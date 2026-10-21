@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tournaments — Deuce & Smash</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0E0E2C;--navy-mid:#14144A;--navy-light:#1C1C5E;--blue:#1A6FD4;--blue-light:#3A8FFF;--green:#7DC515;--green-light:#9DDF2A;--green-dark:#5A8E0A;--orange:#E05A00;--lime:#A8D800;--white:#FFFFFF;--grey-light:#D0CFCA;--grey-mid:#8C8B85}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:20px 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,6,18,.92);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,.04)}
+.nav-logo-text{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.08em;color:var(--white);text-decoration:none}
+.nav-logo-text span{color:var(--green)}
+.nav-back{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.5);text-decoration:none;display:flex;align-items:center;gap:8px;transition:color .3s}
+.nav-back:hover{color:var(--white)}
+.nav-back svg{width:16px;height:16px;opacity:.6}
+
+/* HERO */
+.hero{padding:160px 48px 80px;max-width:1280px;margin:0 auto}
+.hero-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--green);display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.hero-label::before{content:'';width:24px;height:1px;background:var(--green)}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(56px,7vw,100px);letter-spacing:.02em;line-height:.92;margin-bottom:20px}
+.hero-title .accent{background:linear-gradient(135deg,#9DDF2A,#7DC515);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-desc{font-family:'Barlow',sans-serif;font-size:17px;font-weight:300;line-height:1.8;color:rgba(255,255,255,.45);max-width:520px}
+
+/* STATS ROW */
+.stats-row{display:flex;gap:48px;margin-top:48px;padding-top:48px;border-top:1px solid rgba(255,255,255,.05)}
+.stat{display:flex;flex-direction:column;gap:4px}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:.02em;color:var(--green)}
+.stat-lbl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+
+/* FILTERS */
+.filters-wrap{max-width:1280px;margin:0 auto;padding:0 48px 40px;display:flex;gap:12px;flex-wrap:wrap}
+.filter-btn{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:10px 24px;border-radius:50px;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.45);cursor:pointer;transition:all .3s}
+.filter-btn:hover,.filter-btn.active{background:rgba(125,197,21,.1);border-color:rgba(125,197,21,.4);color:var(--green-light)}
+
+/* GRID */
+.grid-wrap{max-width:1280px;margin:0 auto;padding:0 48px 120px}
+.tournaments-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:24px}
+
+/* CARD */
+.t-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:20px;overflow:hidden;transition:all .4s cubic-bezier(.16,1,.3,1);text-decoration:none;color:inherit;display:flex;flex-direction:column}
+.t-card:hover{border-color:rgba(125,197,21,.25);background:rgba(125,197,21,.02);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.t-card-header{padding:28px 28px 20px;border-bottom:1px solid rgba(255,255,255,.04)}
+.t-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.t-format-badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:6px 14px;border-radius:50px;background:rgba(26,111,212,.15);border:1px solid rgba(26,111,212,.3);color:#3A8FFF}
+.t-status{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.t-status.live{color:#FF6B35}
+.t-status.live::before{content:'';width:6px;height:6px;border-radius:50%;background:#FF6B35;animation:pulse 1.5s infinite}
+.t-status.completed{color:var(--green)}
+.t-status.completed::before{content:'✓';font-size:10px}
+.t-status.upcoming{color:rgba(255,255,255,.35)}
+.t-status.upcoming::before{content:'';width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2)}
+.t-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.03em;line-height:1;margin-bottom:8px}
+.t-date{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.t-card-body{padding:20px 28px;flex:1}
+.t-meta{display:flex;gap:20px;flex-wrap:wrap}
+.t-meta-item{display:flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.t-meta-item svg{width:14px;height:14px;opacity:.5}
+.t-card-footer{padding:16px 28px;border-top:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;align-items:center}
+.t-winner{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.t-winner span{color:var(--green-light);margin-left:6px}
+.t-arrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.25);display:flex;align-items:center;gap:6px;transition:all .3s}
+.t-card:hover .t-arrow{color:var(--green);gap:10px}
+
+/* EMPTY STATE */
+.empty-state{grid-column:1/-1;text-align:center;padding:80px 40px;color:rgba(255,255,255,.2)}
+.empty-state h3{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:.05em;margin-bottom:12px;color:rgba(255,255,255,.15)}
+.empty-state p{font-family:'Barlow',sans-serif;font-size:15px;font-weight:300}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+@media(max-width:768px){
+  .nav{padding:16px 24px}
+  .hero{padding:120px 24px 60px}
+  .stats-row{gap:28px}
+  .filters-wrap,.grid-wrap{padding-left:24px;padding-right:24px}
+  .tournaments-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="../index.html" class="nav-back">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
+    Back to site
+  </a>
+  <a href="../index.html" class="nav-logo-text">DEUCE <span>&</span> SMASH</a>
+  <div style="width:100px"></div>
+</nav>
+
+<section class="hero">
+  <div class="hero-label">Deuce & Smash · Ivory Estate, Baner</div>
+  <h1 class="hero-title">CLUB<br><span class="accent">TOURNAMENTS</span></h1>
+  <p class="hero-desc">Every match. Every round. Every champion. The complete record of competitive play at Deuce & Smash.</p>
+  <div class="stats-row" id="statsRow">
+    <div class="stat"><div class="stat-num" id="statEvents">—</div><div class="stat-lbl">Events</div></div>
+    <div class="stat"><div class="stat-num" id="statPlayers">—</div><div class="stat-lbl">Players</div></div>
+    <div class="stat"><div class="stat-num" id="statMatches">—</div><div class="stat-lbl">Matches Played</div></div>
+  </div>
+</section>
+
+<div class="filters-wrap">
+  <button class="filter-btn active" onclick="filterCards('all',this)">All Events</button>
+  <button class="filter-btn" onclick="filterCards('live',this)">Live</button>
+  <button class="filter-btn" onclick="filterCards('completed',this)">Completed</button>
+  <button class="filter-btn" onclick="filterCards('upcoming',this)">Upcoming</button>
+  <button class="filter-btn" onclick="filterCards('padel',this)">Padel</button>
+  <button class="filter-btn" onclick="filterCards('pickleball',this)">Pickleball</button>
+</div>
+
+<div class="grid-wrap">
+  <div class="tournaments-grid" id="tournamentsGrid">
+    <!-- Cards injected by JS -->
+  </div>
+</div>
+
+<script>
+// ─── TOURNAMENT REGISTRY ───────────────────────────────────────────────────
+// Add each new tournament here as an object. The page auto-renders the grid.
+const TOURNAMENTS = [
+  {
+    slug:       "mexicano-oct-2026",
+    name:       "Mexicano Oct 2026",
+    format:     "Hybrid Mexicano",
+    sport:      "padel",
+    date:       "21 Oct 2026",
+    time:       "6:00 – 9:00 PM",
+    players:    12,
+    courts:     2,
+    rounds:     6,
+    status:     "live",        // "upcoming" | "live" | "completed"
+    winner:     null,          // fill after event: "Nikhil A."
+    highlight:  null,
+  },
+  // ── Add future events below ──────────────────────────────────────────────
+  // {
+  //   slug: "pickleball-nov-2026",
+  //   name: "Pickleball Doubles Nov 2026",
+  //   format: "Round Robin",
+  //   sport: "pickleball",
+  //   date: "15 Nov 2026",
+  //   time: "5:00 – 8:00 PM",
+  //   players: 8,
+  //   courts: 2,
+  //   rounds: 4,
+  //   status: "upcoming",
+  //   winner: null,
+  //   highlight: null,
+  // },
+];
+
+// ─── RENDER ────────────────────────────────────────────────────────────────
+function sportIcon(sport) {
+  if (sport === 'padel') return `<svg viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.2"/><line x1="7" y1="2" x2="7" y2="12" stroke="currentColor" stroke-width="1.2"/></svg>`;
+  return `<svg viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>`;
+}
+
+function renderGrid(filter = 'all') {
+  const grid = document.getElementById('tournamentsGrid');
+  const filtered = filter === 'all' ? TOURNAMENTS :
+    TOURNAMENTS.filter(t =>
+      t.status === filter ||
+      t.sport === filter
+    );
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state"><h3>No Events Yet</h3><p>Check back soon — the next tournament is being planned.</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(t => `
+    <a class="t-card" href="${t.slug}.html" data-status="${t.status}" data-sport="${t.sport}">
+      <div class="t-card-header">
+        <div class="t-card-top">
+          <span class="t-format-badge">${t.format}</span>
+          <span class="t-status ${t.status}">${
+            t.status === 'live' ? 'Live Now' :
+            t.status === 'completed' ? 'Completed' : 'Upcoming'
+          }</span>
+        </div>
+        <div class="t-name">${t.name.toUpperCase()}</div>
+        <div class="t-date">${t.date} · ${t.time}</div>
+      </div>
+      <div class="t-card-body">
+        <div class="t-meta">
+          <div class="t-meta-item">${sportIcon(t.sport)} ${t.sport.charAt(0).toUpperCase()+t.sport.slice(1)}</div>
+          <div class="t-meta-item">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="7" cy="5" r="2.5"/><path d="M2.5 12c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5"/></svg>
+            ${t.players} Players
+          </div>
+          <div class="t-meta-item">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.5" y="3" width="11" height="8" rx="1"/><line x1="1.5" y1="7" x2="12.5" y2="7"/></svg>
+            ${t.courts} Courts · ${t.rounds} Rounds
+          </div>
+        </div>
+      </div>
+      <div class="t-card-footer">
+        <div class="t-winner">
+          ${t.winner ? `🏆 Winner <span>${t.winner}</span>` : `<span style="color:rgba(255,255,255,.2)">${t.status === 'upcoming' ? 'Not yet played' : t.status === 'live' ? 'In progress…' : '—'}</span>`}
+        </div>
+        <div class="t-arrow">View <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 6h7M6 2.5L9.5 6 6 9.5"/></svg></div>
+      </div>
+    </a>
+  `).join('');
+
+  // Update stats
+  const total = TOURNAMENTS.length;
+  const uniquePlayers = [...new Set(TOURNAMENTS.map(t => t.players))].reduce((a,b) => a+b, 0);
+  const totalMatches = TOURNAMENTS.filter(t => t.status !== 'upcoming')
+    .reduce((sum, t) => sum + Math.floor(t.rounds * t.courts), 0);
+  document.getElementById('statEvents').textContent = total;
+  document.getElementById('statPlayers').textContent = uniquePlayers + '+';
+  document.getElementById('statMatches').textContent = totalMatches || '—';
+}
+
+function filterCards(filter, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid(filter);
+}
+
+renderGrid();
+</script>
+</body>
+</html>
