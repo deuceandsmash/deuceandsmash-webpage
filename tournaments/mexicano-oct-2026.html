@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mexicano Oct 2026 — Deuce & Smash Tournaments</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ─── FIREBASE CONFIG ────────────────────────────────────────────────────────
+// Replace these values after creating your Firebase project (see SETUP.md)
+const firebaseConfig = {
+  apiKey:            "REPLACE_WITH_YOUR_API_KEY",
+  authDomain:        "REPLACE_WITH_YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL:       "REPLACE_WITH_YOUR_DATABASE_URL",
+  projectId:         "REPLACE_WITH_YOUR_PROJECT_ID",
+  storageBucket:     "REPLACE_WITH_YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "REPLACE_WITH_YOUR_SENDER_ID",
+  appId:             "REPLACE_WITH_YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const TOURNAMENT_KEY = "mexicano-oct-2026";
+
+// ─── TOURNAMENT DATA ────────────────────────────────────────────────────────
+const PLAYERS = [
+  { id:0,  name:"Nikhil A.",  full:"Nikhil Agarwal" },
+  { id:1,  name:"Piyush A.",  full:"Piyush Agarwal" },
+  { id:2,  name:"Jeetu",      full:"Jeetu Punjabi" },
+  { id:3,  name:"Tushar",     full:"Tushar" },
+  { id:4,  name:"Shreedhar",  full:"Shreedhar" },
+  { id:5,  name:"Yash",       full:"Yash" },
+  { id:6,  name:"Mayur",      full:"Mayur Bagad" },
+  { id:7,  name:"Vivek",      full:"Vivek" },
+  { id:8,  name:"Dhruv",      full:"Dhruv Bhat" },
+  { id:9,  name:"Nikhil (V)", full:"Nikhil (Visiting)" },
+  { id:10, name:"Ranjith",    full:"Ranjith" },
+  { id:11, name:"Rishab M.",  full:"Rishab Mutha" },
+];
+
+const TOTAL_ROUNDS = 6;
+const MAYUR_ID = 6;
+const ROUND_TIMES = ["6:00–6:27 PM","6:27–6:54 PM","6:54–7:21 PM","7:21–7:48 PM","7:48–8:15 PM","8:15–8:45 PM"];
+const ROUND_MODE  = ["RANDOM MIX","RANDOM MIX","MEXICANO","MEXICANO","MEXICANO","CHAMPIONSHIP"];
+const FORCED_BYE  = { 2:[MAYUR_ID], 3:[MAYUR_ID] };
+const ADMIN_PIN   = "062026";
+const TARGET      = 21;
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+const state = {
+  pts:            new Array(12).fill(0),
+  played:         new Array(12).fill(0),
+  wins:           new Array(12).fill(0),
+  byeCnt:         new Array(12).fill(0),
+  partnerHistory: Array.from({length:12},()=>new Array(12).fill(0)),
+  rounds:         [],
+  submitted:      [],
+  current:        0,
+};
+
+let isAdmin = false;
+let firebaseReady = false;
+
+// ─── FIREBASE SYNC ───────────────────────────────────────────────────────────
+function saveToFirebase() {
+  if (!firebaseReady) return;
+  const payload = {
+    pts:       state.pts,
+    played:    state.played,
+    wins:      state.wins,
+    byeCnt:    state.byeCnt,
+    partnerHistory: state.partnerHistory,
+    rounds:    state.rounds,
+    submitted: state.submitted,
+    current:   state.current,
+    updatedAt: Date.now(),
+  };
+  set(ref(db, `tournaments/${TOURNAMENT_KEY}`), payload);
+}
+
+function loadFromFirebase(snap) {
+  const data = snap.val();
+  if (!data) { firebaseReady = true; initRound(0); render(); return; }
+  state.pts            = data.pts            || new Array(12).fill(0);
+  state.played         = data.played         || new Array(12).fill(0);
+  state.wins           = data.wins           || new Array(12).fill(0);
+  state.byeCnt         = data.byeCnt         || new Array(12).fill(0);
+  state.partnerHistory = data.partnerHistory || Array.from({length:12},()=>new Array(12).fill(0));
+  state.rounds         = data.rounds         || [];
+  state.submitted      = data.submitted      || [];
+  state.current        = data.current        || 0;
+  if (!state.rounds[state.current]) initRound(state.current);
+  firebaseReady = true;
+  render();
+}
+
+// Listen for real-time updates (public scoreboard auto-refreshes)
+onValue(ref(db, `tournaments/${TOURNAMENT_KEY}`), snap => {
+  if (!isAdmin) {
+    loadFromFirebase(snap);
+  }
+});
+
+// Admin does one initial load then writes
+get(ref(db, `tournaments/${TOURNAMENT_KEY}`)).then(snap => {
+  loadFromFirebase(snap);
+});
+
+// ─── SCHEDULE GENERATION ─────────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function genByeList(roundIdx) {
+  const forced = (FORCED_BYE[roundIdx] || []).filter(id => id < 12);
+  const pool   = PLAYERS.map(p=>p.id).filter(id => !forced.includes(id));
+  const needed = 4 - forced.length;
+  const sorted = [...pool].sort((a,b) => {
+    if (state.byeCnt[a] !== state.byeCnt[b]) return state.byeCnt[a] - state.byeCnt[b];
+    return state.pts[a] - state.pts[b];
+  });
+  return [...forced, ...sorted.slice(0,needed)];
+}
+
+function pairScore(a,b) {
+  return state.partnerHistory[a][b] + state.partnerHistory[b][a];
+}
+
+function genRandomMixRound(playing) {
+  let best=null, bestScore=Infinity;
+  for(let t=0;t<200;t++){
+    const s = shuffle(playing);
+    const pairs = [[s[0],s[1]],[s[2],s[3]],[s[4],s[5]],[s[6],s[7]]];
+    const score = pairs.reduce((sum,[a,b])=>sum+pairScore(a,b),0);
+    if(score<bestScore){bestScore=score;best=pairs;}
+  }
+  return [
+    {c:0, p1:best[0], p2:best[1]},
+    {c:1, p1:best[2], p2:best[3]},
+  ];
+}
+
+function ranked() {
+  return [...PLAYERS].sort((a,b)=>{
+    if(state.pts[b.id]!==state.pts[a.id]) return state.pts[b.id]-state.pts[a.id];
+    return state.wins[b.id]-state.wins[a.id];
+  });
+}
+
+function genMexicanoRound(playing) {
+  const order = ranked().filter(p=>playing.includes(p.id)).map(p=>p.id);
+  let pairs = [[order[0],order[1]],[order[2],order[3]],[order[4],order[5]],[order[6],order[7]]];
+  // swap adjacent pairs to reduce repeats
+  for(let i=0;i<order.length-1;i+=2){
+    const [a,b]=[order[i],order[i+1]];
+    const [c,d]=i+2<order.length?[order[i+2],order[i+3]]:[null,null];
+    if(c!==null && pairScore(a,b)>0 && pairScore(a,c)===0){
+      pairs[Math.floor(i/2)]=[a,c];
+      if(i+2<pairs.length) pairs[Math.floor(i/2)+1]=[b,d||b];
+    }
+  }
+  return [
+    {c:0, p1:[pairs[0][0],pairs[1][0]], p2:[pairs[0][1],pairs[1][1]]},
+    {c:1, p1:[pairs[2][0],pairs[3][0]], p2:[pairs[2][1],pairs[3][1]]},
+  ].map((m,i)=>({c:i,p1:[m.p1[0],m.p1[1]],p2:[m.p2[0],m.p2[1]]}));
+}
+
+function genChampionshipRound() {
+  const order = ranked().map(p=>p.id);
+  return [
+    {c:0, label:"GRAND FINAL",       p1:[order[0],order[3]], p2:[order[1],order[2]]},
+    {c:1, label:"CONSOLATION FINAL", p1:[order[4],order[7]], p2:[order[5],order[6]]},
+  ];
+}
+
+function initRound(roundIdx) {
+  if(state.rounds[roundIdx]) return;
+  const byes = genByeList(roundIdx);
+  const playing = PLAYERS.map(p=>p.id).filter(id=>!byes.includes(id));
+  let matches;
+  if(roundIdx===5) matches = genChampionshipRound();
+  else if(roundIdx<2) matches = genRandomMixRound(playing);
+  else matches = genMexicanoRound(playing);
+  state.rounds[roundIdx] = { byes, matches, scores:[] };
+}
+
+function recordPartnerships(roundIdx) {
+  const round = state.rounds[roundIdx];
+  round.matches.forEach(m => {
+    const team1 = Array.isArray(m.p1[0]) ? m.p1 : m.p1;
+    const team2 = Array.isArray(m.p2[0]) ? m.p2 : m.p2;
+    const t1 = Array.isArray(m.p1) ? m.p1 : [m.p1[0],m.p1[1]];
+    const t2 = Array.isArray(m.p2) ? m.p2 : [m.p2[0],m.p2[1]];
+    if(t1.length===2){state.partnerHistory[t1[0]][t1[1]]++;state.partnerHistory[t1[1]][t1[0]]++;}
+    if(t2.length===2){state.partnerHistory[t2[0]][t2[1]]++;state.partnerHistory[t2[1]][t2[0]]++;}
+  });
+}
+
+function submitRound(roundIdx) {
+  const round = state.rounds[roundIdx];
+  round.matches.forEach((m,mi) => {
+    const s1 = round.scores[mi]?.[0]||0;
+    const s2 = round.scores[mi]?.[1]||0;
+    const t1 = Array.isArray(m.p1) ? m.p1 : [m.p1[0],m.p1[1]];
+    const t2 = Array.isArray(m.p2) ? m.p2 : [m.p2[0],m.p2[1]];
+    t1.forEach(id=>{ if(id<12){state.pts[id]+=s1;state.played[id]++;if(s1>s2)state.wins[id]++;} });
+    t2.forEach(id=>{ if(id<12){state.pts[id]+=s2;state.played[id]++;if(s2>s1)state.wins[id]++;} });
+  });
+  round.byes.forEach(id=>{ if(id<12) state.byeCnt[id]++; });
+  recordPartnerships(roundIdx);
+  state.submitted[roundIdx]=true;
+  state.current = roundIdx+1;
+  if(roundIdx+1 < TOTAL_ROUNDS) initRound(roundIdx+1);
+  saveToFirebase();
+  render();
+}
+
+// ─── PLAYER HELPERS ──────────────────────────────────────────────────────────
+function pname(id) { return id<12 ? PLAYERS[id].name : '?'; }
+function uniquePartners(id) {
+  return state.partnerHistory[id].filter((v,i)=>i!==id&&v>0).length;
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  renderHeader();
+  renderTabs();
+  renderPanels();
+  renderLeaderboard();
+}
+
+function renderHeader() {
+  const el = document.getElementById('liveStatus');
+  if (!el) return;
+  const done = state.submitted.filter(Boolean).length;
+  if (done === TOTAL_ROUNDS) {
+    el.innerHTML = `<span class="status-dot done"></span> Tournament Complete`;
+  } else if (done > 0) {
+    el.innerHTML = `<span class="status-dot live"></span> Round ${done+1} of ${TOTAL_ROUNDS} — Live`;
+  } else {
+    el.innerHTML = `<span class="status-dot upcoming"></span> Starting Soon`;
+  }
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('roundTabs');
+  if (!tabs) return;
+  tabs.innerHTML = Array.from({length:TOTAL_ROUNDS},(_,i)=>`
+    <button class="tab ${i===viewRound?'active':''} ${state.submitted[i]?'done':''}"
+      onclick="setView(${i})">
+      ${i===5?'🏆':''} R${i+1}
+      ${state.submitted[i]?'<span class="tab-check">✓</span>':''}
+    </button>
+  `).join('');
+}
+
+function teamNames(p) {
+  return Array.isArray(p) ? p.map(pname).join(' & ') : pname(p[0])+' & '+pname(p[1]);
+}
+
+function renderPanels() {
+  const container = document.getElementById('roundPanels');
+  if (!container) return;
+  const roundIdx = viewRound;
+  const round = state.rounds[roundIdx];
+  if (!round) { container.innerHTML = '<div class="loading">Generating round…</div>'; return; }
+
+  const isChamp = roundIdx === 5;
+  const isSubmitted = state.submitted[roundIdx];
+  const isCurrent = roundIdx === state.current;
+
+  let html = `<div class="round-panel">`;
+
+  // Round header
+  html += `<div class="round-header ${isChamp?'champ':''}">
+    <div class="round-meta-top">
+      <span class="round-mode-badge ${isChamp?'gold':''}">${ROUND_MODE[roundIdx]}</span>
+      <span class="round-time">${ROUND_TIMES[roundIdx]}</span>
+    </div>
+    <h2 class="round-title">${isChamp?'🏆 CHAMPIONSHIP ROUND':'ROUND '+(roundIdx+1)}</h2>
+    ${isChamp?'<p class="round-subtitle">Top 4 → Grand Final · Ranks 5–8 → Consolation · Bottom 4 sit out</p>':''}
+  </div>`;
+
+  // Matches
+  round.matches.forEach((m, mi) => {
+    const s1 = round.scores[mi]?.[0] ?? '';
+    const s2 = round.scores[mi]?.[1] ?? '';
+    const t1wins = Number(s1) > Number(s2);
+    const t2wins = Number(s2) > Number(s1);
+    html += `<div class="match-card ${isChamp && mi===0 ? 'grand-final' : ''}">
+      <div class="court-label">COURT ${m.c+1}${m.label ? ' · '+m.label : ''}</div>
+      <div class="match-row">
+        <div class="team ${isSubmitted&&t1wins?'winner':''}">
+          <div class="team-names">${teamNames(m.p1)}</div>
+          <div class="team-tag">Team A</div>
+        </div>
+        <div class="vs-block">
+          ${isAdmin && !isSubmitted && isCurrent ? `
+            <div class="score-inputs">
+              <input type="number" class="score-inp" min="0" max="21" value="${s1}"
+                oninput="setScore(${roundIdx},${mi},0,this.value)" placeholder="0">
+              <span class="vs-sep">—</span>
+              <input type="number" class="score-inp" min="0" max="21" value="${s2}"
+                oninput="setScore(${roundIdx},${mi},1,this.value)" placeholder="0">
+            </div>
+          ` : isSubmitted ? `
+            <div class="score-display ${t1wins?'t1-wins':t2wins?'t2-wins':''}">
+              <span class="${t1wins?'score-big':''}">${s1}</span>
+              <span class="score-sep">—</span>
+              <span class="${t2wins?'score-big':''}">${s2}</span>
+            </div>
+          ` : `
+            <div class="score-pending">vs</div>
+          `}
+        </div>
+        <div class="team right ${isSubmitted&&t2wins?'winner':''}">
+          <div class="team-names">${teamNames(m.p2)}</div>
+          <div class="team-tag">Team B</div>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // Byes
+  if (round.byes.length) {
+    html += `<div class="bye-block">
+      <span class="bye-label">${isChamp?'SITTING OUT (BOTTOM 4)':'SITTING OUT'}</span>
+      <div class="bye-names">${round.byes.map(pname).join(' · ')}</div>
+    </div>`;
+  }
+
+  // Submit button
+  if (isAdmin && !isSubmitted && isCurrent) {
+    html += `<button class="submit-btn" onclick="attemptSubmit(${roundIdx})">
+      Lock Round ${roundIdx+1} Scores →
+    </button>`;
+  }
+
+  if (isSubmitted) {
+    html += `<div class="submitted-badge">✓ Round ${roundIdx+1} Locked</div>`;
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function renderLeaderboard() {
+  const tbody = document.getElementById('lbBody');
+  if (!tbody) return;
+  const order = ranked();
+  tbody.innerHTML = order.map((p,i) => {
+    const avgPts = state.played[p.id] ? (state.pts[p.id]/state.played[p.id]).toFixed(1) : '—';
+    return `<tr class="${i<3?'top3':''}">
+      <td class="lb-rank">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
+      <td class="lb-name">${p.name}</td>
+      <td class="lb-pts">${state.pts[p.id]}</td>
+      <td class="lb-wins">${state.wins[p.id]}</td>
+      <td class="lb-played">${state.played[p.id]}</td>
+      <td class="lb-avg">${avgPts}</td>
+      <td class="lb-partners">${uniquePartners(p.id)} / 11</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── UI ACTIONS ──────────────────────────────────────────────────────────────
+let viewRound = 0;
+function setView(i) { viewRound = i; render(); }
+
+function setScore(roundIdx, matchIdx, team, val) {
+  if (!state.rounds[roundIdx].scores[matchIdx])
+    state.rounds[roundIdx].scores[matchIdx] = [0,0];
+  state.rounds[roundIdx].scores[matchIdx][team] = parseInt(val)||0;
+}
+
+function attemptSubmit(roundIdx) {
+  const round = state.rounds[roundIdx];
+  let valid = true;
+  round.matches.forEach((m,mi) => {
+    const s1 = round.scores[mi]?.[0];
+    const s2 = round.scores[mi]?.[1];
+    if(s1===undefined||s2===undefined||s1+s2===0) valid=false;
+  });
+  if (!valid) { showToast('Enter scores for all courts before locking.','error'); return; }
+  document.getElementById('confirmModal').style.display='flex';
+  document.getElementById('confirmBtn').onclick = () => {
+    document.getElementById('confirmModal').style.display='none';
+    submitRound(roundIdx);
+    viewRound = Math.min(roundIdx+1, TOTAL_ROUNDS-1);
+    showToast('Round '+(roundIdx+1)+' locked! ✓');
+  };
+}
+
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─── ADMIN AUTH ───────────────────────────────────────────────────────────────
+window.openAdmin = function() {
+  document.getElementById('pinModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+};
+
+window.checkPin = function() {
+  const val = document.getElementById('pinInput').value.trim();
+  if (val === ADMIN_PIN) {
+    isAdmin = true;
+    document.getElementById('pinModal').style.display = 'none';
+    document.getElementById('adminBadge').style.display = 'inline-flex';
+    document.getElementById('adminBtn').style.display = 'none';
+    render();
+  } else {
+    document.getElementById('pinError').style.display = 'block';
+    document.getElementById('pinInput').value = '';
+  }
+};
+
+window.setView = setView;
+window.setScore = setScore;
+window.attemptSubmit = attemptSubmit;
+</script>
+</head>
+<body>
+
+<!-- PIN MODAL -->
+<div id="pinModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h3 class="modal-title">Club Admin Access</h3>
+    <p class="modal-desc">Enter PIN to manage scores</p>
+    <input id="pinInput" type="password" class="pin-input" maxlength="6"
+      placeholder="······" onkeydown="if(event.key==='Enter')checkPin()">
+    <p id="pinError" style="display:none;color:#FF6B35;font-size:13px;margin-top:8px">Incorrect PIN</p>
+    <button class="modal-btn" onclick="checkPin()">Enter</button>
+    <button class="modal-cancel" onclick="document.getElementById('pinModal').style.display='none'">Cancel</button>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div id="confirmModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h3 class="modal-title">Lock Scores?</h3>
+    <p class="modal-desc">Scores cannot be changed after locking. The leaderboard will update for all viewers.</p>
+    <button class="modal-btn" id="confirmBtn">Yes, Lock Round</button>
+    <button class="modal-cancel" onclick="document.getElementById('confirmModal').style.display='none'">Go Back</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="index.html" class="nav-back">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
+    All Tournaments
+  </a>
+  <span class="nav-logo-text">DEUCE <span style="color:var(--green)">&</span> SMASH</span>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span id="adminBadge" class="admin-badge" style="display:none">⚙ Admin</span>
+    <button id="adminBtn" class="admin-btn" onclick="openAdmin()">Admin</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="t-hero">
+  <div class="t-hero-inner">
+    <div class="t-hero-left">
+      <div class="t-label">Padel · Hybrid Mexicano</div>
+      <h1 class="t-title">MEXICANO<br><span class="t-title-accent">OCT 2026</span></h1>
+      <div class="t-meta-row">
+        <span class="t-meta-chip">21 Oct 2026</span>
+        <span class="t-meta-chip">6:00 – 9:00 PM</span>
+        <span class="t-meta-chip">12 Players</span>
+        <span class="t-meta-chip">2 Courts</span>
+        <span class="t-meta-chip">Race to 21</span>
+      </div>
+      <div id="liveStatus" class="live-status"></div>
+    </div>
+    <div class="t-hero-right">
+      <div class="format-card">
+        <div class="format-card-title">Format Guide</div>
+        <div class="format-item"><span class="fi-label">R1–R2</span><span class="fi-val">Random partner mix</span></div>
+        <div class="format-item"><span class="fi-label">R3–R5</span><span class="fi-val">Mexicano (rank-based)</span></div>
+        <div class="format-item"><span class="fi-label">R6</span><span class="fi-val">Championship finale</span></div>
+        <div class="format-item"><span class="fi-label">Mayur</span><span class="fi-val">Sits out R3 & R4</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main-wrap">
+  <div class="content-cols">
+
+    <!-- LEFT: Rounds -->
+    <section class="rounds-col">
+      <div id="roundTabs" class="round-tabs"></div>
+      <div id="roundPanels"></div>
+    </section>
+
+    <!-- RIGHT: Leaderboard -->
+    <aside class="lb-col">
+      <div class="lb-card">
+        <div class="lb-header">
+          <h3 class="lb-title">LEADERBOARD</h3>
+          <span class="lb-live-dot"></span>
+        </div>
+        <div class="lb-table-wrap">
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th>Pts</th>
+                <th>W</th>
+                <th>P</th>
+                <th>Avg</th>
+                <th>Partners</th>
+              </tr>
+            </thead>
+            <tbody id="lbBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Highlights placeholder -->
+      <div class="highlights-card" id="highlightsCard">
+        <div class="hc-header">
+          <h3 class="hc-title">HIGHLIGHTS</h3>
+          <span class="hc-badge">Coming Soon</span>
+        </div>
+        <p class="hc-desc">Match recordings and player highlights will appear here after the event.</p>
+        <div class="hc-placeholder">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><circle cx="20" cy="20" r="16"/><polygon points="16,13 30,20 16,27" fill="rgba(255,255,255,.1)"/></svg>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<style>
+:root{--navy:#0E0E2C;--navy-mid:#14144A;--blue:#1A6FD4;--blue-light:#3A8FFF;--green:#7DC515;--green-light:#9DDF2A;--green-dark:#5A8E0A;--orange:#E05A00;--gold:#F5D628;--white:#FFFFFF}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 40px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,6,18,.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.05)}
+.nav-back{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.45);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .3s}
+.nav-back:hover{color:var(--white)}
+.nav-logo-text{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.08em}
+.admin-badge{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;background:rgba(125,197,21,.15);border:1px solid rgba(125,197,21,.3);color:var(--green-light);padding:6px 14px;border-radius:50px}
+.admin-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);padding:6px 14px;border-radius:50px;cursor:pointer;transition:all .3s}
+.admin-btn:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.8)}
+
+/* HERO */
+.t-hero{padding:100px 40px 60px;background:linear-gradient(180deg,rgba(26,111,212,.06) 0%,transparent 100%);border-bottom:1px solid rgba(255,255,255,.04)}
+.t-hero-inner{max-width:1280px;margin:0 auto;display:flex;gap:60px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.t-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--green);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.t-label::before{content:'';width:20px;height:1px;background:var(--green)}
+.t-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,6vw,88px);line-height:.9;letter-spacing:.02em;margin-bottom:20px}
+.t-title-accent{background:linear-gradient(135deg,#9DDF2A,#7DC515);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.t-meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.t-meta-chip{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:6px 14px;border-radius:50px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.5)}
+.live-status{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.live{background:#FF6B35;animation:pulse 1.5s infinite;box-shadow:0 0 12px rgba(255,107,53,.6)}
+.status-dot.done{background:var(--green)}
+.status-dot.upcoming{background:rgba(255,255,255,.2)}
+.format-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:24px;min-width:240px}
+.format-card-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:16px}
+.format-item{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.format-item:last-child{border-bottom:none}
+.fi-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--green-light)}
+.fi-val{font-family:'Barlow',sans-serif;font-size:13px;font-weight:300;color:rgba(255,255,255,.5);text-align:right}
+
+/* MAIN LAYOUT */
+.main-wrap{max-width:1280px;margin:0 auto;padding:40px 40px 100px}
+.content-cols{display:grid;grid-template-columns:1fr 380px;gap:32px;align-items:start}
+
+/* TABS */
+.round-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:8px 20px;border-radius:50px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);color:rgba(255,255,255,.35);cursor:pointer;transition:all .3s;display:flex;align-items:center;gap:6px}
+.tab:hover{border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7)}
+.tab.active{background:rgba(26,111,212,.15);border-color:rgba(26,111,212,.4);color:var(--blue-light)}
+.tab.done{border-color:rgba(125,197,21,.2);color:rgba(125,197,21,.6)}
+.tab.active.done{background:rgba(125,197,21,.1);border-color:rgba(125,197,21,.4);color:var(--green-light)}
+.tab-check{color:var(--green);font-size:10px}
+
+/* ROUND PANEL */
+.round-panel{display:flex;flex-direction:column;gap:16px}
+.round-header{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:24px;margin-bottom:4px}
+.round-header.champ{background:rgba(245,214,40,.04);border-color:rgba(245,214,40,.15)}
+.round-meta-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.round-mode-badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:5px 12px;border-radius:50px;background:rgba(26,111,212,.12);border:1px solid rgba(26,111,212,.25);color:#3A8FFF}
+.round-mode-badge.gold{background:rgba(245,214,40,.12);border-color:rgba(245,214,40,.3);color:var(--gold)}
+.round-time{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.25)}
+.round-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:.03em}
+.round-subtitle{font-family:'Barlow',sans-serif;font-size:13px;font-weight:300;color:rgba(255,255,255,.3);margin-top:4px}
+
+/* MATCH CARD */
+.match-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:20px 24px;transition:border-color .3s}
+.match-card:hover{border-color:rgba(255,255,255,.1)}
+.match-card.grand-final{background:rgba(245,214,40,.03);border-color:rgba(245,214,40,.2)}
+.court-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:14px}
+.match-row{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center}
+.team{display:flex;flex-direction:column;gap:4px}
+.team.right{text-align:right;align-items:flex-end}
+.team.winner .team-names{color:var(--green-light)}
+.team-names{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:.05em;color:rgba(255,255,255,.85);line-height:1.2}
+.team-tag{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.2)}
+.vs-block{display:flex;justify-content:center}
+.score-inputs{display:flex;align-items:center;gap:8px}
+.score-inp{width:52px;height:44px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:22px;text-align:center;outline:none;transition:border-color .3s}
+.score-inp:focus{border-color:rgba(26,111,212,.6);background:rgba(26,111,212,.08)}
+.vs-sep{font-family:'Bebas Neue',sans-serif;font-size:18px;color:rgba(255,255,255,.2)}
+.score-display{display:flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;font-size:22px;color:rgba(255,255,255,.4)}
+.score-display.t1-wins .score-big:first-child,.score-display.t2-wins .score-big:last-child{color:var(--green-light);font-size:26px}
+.score-big{color:var(--white)}
+.score-sep{color:rgba(255,255,255,.2);font-size:16px}
+.score-pending{font-family:'Bebas Neue',sans-serif;font-size:20px;color:rgba(255,255,255,.15);padding:0 12px}
+
+/* BYE + SUBMIT */
+.bye-block{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bye-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.2);flex-shrink:0}
+.bye-names{font-family:'Barlow',sans-serif;font-size:13px;font-weight:400;color:rgba(255,255,255,.3)}
+.submit-btn{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;background:var(--green);color:var(--navy);padding:16px 40px;border-radius:50px;border:none;cursor:pointer;transition:all .3s;width:100%}
+.submit-btn:hover{background:var(--green-light);transform:translateY(-1px);box-shadow:0 8px 32px rgba(125,197,21,.3)}
+.submitted-badge{text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);padding:12px;background:rgba(125,197,21,.06);border:1px solid rgba(125,197,21,.15);border-radius:10px}
+
+/* LEADERBOARD */
+.lb-col{position:sticky;top:80px;display:flex;flex-direction:column;gap:20px}
+.lb-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:16px;overflow:hidden}
+.lb-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.04)}
+.lb-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.05em}
+.lb-live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;box-shadow:0 0 8px rgba(125,197,21,.5)}
+.lb-table-wrap{overflow-x:auto}
+.lb-table{width:100%;border-collapse:collapse}
+.lb-table th{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.25);padding:10px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04)}
+.lb-table th:nth-child(2){text-align:left;padding-left:12px}
+.lb-table td{font-family:'Barlow',sans-serif;font-size:13px;padding:10px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.03);color:rgba(255,255,255,.7);transition:background .2s}
+.lb-table tbody tr:hover td{background:rgba(255,255,255,.02)}
+.lb-table tbody tr.top3 td{color:rgba(255,255,255,.9)}
+.lb-table tbody tr:first-child td{color:var(--white)}
+.lb-name{text-align:left!important;padding-left:12px!important;font-weight:600;font-size:13px;white-space:nowrap}
+.lb-pts{font-family:'Bebas Neue',sans-serif!important;font-size:17px!important;color:var(--green-light)!important;font-weight:400!important}
+.lb-rank{font-size:14px!important}
+.lb-table tbody tr:first-child .lb-pts{color:var(--gold)!important;font-size:20px!important}
+
+/* HIGHLIGHTS */
+.highlights-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:24px}
+.hc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hc-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.05em}
+.hc-badge{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:4px 10px;border-radius:50px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.25)}
+.hc-desc{font-family:'Barlow',sans-serif;font-size:13px;font-weight:300;color:rgba(255,255,255,.3);line-height:1.6;margin-bottom:20px}
+.hc-placeholder{display:flex;justify-content:center;padding:20px}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(6,6,18,.85);backdrop-filter:blur(12px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px}
+.modal{background:#0E0E2C;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:40px;max-width:400px;width:100%;text-align:center}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.03em;margin-bottom:8px}
+.modal-desc{font-family:'Barlow',sans-serif;font-size:14px;font-weight:300;color:rgba(255,255,255,.45);margin-bottom:28px;line-height:1.6}
+.pin-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:28px;text-align:center;letter-spacing:.3em;padding:16px;outline:none;margin-bottom:8px;transition:border-color .3s}
+.pin-input:focus{border-color:rgba(26,111,212,.5)}
+.modal-btn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;background:var(--green);color:var(--navy);padding:14px 40px;border-radius:50px;border:none;cursor:pointer;width:100%;margin-top:16px;transition:all .3s}
+.modal-btn:hover{background:var(--green-light)}
+.modal-cancel{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;background:transparent;border:none;color:rgba(255,255,255,.25);cursor:pointer;margin-top:12px;width:100%;padding:8px;transition:color .3s}
+.modal-cancel:hover{color:rgba(255,255,255,.5)}
+
+/* TOAST */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:#0E0E2C;border:1px solid rgba(125,197,21,.3);color:var(--green-light);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:14px 28px;border-radius:50px;opacity:0;transition:all .4s cubic-bezier(.16,1,.3,1);pointer-events:none;z-index:3000;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{border-color:rgba(255,107,53,.4);color:#FF6B35}
+.loading{color:rgba(255,255,255,.3);font-family:'Barlow',sans-serif;padding:40px;text-align:center}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+@media(max-width:1024px){
+  .content-cols{grid-template-columns:1fr}
+  .lb-col{position:static}
+}
+@media(max-width:640px){
+  .nav{padding:14px 20px}
+  .t-hero{padding:80px 20px 40px}
+  .main-wrap{padding:24px 20px 80px}
+  .match-row{grid-template-columns:1fr auto 1fr;gap:8px}
+  .team-names{font-size:13px}
+}
+</style>
+</body>
+</html>
