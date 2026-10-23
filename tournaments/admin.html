@@ -224,6 +224,36 @@
 
 <!-- Rounds -->
 <div class="section" id="tab-rounds">
+  <!-- Live edit panel -->
+  <div class="card" id="edit-settings-panel" style="display:none;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h3 style="font-size:1rem">⚙️ Edit Tournament Settings</h3>
+      <button class="btn btn-secondary btn-sm" onclick="toggleEditSettings()">✕ Close</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label class="form-label">Total Rounds (excl. championship)</label>
+        <input class="form-input" type="number" id="edit-rounds" min="2" max="20" placeholder="e.g. 9">
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Championship is always added as the final round</div>
+      </div>
+      <div>
+        <label class="form-label">Random Mix Rounds</label>
+        <input class="form-input" type="number" id="edit-random" min="1" max="10" placeholder="e.g. 2">
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="form-label">Target Points per Match</label>
+      <input class="form-input" type="number" id="edit-target" min="10" max="100" placeholder="e.g. 32" style="max-width:160px">
+    </div>
+    <div style="margin-bottom:14px">
+      <label class="form-label">Round Schedule (one per line, e.g. "6:00–6:22 PM")</label>
+      <textarea class="form-input" id="edit-times" rows="6" placeholder="6:00–6:22 PM&#10;6:22–6:44 PM&#10;…"></textarea>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Line 1 = Round 1 time label shown on scoreboard</div>
+    </div>
+    <button class="btn btn-primary" onclick="saveEditedSettings()">💾 Save Changes</button>
+    <div id="edit-settings-msg" style="margin-top:8px;font-size:0.82rem;color:var(--success)"></div>
+  </div>
+
   <div id="rounds-container"><div class="loading">Load or create a tournament to see rounds.</div></div>
 </div>
 
@@ -473,6 +503,17 @@ function renderRoundsTab() {
   const current = state.current || 0;
   const canGenerate = current < totalRounds;
 
+  // Show edit settings button
+  const editPanel = document.getElementById('edit-settings-panel');
+  if (editPanel) {
+    editPanel.style.display = 'block';
+    // Populate current values
+    document.getElementById('edit-rounds').value = totalRounds - 1; // minus championship
+    document.getElementById('edit-random').value = randomRounds;
+    document.getElementById('edit-target').value = target;
+    document.getElementById('edit-times').value = (times || []).join('\n');
+  }
+
   let html = '';
 
   // Generate Next Round button
@@ -703,6 +744,54 @@ window.submitRound = async (ri) => {
 
   await update(ref(db, `tournaments/${t.id}/state`), updates);
   showToast(`Round ${ri + 1} scores saved!`, 'ok');
+};
+
+// ===== Edit Settings =====
+window.toggleEditSettings = () => {
+  const panel = document.getElementById('edit-settings-panel');
+  if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+};
+
+window.saveEditedSettings = async () => {
+  const t = activeTournament;
+  if (!t) return;
+  const msg = document.getElementById('edit-settings-msg');
+  msg.textContent = '';
+
+  const mexRounds = parseInt(document.getElementById('edit-rounds').value);
+  const randomRounds = parseInt(document.getElementById('edit-random').value);
+  const target = parseInt(document.getElementById('edit-target').value);
+  const timesRaw = document.getElementById('edit-times').value.trim();
+  const times = timesRaw ? timesRaw.split('\n').map(s => s.trim()).filter(Boolean) : [];
+
+  if (!mexRounds || mexRounds < 2) { msg.style.color='var(--danger)'; msg.textContent = 'Total rounds must be at least 2.'; return; }
+  if (!randomRounds || randomRounds < 1) { msg.style.color='var(--danger)'; msg.textContent = 'Random rounds must be at least 1.'; return; }
+  if (randomRounds >= mexRounds) { msg.style.color='var(--danger)'; msg.textContent = 'Random rounds must be less than total rounds.'; return; }
+  if (!target || target < 10) { msg.style.color='var(--danger)'; msg.textContent = 'Target must be at least 10.'; return; }
+
+  const totalRounds = mexRounds + 1; // +1 for championship
+  const mexicanoEnd = mexRounds - 2;
+  const championshipRound = mexRounds; // last round index
+
+  const newConfig = {
+    ...t.config,
+    totalRounds,
+    randomRounds,
+    mexicanoEnd,
+    championshipRound,
+    target,
+    times
+  };
+
+  try {
+    await update(ref(db, `tournaments/${t.id}`), { config: newConfig });
+    msg.style.color = 'var(--success)';
+    msg.textContent = '✓ Settings saved — takes effect from next round generated.';
+    setTimeout(() => { msg.textContent = ''; }, 4000);
+  } catch (e) {
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'Save failed: ' + e.message;
+  }
 };
 
 // ===== Standings =====
