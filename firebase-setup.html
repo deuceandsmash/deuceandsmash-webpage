@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firebase Setup — D&S Club</title>
+<style>
+  :root{--bg:#0d0d0d;--surface:#161616;--card:#1c1c1c;--border:#2a2a2a;--accent:#e8ff3b;--text:#f0f0f0;--muted:#888;--success:#4dff91;--font:'Segoe UI',system-ui,sans-serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font);padding:24px;max-width:800px;margin:0 auto;}
+  h1{font-size:1.6rem;margin-bottom:8px;}
+  h2{font-size:1.1rem;margin:28px 0 10px;color:var(--accent);}
+  p{font-size:0.9rem;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+  .step{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:12px;}
+  .step-num{font-size:0.7rem;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+  .step h3{font-size:1rem;margin-bottom:8px;}
+  code{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-size:0.85rem;font-family:monospace;color:var(--accent);}
+  pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;font-size:0.82rem;overflow-x:auto;margin:10px 0;line-height:1.5;}
+  .btn{padding:10px 18px;border-radius:8px;font-size:0.85rem;font-weight:600;border:none;cursor:pointer;background:var(--accent);color:#000;margin-top:10px;}
+  .check{color:var(--success);}
+  ul{margin-left:20px;font-size:0.9rem;color:var(--muted);line-height:2;}
+  a{color:var(--accent);}
+  .config-form input{width:100%;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:0.85rem;margin-bottom:8px;outline:none;}
+  .config-form input:focus{border-color:var(--accent);}
+  .config-form label{font-size:0.75rem;color:var(--muted);display:block;margin-bottom:3px;}
+  #output{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;font-size:0.8rem;font-family:monospace;white-space:pre-wrap;margin-top:12px;display:none;}
+</style>
+</head>
+<body>
+<h1>🔥 Firebase Setup Guide</h1>
+<p>One-time setup for the Deuce &amp; Smash club management system. Takes about 10 minutes.</p>
+
+<h2>Step 1 — Create your Firebase project</h2>
+<div class="step">
+  <div class="step-num">Step 1</div>
+  <h3>Create project on Firebase Console</h3>
+  <ul>
+    <li>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a></li>
+    <li>Click <strong>Create a project</strong></li>
+    <li>Name it <code>deuceandsmash-club</code></li>
+    <li>Disable Google Analytics (not needed)</li>
+    <li>Click <strong>Create project</strong></li>
+  </ul>
+</div>
+
+<div class="step">
+  <div class="step-num">Step 2</div>
+  <h3>Create Realtime Database</h3>
+  <ul>
+    <li>In the left sidebar → <strong>Build</strong> → <strong>Realtime Database</strong></li>
+    <li>Click <strong>Create Database</strong></li>
+    <li>Choose location: <strong>asia-south1 (Mumbai)</strong> for best latency from Pune</li>
+    <li>Select <strong>Start in test mode</strong> (you'll add rules in step 4)</li>
+  </ul>
+</div>
+
+<div class="step">
+  <div class="step-num">Step 3</div>
+  <h3>Get your web app config</h3>
+  <ul>
+    <li>In Project Overview → click the web icon <strong>&lt;/&gt;</strong></li>
+    <li>Register app name: <code>deuceandsmash-web</code></li>
+    <li>Don't enable Firebase Hosting</li>
+    <li>Copy the <code>firebaseConfig</code> object</li>
+  </ul>
+</div>
+
+<div class="step">
+  <div class="step-num">Step 4</div>
+  <h3>Set Database Security Rules</h3>
+  <p>In Realtime Database → Rules tab, paste these rules:</p>
+  <pre>{
+  "rules": {
+    "members": {
+      ".read": false,
+      ".write": false
+    },
+    "tournaments": {
+      ".read": true,
+      ".write": false,
+      "$tournamentId": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "openPlaySessions": {
+      ".read": false,
+      ".write": false
+    },
+    "openPlayMatches": {
+      ".read": false,
+      ".write": false
+    },
+    ".read": false,
+    ".write": false
+  }
+}</pre>
+  <p style="margin-top:8px">This lets the public scoreboard read tournaments, while members and match data stay private (admin only via the pages which use your config key directly).</p>
+</div>
+
+<div class="step">
+  <div class="step-num">Step 5</div>
+  <h3>Import your member database</h3>
+  <p>In Realtime Database → Data tab → click the 3-dot menu → <strong>Import JSON</strong> → upload <code>firebase-import.json</code></p>
+</div>
+
+<h2>Step 6 — Paste your config into the pages</h2>
+<div class="step">
+  <div class="step-num">Step 6</div>
+  <h3>Generate config snippet</h3>
+  <p>Paste your Firebase config values below to generate the replacement code for all 3 pages:</p>
+  <div class="config-form">
+    <label>apiKey</label><input id="c-apiKey" placeholder="AIzaSy…">
+    <label>authDomain</label><input id="c-authDomain" placeholder="deuceandsmash-club.firebaseapp.com">
+    <label>databaseURL</label><input id="c-databaseURL" placeholder="https://deuceandsmash-club-default-rtdb.asia-southeast1.firebasedatabase.app">
+    <label>projectId</label><input id="c-projectId" placeholder="deuceandsmash-club">
+    <label>storageBucket</label><input id="c-storageBucket" placeholder="deuceandsmash-club.appspot.com">
+    <label>messagingSenderId</label><input id="c-messagingSenderId" placeholder="123456789">
+    <label>appId</label><input id="c-appId" placeholder="1:123456789:web:…">
+  </div>
+  <button class="btn" onclick="generateConfig()">Generate Config Snippet</button>
+  <div id="output"></div>
+</div>
+
+<h2>Files to update</h2>
+<p>Replace the <code>FIREBASE_CONFIG</code> block in these 3 files with your values:</p>
+<ul>
+  <li><code>members/index.html</code> — member database portal</li>
+  <li><code>tournaments/admin.html</code> — tournament admin</li>
+  <li><code>tournaments/scoreboard.html</code> — live public scoreboard</li>
+</ul>
+
+<h2>Deploy to Vercel</h2>
+<div class="step">
+  <div class="step-num">Final step</div>
+  <h3>Push to GitHub → auto-deploys to Vercel</h3>
+  <pre>git add .
+git commit -m "Add club management system — members, tournaments, scoreboard"
+git push</pre>
+  <p>Vercel auto-deploys on every push. Your pages will be live at:</p>
+  <ul>
+    <li><code>deuceandsmash.com/members/</code></li>
+    <li><code>deuceandsmash.com/tournaments/admin.html</code></li>
+    <li><code>deuceandsmash.com/tournaments/scoreboard.html</code></li>
+  </ul>
+</div>
+
+<script>
+function generateConfig() {
+  const fields = ['apiKey','authDomain','databaseURL','projectId','storageBucket','messagingSenderId','appId'];
+  const vals = {};
+  let missing = false;
+  for (const f of fields) {
+    vals[f] = document.getElementById('c-'+f).value.trim();
+    if (!vals[f]) missing = true;
+  }
+  if (missing) { alert('Fill in all fields'); return; }
+  const snippet = `const FIREBASE_CONFIG = {\n  apiKey: "${vals.apiKey}",\n  authDomain: "${vals.authDomain}",\n  databaseURL: "${vals.databaseURL}",\n  projectId: "${vals.projectId}",\n  storageBucket: "${vals.storageBucket}",\n  messagingSenderId: "${vals.messagingSenderId}",\n  appId: "${vals.appId}"\n};`;
+  const out = document.getElementById('output');
+  out.textContent = snippet;
+  out.style.display = 'block';
+  navigator.clipboard?.writeText(snippet);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&S Members — Deuce & Smash</title>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --card: #1c1c1c;
+    --border: #2a2a2a;
+    --accent: #e8ff3b;
+    --accent2: #3bffe8;
+    --text: #f0f0f0;
+    --muted: #888;
+    --danger: #ff4d4d;
+    --success: #4dff91;
+    --warn: #ffb347;
+    --pill-bg: #252525;
+    --radius: 10px;
+    --font: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+  /* Header */
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .header-logo { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
+  .header-logo span { color: var(--accent); }
+  .header-sub { font-size: 0.8rem; color: var(--muted); margin-left: auto; }
+  .admin-badge { background: var(--accent); color: #000; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; }
+
+  /* PIN overlay */
+  #pin-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+  .pin-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 36px 32px; text-align: center; max-width: 320px; width: 100%; }
+  .pin-box h2 { font-size: 1.4rem; margin-bottom: 6px; }
+  .pin-box p { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+  .pin-input { width: 100%; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 1.4rem; text-align: center; letter-spacing: 8px; outline: none; }
+  .pin-input:focus { border-color: var(--accent); }
+  .pin-btn { margin-top: 14px; width: 100%; padding: 14px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+  .pin-error { color: var(--danger); font-size: 0.85rem; margin-top: 10px; min-height: 20px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .tab { padding: 8px 18px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: var(--muted); white-space: nowrap; transition: all 0.15s; }
+  .tab.active { background: var(--accent); color: #000; }
+  .tab:not(.active):hover { background: var(--pill-bg); color: var(--text); }
+
+  /* Main sections */
+  .section { display: none; padding: 16px; }
+  .section.active { display: block; }
+
+  /* Search bar */
+  .search-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .search-input { flex: 1; min-width: 180px; padding: 11px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.95rem; outline: none; }
+  .search-input:focus { border-color: var(--accent); }
+  .filter-select { padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.85rem; outline: none; cursor: pointer; }
+  .btn { padding: 10px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; transition: opacity 0.15s; }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-secondary { background: var(--pill-bg); color: var(--text); border: 1px solid var(--border); }
+  .btn-danger { background: var(--danger); color: #fff; }
+
+  /* Member grid */
+  .member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .member-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; cursor: pointer; transition: border-color 0.15s; }
+  .member-card:hover { border-color: var(--accent); }
+  .member-card-top { display: flex; align-items: flex-start; gap: 12px; }
+  .member-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+  .member-name { font-size: 1rem; font-weight: 700; }
+  .member-meta { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .member-stats { display: flex; gap: 12px; margin-top: 12px; }
+  .stat-pill { background: var(--pill-bg); border-radius: 6px; padding: 5px 10px; font-size: 0.75rem; }
+  .stat-pill strong { color: var(--accent); }
+  .rating-badge { margin-left: auto; text-align: right; }
+  .rating-num { font-size: 1.5rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .rating-band { font-size: 0.7rem; color: var(--muted); }
+  .badge-prov { color: var(--warn); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px; }
+  .badge-est { color: var(--accent2); font-size: 0.65rem; font-weight: 700; }
+  .badge-vet { color: var(--accent); font-size: 0.65rem; font-weight: 700; }
+
+  /* Detail drawer */
+  #drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; }
+  #drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(480px, 100vw); background: var(--surface); border-left: 1px solid var(--border); z-index: 201; display: none; flex-direction: column; overflow: hidden; }
+  #drawer.open, #drawer-overlay.open { display: flex; }
+  .drawer-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .drawer-close { margin-left: auto; background: var(--pill-bg); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+  .drawer-section { margin-bottom: 24px; }
+  .drawer-section h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
+  .field-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+  .field-label { font-size: 0.8rem; color: var(--muted); width: 100px; flex-shrink: 0; }
+  .field-val { flex: 1; font-size: 0.9rem; }
+  .field-edit { flex: 1; padding: 7px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem; outline: none; }
+  .field-edit:focus { border-color: var(--accent); }
+  .history-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .history-item { background: var(--card); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; }
+  .history-date { color: var(--muted); font-size: 0.75rem; }
+  .delta-pos { color: var(--success); }
+  .delta-neg { color: var(--danger); }
+  .save-bar { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+
+  /* Open Play entry */
+  .op-form { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; max-width: 640px; }
+  .op-form h3 { font-size: 1.1rem; margin-bottom: 16px; }
+  .form-row { margin-bottom: 14px; }
+  .form-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 5px; display: block; }
+  .form-input { width: 100%; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.95rem; outline: none; }
+  .form-input:focus { border-color: var(--accent); }
+  .match-block { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+  .match-block h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 10px; }
+  .team-row { display: flex; gap: 8px; align-items: center; }
+  .vs { color: var(--muted); font-size: 0.8rem; margin: 4px 0; text-align: center; }
+  .score-input { width: 90px; padding: 8px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.95rem; text-align: center; outline: none; }
+  .score-input:focus { border-color: var(--accent); }
+  select.form-input option { background: var(--card); }
+  .player-tag { display: inline-flex; align-items: center; gap: 5px; background: var(--pill-bg); border-radius: 20px; padding: 4px 10px; font-size: 0.82rem; cursor: pointer; }
+  .player-tag .x { color: var(--muted); font-size: 0.7rem; }
+
+  /* Rating overview */
+  .rating-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .rating-table th { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .rating-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .rating-table tr:hover td { background: var(--card); }
+  .rank { font-weight: 700; color: var(--muted); }
+  .name-cell { font-weight: 600; }
+  .trend-up { color: var(--success); }
+  .trend-dn { color: var(--danger); }
+  .trend-flat { color: var(--muted); }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 20px; font-size: 0.9rem; z-index: 500; display: none; }
+  #toast.show { display: block; }
+  #toast.ok { border-color: var(--success); color: var(--success); }
+  #toast.err { border-color: var(--danger); color: var(--danger); }
+
+  /* Loading */
+  .loading { text-align: center; padding: 60px; color: var(--muted); }
+  .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Responsive */
+  @media (max-width: 500px) {
+    .member-grid { grid-template-columns: 1fr; }
+    .tabs { gap: 2px; }
+    .tab { padding: 7px 12px; font-size: 0.8rem; }
+  }
+
+  /* New member form */
+  .new-member-form { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; max-width: 500px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+  .form-full { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<!-- PIN overlay -->
+<div id="pin-overlay">
+  <div class="pin-box">
+    <h2>🏓 D&S Members</h2>
+    <p>Staff access only — enter your PIN</p>
+    <input type="password" class="pin-input" id="pin-input" maxlength="6" placeholder="••••••" inputmode="numeric">
+    <button class="pin-btn" onclick="checkPin()">Enter</button>
+    <div class="pin-error" id="pin-error"></div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header" style="display:none" id="main-header">
+  <div class="header-logo">Deuce &amp; <span>Smash</span></div>
+  <span class="admin-badge" id="admin-badge">ADMIN</span>
+  <span class="header-sub" id="header-count">Loading…</span>
+</div>
+
+<!-- Tabs -->
+<div class="tabs" style="display:none" id="main-tabs">
+  <button class="tab active" onclick="showTab('members')">👥 Members</button>
+  <button class="tab" onclick="showTab('ratings')">⭐ Smash Ratings</button>
+  <button class="tab" onclick="showTab('openplay')">🎾 Open Play</button>
+  <button class="tab" onclick="showTab('add-member')">➕ Add Member</button>
+</div>
+
+<!-- Members tab -->
+<div class="section active" id="tab-members">
+  <div class="search-row">
+    <input type="search" class="search-input" id="search-input" placeholder="Search by name or phone…" oninput="renderMembers()">
+    <select class="filter-select" id="filter-level" onchange="renderMembers()">
+      <option value="">All levels</option>
+      <option>Beginner</option>
+      <option>Beginner+</option>
+      <option>Intermediate</option>
+      <option>Intermediate+</option>
+      <option>Advanced</option>
+    </select>
+    <select class="filter-select" id="filter-source" onchange="renderMembers()">
+      <option value="">All sources</option>
+      <option value="chat">WhatsApp</option>
+      <option value="manual">Manual</option>
+    </select>
+  </div>
+  <div id="members-list" class="member-grid">
+    <div class="loading"><div class="spinner"></div><br><br>Loading members…</div>
+  </div>
+</div>
+
+<!-- Ratings tab -->
+<div class="section" id="tab-ratings">
+  <div class="search-row">
+    <input type="search" class="search-input" id="rating-search" placeholder="Search player…" oninput="renderRatings()">
+    <button class="btn btn-secondary" onclick="recalcRatings()">🔄 Recalculate</button>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="rating-table" id="rating-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Name</th><th>Rating</th><th>Band</th><th>Badge</th><th>Games</th><th>Trend</th>
+        </tr>
+      </thead>
+      <tbody id="rating-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Open Play tab -->
+<div class="section" id="tab-openplay">
+  <div class="search-row">
+    <button class="btn btn-primary" onclick="showOpForm()">+ Log Match Result</button>
+    <button class="btn btn-secondary" onclick="showOpHistory()">📋 Session History</button>
+  </div>
+  <div id="op-area">
+    <div id="op-history"></div>
+  </div>
+</div>
+
+<!-- Add Member tab -->
+<div class="section" id="tab-add-member">
+  <div class="new-member-form">
+    <h3 style="margin-bottom:20px">Add New Member</h3>
+    <div class="form-grid">
+      <div>
+        <label class="form-label">Name *</label>
+        <input class="form-input" id="new-name" placeholder="First name">
+      </div>
+      <div>
+        <label class="form-label">Full Name</label>
+        <input class="form-input" id="new-fullname" placeholder="Full name">
+      </div>
+      <div>
+        <label class="form-label">Phone</label>
+        <input class="form-input" id="new-phone" placeholder="+91 …" inputmode="tel">
+      </div>
+      <div>
+        <label class="form-label">Email</label>
+        <input class="form-input" id="new-email" placeholder="email@…" inputmode="email">
+      </div>
+      <div>
+        <label class="form-label">Level</label>
+        <select class="form-input" id="new-level">
+          <option value="">Unknown / unset</option>
+          <option>Beginner</option>
+          <option>Beginner+</option>
+          <option>Intermediate</option>
+          <option>Intermediate+</option>
+          <option>Advanced</option>
+          <option>Advanced High</option>
+          <option>Elite</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Membership</label>
+        <select class="form-input" id="new-membership">
+          <option value="">None</option>
+          <option>Monthly</option>
+          <option>Annual</option>
+          <option>Trial</option>
+        </select>
+      </div>
+      <div class="form-full">
+        <label class="form-label">Notes</label>
+        <input class="form-input" id="new-notes" placeholder="Any notes…">
+      </div>
+    </div>
+    <div style="margin-top:20px; display:flex; gap:10px">
+      <button class="btn btn-primary" onclick="addMember()">✓ Add Member</button>
+      <button class="btn btn-secondary" onclick="clearNewForm()">Clear</button>
+    </div>
+    <div id="add-result" style="margin-top:12px; font-size:0.85rem;"></div>
+  </div>
+</div>
+
+<!-- Member drawer -->
+<div id="drawer-overlay" onclick="closeDrawer()"></div>
+<div id="drawer">
+  <div class="drawer-header">
+    <div>
+      <div id="drawer-name" style="font-size:1.2rem;font-weight:800;"></div>
+      <div id="drawer-meta" style="font-size:0.8rem;color:var(--muted);margin-top:2px;"></div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="save-bar" id="save-bar" style="display:none">
+    <button class="btn btn-primary" onclick="saveMember()">Save Changes</button>
+    <button class="btn btn-secondary" onclick="closeDrawer()">Cancel</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set, update, push, onValue, off } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ============================================================
+//  CONFIG — replace with your deuceandsmash-club Firebase config
+// ============================================================
+const FIREBASE_CONFIG = {
+  apiKey: "REPLACE_WITH_YOUR_API_KEY",
+  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
+  databaseURL: "REPLACE_WITH_YOUR_DATABASE_URL",
+  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
+  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
+  messagingSenderId: "REPLACE_WITH_YOUR_SENDER_ID",
+  appId: "REPLACE_WITH_YOUR_APP_ID"
+};
+const ADMIN_PIN = "062026";
+// ============================================================
+
+const app = initializeApp(FIREBASE_CONFIG);
+const db = getDatabase(app);
+
+// ===== Smash Rating Engine (embedded) =====
+const DSR = {
+  SCALE:7/1000,DIVISOR:400,
+  K:{provisional:60,established:32,veteran:20},
+  ZONES:[{name:"Growth",lo:0,hi:3,gain:1.3,loss:0.9},{name:"Qualification",lo:3,hi:4,gain:0.65,loss:1.0},{name:"Elite",lo:4,hi:99,gain:0.35,loss:1.15}],
+  QUALITY_GATE:{from:4.5,oppBelow:3.5,gain:0.15},
+  TOP_DAMPENER:{above:6.5,factor:0.5},
+  W:{league:1,openplay:1,competitive:1,americano:0.25},
+  PROVISIONAL:{sets:8,partners:4,opponents:6},
+  BREAK:{faster:90,provisional:180,hidden:365},
+  BANDS:[["Beginner",0],["Beginner+",1],["Intermediate",2],["Intermediate+",3],["Advanced",4],["Advanced High",5],["Elite",6]],
+  TAG_SEED:{"Beginner":0.75,"Beginner / Beginner+":1.0,"Beginner+":1.5,"Beginner+ / Inter":2.0,"Inter":2.5,"Inter / Inter+":3.0,"Strong Inter":3.5,"Inter+":3.5},
+  TAG_ORDER:["Beginner","Beginner / Beginner+","Beginner+","Beginner+ / Inter","Inter","Inter / Inter+","Strong Inter","Inter+"],
+  SEED_FLOOR:0.5,SEED_CAP:4.0,DEFAULT_SEED:0.5,
+};
+DSR.band=r=>{let b=DSR.BANDS[0][0];for(const[n,lo]of DSR.BANDS)if(r>=lo-1e-9)b=n;return b;};
+DSR.zone=r=>DSR.ZONES.find(z=>r>=z.lo-1e-9&&r<z.hi)||DSR.ZONES[0];
+DSR.expected=(ra,rb)=>1/(1+Math.pow(10,-((ra-rb)/DSR.SCALE)/DSR.DIVISOR));
+const dayNum=d=>Math.round(new Date(d+"T00:00:00Z").getTime()/864e5);
+DSR.setsIn=m=>m.sets||String(m.score||"").split(",").filter(s=>s.trim()).length||1;
+DSR.isProvisional=p=>p.sets<DSR.PROVISIONAL.sets||p.partners.size<DSR.PROVISIONAL.partners||p.opps.size<DSR.PROVISIONAL.opponents;
+DSR.seedFromHistory=(games,today)=>{
+  const t=dayNum(today);const g=games.filter(x=>x.level in DSR.TAG_SEED&&t-dayNum(x.date)<=183);
+  if(!g.length)return null;
+  const cnt={};g.forEach(x=>cnt[x.level]=(cnt[x.level]||0)+1);
+  const order=DSR.TAG_ORDER;let tag=null,atOrAbove=0;
+  for(let i=order.length-1;i>=0;i--){const c=cnt[order[i]]||0;atOrAbove+=c;if(c>=3||(c&&atOrAbove/g.length>=0.4)){tag=order[i];break;}}
+  if(!tag)tag=g[g.length-1].level;
+  let seed=DSR.TAG_SEED[tag],why=`Seeded from ${tag} open plays`;
+  const higher=order.slice(order.indexOf(tag)+1).filter(l=>DSR.TAG_SEED[l]>DSR.TAG_SEED[tag]).reduce((s,l)=>s+(cnt[l]||0),0);
+  if(higher>=3){seed+=0.25;why+="; +0.25 for 3+ games a level up";}
+  if(g.length<3){seed-=0.25;why+="; −0.25 for fewer than 3 games";}
+  return{seed:Math.min(DSR.SEED_CAP,Math.max(DSR.SEED_FLOOR,seed)),tag,why};
+};
+DSR.compute=(seeds,matches,today)=>{
+  const S={};
+  const get=n=>S[n]||(S[n]={name:n,seed:seeds[n]?.seed??DSR.DEFAULT_SEED,r:seeds[n]?.seed??DSR.DEFAULT_SEED,me:0,sets:0,matches:0,last:null,partners:new Set(),opps:new Set(),hist:[]});
+  Object.keys(seeds).forEach(get);
+  const list=matches.filter(m=>m.status==="confirmed"&&DSR.W[m.format]).slice().sort((x,y)=>x.date.localeCompare(y.date)||String(x.enteredAt||"").localeCompare(String(y.enteredAt||"")));
+  for(const m of list){
+    const A=m.teamA.map(get),B=m.teamB.map(get);
+    const ra=(A[0].r+A[1].r)/2,rb=(B[0].r+B[1].r)/2;
+    const E=DSR.expected(ra,rb);const Sa=m.a/(m.a+m.b);const W=DSR.W[m.format];const d=dayNum(m.date);
+    const apply=(p,team,opp,oppAvg,surprise)=>{
+      const away=p.last==null?0:d-p.last;
+      let status=DSR.isProvisional(p)?"provisional":p.me<30?"established":"veteran";
+      if(away>=DSR.BREAK.provisional)status="provisional";
+      else if(away>=DSR.BREAK.faster&&status==="veteran")status="established";
+      let K=DSR.K[status];if(p.r>DSR.TOP_DAMPENER.above)K*=DSR.TOP_DAMPENER.factor;
+      const z=DSR.zone(p.r);let mult=surprise>=0?z.gain:z.loss;
+      if(surprise>0&&p.r>=DSR.QUALITY_GATE.from&&oppAvg<DSR.QUALITY_GATE.oppBelow)mult=DSR.QUALITY_GATE.gain;
+      const delta=K*mult*W*surprise*DSR.SCALE;const before=p.r;
+      p.r=Math.min(7,Math.max(0,p.r+delta));
+      const st=DSR.setsIn(m)*W;p.me+=W;p.sets+=st;p.matches++;p.last=d;
+      team.filter(x=>x!==p).forEach(x=>p.partners.add(x.name));opp.forEach(x=>p.opps.add(x.name));
+      p.hist.push({date:m.date,r:p.r,delta:p.r-before,id:m.id});
+    };
+    A.forEach(p=>apply(p,A,B,rb,Sa-E));B.forEach(p=>apply(p,B,A,ra,E-Sa));
+  }
+  const t=dayNum(today);
+  Object.values(S).forEach(p=>{
+    const away=p.last==null?null:t-p.last;
+    p.badge=(DSR.isProvisional(p)||(away!=null&&away>=DSR.BREAK.provisional))?"Provisional":p.me<30?"Established":"Veteran";
+    p.hidden=away!=null&&away>DSR.BREAK.hidden;
+    p.band=DSR.band(p.r);p.zone=DSR.zone(p.r).name;
+    p.trend=p.hist.slice(-5).reduce((s,h)=>s+h.delta,0);
+  });
+  return{players:S};
+};
+
+// ===== State =====
+let members = {};       // id -> member object
+let sessions = {};      // id -> session
+let opMatches = {};     // id -> match
+let ratings = {};       // name -> player rating object
+let drawerMemberId = null;
+let drawerEdits = {};
+let currentTab = 'members';
+
+// ===== PIN =====
+window.checkPin = () => {
+  const v = document.getElementById('pin-input').value;
+  if (v === ADMIN_PIN) {
+    document.getElementById('pin-overlay').style.display = 'none';
+    document.getElementById('main-header').style.display = 'flex';
+    document.getElementById('main-tabs').style.display = 'flex';
+    document.getElementById('tab-members').classList.add('active');
+    loadAll();
+  } else {
+    document.getElementById('pin-error').textContent = 'Incorrect PIN — try again';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-input').focus();
+  }
+};
+document.getElementById('pin-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
+
+// ===== Data loading =====
+async function loadAll() {
+  showToast('Loading member database…', 'ok', 2000);
+  const [mSnap, sSnap, matchSnap] = await Promise.all([
+    get(ref(db, 'members')),
+    get(ref(db, 'openPlaySessions')),
+    get(ref(db, 'openPlayMatches')),
+  ]);
+  members = mSnap.val() || {};
+  sessions = sSnap.val() || {};
+  opMatches = matchSnap.val() || {};
+  computeAllRatings();
+  renderMembers();
+  renderRatings();
+  document.getElementById('header-count').textContent = `${Object.keys(members).length} members`;
+}
+
+function computeAllRatings() {
+  const today = new Date().toISOString().split('T')[0];
+  // Build seeds from open-play history
+  const seeds = {};
+  for (const [id, m] of Object.entries(members)) {
+    const name = m.name;
+    // Collect sessions for this player
+    const playerGames = [];
+    for (const s of Object.values(sessions)) {
+      if (Array.isArray(s.players) && s.players.includes(name) && s.status === 'Played') {
+        playerGames.push({ date: s.date, level: s.level });
+      }
+    }
+    if (m.levelOverride) {
+      // Staff override takes priority
+      const LEVEL_MAP = { 'Beginner': 0.75, 'Beginner+': 1.5, 'Inter': 2.5, 'Intermediate': 2.5, 'Intermediate+': 3.5, 'Strong Inter': 3.5, 'Advanced': 4.5, 'Advanced High': 5.5, 'Elite': 6.5 };
+      const s = LEVEL_MAP[m.levelOverride] ?? 1.5;
+      seeds[name] = { seed: s, source: `Staff override: ${m.levelOverride}` };
+    } else {
+      const h = DSR.seedFromHistory(playerGames, today);
+      if (h) seeds[name] = { seed: h.seed, source: h.why };
+    }
+  }
+  // All matches
+  const allMatches = Object.entries(opMatches).map(([id, m]) => ({ id, ...m }));
+  const result = DSR.compute(seeds, allMatches, today);
+  ratings = result.players;
+}
+
+// ===== Members tab =====
+window.renderMembers = () => {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const lvl = document.getElementById('filter-level').value;
+  const src = document.getElementById('filter-source').value;
+  const list = Object.entries(members).filter(([id, m]) => {
+    if (q && !m.name?.toLowerCase().includes(q) && !m.phone?.includes(q)) return false;
+    if (lvl && m.levelOverride !== lvl) return false;
+    if (src && m.source !== src) return false;
+    return true;
+  }).sort((a, b) => a[1].name?.localeCompare(b[1].name));
+
+  const grid = document.getElementById('members-list');
+  if (!list.length) { grid.innerHTML = '<div class="loading" style="grid-column:1/-1">No members found</div>'; return; }
+
+  grid.innerHTML = list.map(([id, m]) => {
+    const initials = (m.name || '?')[0].toUpperCase();
+    const r = ratings[m.name];
+    const rval = r ? r.r.toFixed(2) : '—';
+    const band = r ? r.band : (m.levelOverride || '—');
+    const badge = r ? `<span class="badge-${r.badge.toLowerCase().slice(0,4)}">${r.badge}</span>` : '';
+    const games = r ? r.matches : 0;
+    return `<div class="member-card" onclick="openDrawer('${id}')">
+      <div class="member-card-top">
+        <div class="member-avatar">${initials}</div>
+        <div style="flex:1">
+          <div class="member-name">${m.name || id}</div>
+          <div class="member-meta">${m.fullName || ''} ${m.phone ? '· ' + m.phone : ''}</div>
+        </div>
+        <div class="rating-badge">
+          <div class="rating-num">${rval}</div>
+          <div class="rating-band">${band}</div>
+          ${badge}
+        </div>
+      </div>
+      <div class="member-stats">
+        <div class="stat-pill"><strong>${games}</strong> games</div>
+        ${m.levelOverride ? `<div class="stat-pill">${m.levelOverride}</div>` : ''}
+        ${m.membership ? `<div class="stat-pill" style="color:var(--accent2)">${m.membership}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+};
+
+// ===== Drawer =====
+window.openDrawer = (id) => {
+  drawerMemberId = id;
+  drawerEdits = {};
+  const m = members[id];
+  if (!m) return;
+  document.getElementById('drawer-name').textContent = m.name || id;
+  document.getElementById('drawer-meta').textContent = m.levelOverride || 'No level set';
+  const r = ratings[m.name];
+
+  // Build rating history
+  const histHtml = r && r.hist.length
+    ? `<ul class="history-list">${r.hist.slice().reverse().slice(0,10).map(h => {
+        const cls = h.delta > 0.001 ? 'delta-pos' : h.delta < -0.001 ? 'delta-neg' : '';
+        const sign = h.delta > 0.001 ? '+' : '';
+        return `<li class="history-item">
+          <span>${h.date}</span>
+          <span class="${cls}">${sign}${h.delta.toFixed(3)}</span>
+          <span style="color:var(--accent)">${h.r.toFixed(2)}</span>
+        </li>`;
+      }).join('')}</ul>` : '<p style="color:var(--muted);font-size:0.85rem">No rated matches yet</p>';
+
+  // Player sessions
+  const playerSessions = Object.values(sessions).filter(s => Array.isArray(s.players) && s.players.includes(m.name) && s.status === 'Played');
+  const sessHtml = playerSessions.length
+    ? `<ul class="history-list">${playerSessions.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8).map(s =>
+        `<li class="history-item"><span>${s.date}</span><span>${s.level}</span><span style="color:var(--muted)">${s.time}</span></li>`
+      ).join('')}</ul>` : '<p style="color:var(--muted);font-size:0.85rem">No sessions recorded</p>';
+
+  document.getElementById('drawer-body').innerHTML = `
+    <div class="drawer-section">
+      <h4>Smash Rating</h4>
+      ${r ? `<div style="display:flex;gap:16px;align-items:center;margin-bottom:12px">
+        <div style="font-size:2.5rem;font-weight:800;color:var(--accent)">${r.r.toFixed(2)}</div>
+        <div>
+          <div style="font-size:1rem;font-weight:600">${r.band}</div>
+          <div style="font-size:0.75rem;color:var(--muted)">${r.badge} · ${r.zone} zone</div>
+          <div style="font-size:0.75rem;color:var(--muted)">${r.matches} matches · ${r.sets.toFixed(1)} sets equiv.</div>
+        </div>
+      </div>` : '<p style="color:var(--muted);font-size:0.85rem">Rating not yet calculated</p>'}
+      ${histHtml}
+    </div>
+    <div class="drawer-section">
+      <h4>Profile</h4>
+      <div class="field-row"><span class="field-label">Name</span><input class="field-edit" value="${m.name || ''}" onchange="drawerEdits.name=this.value;showSave()"></div>
+      <div class="field-row"><span class="field-label">Full Name</span><input class="field-edit" value="${m.fullName || ''}" onchange="drawerEdits.fullName=this.value;showSave()"></div>
+      <div class="field-row"><span class="field-label">Phone</span><input class="field-edit" value="${m.phone || ''}" onchange="drawerEdits.phone=this.value;showSave()" inputmode="tel"></div>
+      <div class="field-row"><span class="field-label">Email</span><input class="field-edit" value="${m.email || ''}" onchange="drawerEdits.email=this.value;showSave()" inputmode="email"></div>
+      <div class="field-row"><span class="field-label">Level</span>
+        <select class="field-edit" onchange="drawerEdits.levelOverride=this.value;showSave()">
+          <option value="">— not set —</option>
+          ${['Beginner','Beginner+','Intermediate','Intermediate+','Advanced','Advanced High','Elite'].map(l =>
+            `<option${m.levelOverride===l?' selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-row"><span class="field-label">Membership</span>
+        <select class="field-edit" onchange="drawerEdits.membership=this.value;showSave()">
+          <option value="">None</option>
+          ${['Monthly','Annual','Trial'].map(l => `<option${m.membership===l?' selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-row"><span class="field-label">Notes</span><input class="field-edit" value="${m.notes || ''}" onchange="drawerEdits.notes=this.value;showSave()"></div>
+    </div>
+    <div class="drawer-section">
+      <h4>Open Play Sessions (${playerSessions.length})</h4>
+      ${sessHtml}
+    </div>
+  `;
+  document.getElementById('drawer').style.display = 'flex';
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('save-bar').style.display = 'none';
+};
+
+window.showSave = () => document.getElementById('save-bar').style.display = 'flex';
+
+window.closeDrawer = () => {
+  document.getElementById('drawer').style.display = 'none';
+  document.getElementById('drawer-overlay').classList.remove('open');
+  drawerMemberId = null;
+  drawerEdits = {};
+};
+
+window.saveMember = async () => {
+  if (!drawerMemberId || !Object.keys(drawerEdits).length) return;
+  const updates = { ...drawerEdits, updatedAt: new Date().toISOString() };
+  await update(ref(db, `members/${drawerMemberId}`), updates);
+  Object.assign(members[drawerMemberId], updates);
+  computeAllRatings();
+  renderMembers();
+  renderRatings();
+  closeDrawer();
+  showToast('Member updated ✓', 'ok');
+};
+
+// ===== Ratings tab =====
+window.renderRatings = () => {
+  const q = document.getElementById('rating-search').value.toLowerCase();
+  const sorted = Object.values(ratings)
+    .filter(p => !q || p.name.toLowerCase().includes(q))
+    .filter(p => !p.hidden)
+    .sort((a, b) => b.r - a.r);
+  const tbody = document.getElementById('rating-tbody');
+  tbody.innerHTML = sorted.map((p, i) => {
+    const t = p.trend;
+    const tCls = t > 0.01 ? 'trend-up' : t < -0.01 ? 'trend-dn' : 'trend-flat';
+    const tTxt = t > 0.01 ? `▲ ${t.toFixed(2)}` : t < -0.01 ? `▼ ${Math.abs(t).toFixed(2)}` : '—';
+    return `<tr>
+      <td class="rank">${i+1}</td>
+      <td class="name-cell">${p.name}</td>
+      <td style="color:var(--accent);font-weight:700">${p.r.toFixed(2)}</td>
+      <td>${p.band}</td>
+      <td><span class="badge-${p.badge.toLowerCase().slice(0,4)}">${p.badge}</span></td>
+      <td>${p.matches}</td>
+      <td class="${tCls}">${tTxt}</td>
+    </tr>`;
+  }).join('');
+};
+
+window.recalcRatings = () => { computeAllRatings(); renderRatings(); showToast('Ratings recalculated', 'ok'); };
+
+// ===== Open Play tab =====
+window.showOpForm = () => {
+  const memberNames = Object.values(members).map(m => m.name).sort();
+  document.getElementById('op-area').innerHTML = `
+    <div class="op-form">
+      <h3>Log Open Play Match</h3>
+      <div class="form-row">
+        <label class="form-label">Date</label>
+        <input type="date" class="form-input" id="op-date" value="${new Date().toISOString().split('T')[0]}">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Format</label>
+        <select class="form-input" id="op-format">
+          <option value="openplay">Open Play</option>
+          <option value="competitive">Competitive Match</option>
+        </select>
+      </div>
+      <div class="match-block">
+        <h4>Team A</h4>
+        <div style="display:flex;gap:8px">
+          <select class="form-input" id="op-a1"><option value="">Player 1</option>${memberNames.map(n=>`<option>${n}</option>`).join('')}</select>
+          <select class="form-input" id="op-a2"><option value="">Player 2</option>${memberNames.map(n=>`<option>${n}</option>`).join('')}</select>
+        </div>
+        <div class="vs">vs</div>
+        <h4>Team B</h4>
+        <div style="display:flex;gap:8px">
+          <select class="form-input" id="op-b1"><option value="">Player 3</option>${memberNames.map(n=>`<option>${n}</option>`).join('')}</select>
+          <select class="form-input" id="op-b2"><option value="">Player 4</option>${memberNames.map(n=>`<option>${n}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Score (e.g. 6-4 or 6-3, 7-5)</label>
+        <input class="form-input" id="op-score" placeholder="9-7">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn btn-primary" onclick="submitMatch()">Submit Match</button>
+        <button class="btn btn-secondary" onclick="showOpHistory()">Cancel</button>
+      </div>
+      <div id="op-result" style="margin-top:10px;font-size:0.85rem;"></div>
+    </div>`;
+};
+
+window.submitMatch = async () => {
+  const date = document.getElementById('op-date').value;
+  const format = document.getElementById('op-format').value;
+  const a1 = document.getElementById('op-a1').value;
+  const a2 = document.getElementById('op-a2').value;
+  const b1 = document.getElementById('op-b1').value;
+  const b2 = document.getElementById('op-b2').value;
+  const scoreText = document.getElementById('op-score').value.trim();
+  const res = document.getElementById('op-result');
+  if (!date || !a1 || !a2 || !b1 || !b2) { res.innerHTML = '<span style="color:var(--danger)">Fill in all 4 players</span>'; return; }
+  if (new Set([a1,a2,b1,b2]).size < 4) { res.innerHTML = '<span style="color:var(--danger)">All 4 players must be different</span>'; return; }
+  const pairs = scoreText.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+  const valid = pairs.every(p=>/^\d{1,2}-\d{1,2}$/.test(p));
+  if (!scoreText || !valid) { res.innerHTML = '<span style="color:var(--danger)">Score like 6-4 or 6-3, 7-5</span>'; return; }
+  const totals = pairs.map(p=>p.split('-').map(Number));
+  const ta = totals.reduce((s,p)=>s+p[0],0), tb = totals.reduce((s,p)=>s+p[1],0);
+  const matchId = `${date}-${Date.now()}`;
+  const matchData = {
+    date, format, teamA: [a1,a2], teamB: [b1,b2],
+    a: ta, b: tb, score: scoreText, sets: pairs.length,
+    status: 'confirmed', enteredAt: new Date().toISOString(),
+    note: `Open play — ${a1} & ${a2} vs ${b1} & ${b2}`,
+  };
+  await set(ref(db, `openPlayMatches/${matchId}`), matchData);
+  opMatches[matchId] = matchData;
+  computeAllRatings();
+  renderMembers();
+  renderRatings();
+  res.innerHTML = `<span style="color:var(--success)">✓ Match saved! Ratings updated.</span>`;
+  showToast('Match logged & ratings updated', 'ok');
+  setTimeout(showOpHistory, 1500);
+};
+
+window.showOpHistory = () => {
+  const list = Object.entries(opMatches).sort((a,b)=>b[1].date.localeCompare(a[1].date)).slice(0,30);
+  document.getElementById('op-area').innerHTML = list.length ? `
+    <div style="max-width:640px">
+      <ul class="history-list">
+        ${list.map(([id,m])=>`<li class="history-item">
+          <span>${m.date}</span>
+          <span>${m.teamA.join(' & ')} vs ${m.teamB.join(' & ')}</span>
+          <span style="color:var(--accent);font-weight:700">${m.score}</span>
+        </li>`).join('')}
+      </ul>
+    </div>` : '<p style="color:var(--muted);padding:20px">No matches logged yet.</p>';
+};
+
+// ===== Add Member =====
+window.addMember = async () => {
+  const name = document.getElementById('new-name').value.trim();
+  if (!name) { document.getElementById('add-result').innerHTML = '<span style="color:var(--danger)">Name is required</span>'; return; }
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const existing = members[id];
+  if (existing) { document.getElementById('add-result').innerHTML = `<span style="color:var(--warn)">Member "${existing.name}" already exists with this ID</span>`; return; }
+  const newMember = {
+    id, name,
+    fullName: document.getElementById('new-fullname').value.trim(),
+    phone: document.getElementById('new-phone').value.trim(),
+    email: document.getElementById('new-email').value.trim(),
+    levelOverride: document.getElementById('new-level').value,
+    membership: document.getElementById('new-membership').value,
+    notes: document.getElementById('new-notes').value.trim(),
+    source: 'manual', sport: 'Padel',
+    whatsappName: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    active: true,
+  };
+  await set(ref(db, `members/${id}`), newMember);
+  members[id] = newMember;
+  computeAllRatings();
+  renderMembers();
+  renderRatings();
+  document.getElementById('header-count').textContent = `${Object.keys(members).length} members`;
+  document.getElementById('add-result').innerHTML = `<span style="color:var(--success)">✓ ${name} added successfully!</span>`;
+  clearNewForm();
+  showToast(`${name} added to members ✓`, 'ok');
+};
+
+window.clearNewForm = () => {
+  ['new-name','new-fullname','new-phone','new-email','new-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('new-level').value = '';
+  document.getElementById('new-membership').value = '';
+  document.getElementById('add-result').innerHTML = '';
+};
+
+// ===== Tabs =====
+window.showTab = (name) => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+  currentTab = name;
+  if (name === 'openplay') showOpHistory();
+};
+
+// ===== Toast =====
+window.showToast = (msg, type='ok', dur=2500) => {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), dur);
+};
+</script>
+</body>
+</html>
