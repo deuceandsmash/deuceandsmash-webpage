@@ -57,6 +57,16 @@
   @media(max-width:500px){.form-grid{grid-template-columns:1fr;}}
   .pill{display:inline-flex;align-items:center;gap:5px;background:var(--pill);border-radius:20px;padding:5px 10px;font-size:0.8rem;margin:3px;}
   .pill .x{color:var(--muted);cursor:pointer;font-size:0.75rem;}
+  .format-btn{padding:8px 16px;border-radius:20px;font-size:0.82rem;font-weight:600;border:1px solid var(--border);background:var(--pill);color:var(--muted);cursor:pointer;transition:all 0.15s;}
+  .format-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
+  .format-btn:hover:not(.active){background:var(--surface);color:var(--text);}
+  .target-btn{padding:7px 14px;border-radius:8px;font-size:0.85rem;font-weight:700;border:1px solid var(--border);background:var(--pill);color:var(--muted);cursor:pointer;transition:all 0.15s;min-width:48px;}
+  .target-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
+  .target-btn:hover:not(.active){background:var(--surface);color:var(--text);}
+  .constraint-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 12px;margin-bottom:6px;font-size:0.82rem;}
+  .constraint-item .c-name{font-weight:600;color:var(--accent2);}
+  .constraint-item .c-note{color:var(--muted);flex:1;}
+  .constraint-item .c-del{color:var(--danger);cursor:pointer;font-size:0.8rem;margin-left:auto;}
 
   /* Player picker */
   .player-picker{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:8px;background:var(--surface);}
@@ -161,44 +171,87 @@
         <label class="form-label">Date</label>
         <input type="date" class="form-input" id="t-date">
       </div>
-      <div class="form-row">
+      <div class="form-row" style="grid-column:1/-1">
         <label class="form-label">Format</label>
-        <select class="form-input" id="t-format">
-          <option value="mexicano">Mexicano (Random→Mexicano→Championship)</option>
-          <option value="americano">Americano</option>
-          <option value="knockout">Knockout</option>
-        </select>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="format-picker">
+          <button type="button" class="format-btn active" data-fmt="mexicano" onclick="selectFormat('mexicano')">Mexicano</button>
+          <button type="button" class="format-btn" data-fmt="team-mexicano" onclick="selectFormat('team-mexicano')">Team Mexicano</button>
+          <button type="button" class="format-btn" data-fmt="americano" onclick="selectFormat('americano')">Americano</button>
+          <button type="button" class="format-btn" data-fmt="team-americano" onclick="selectFormat('team-americano')">Team Americano</button>
+          <button type="button" class="format-btn" data-fmt="round-robin" onclick="selectFormat('round-robin')">Round Robin</button>
+          <button type="button" class="format-btn" data-fmt="knockout" onclick="selectFormat('knockout')">Knockout</button>
+        </div>
+        <input type="hidden" id="t-format" value="mexicano">
+        <div id="format-desc" style="font-size:0.78rem;color:var(--muted);margin-top:6px">Random mix rounds → Mexicano draws → Championship final</div>
       </div>
+
       <div class="form-row">
-        <label class="form-label">Total Rounds</label>
-        <select class="form-input" id="t-rounds">
-          <option value="8">8 rounds + Championship</option>
-          <option value="9" selected>9 rounds + Championship</option>
-          <option value="7">7 rounds + Championship</option>
-          <option value="6">6 rounds + Championship</option>
-        </select>
+        <label class="form-label">Total Rounds <span style="color:var(--muted);font-weight:400">(excl. championship)</span></label>
+        <input class="form-input" type="number" id="t-rounds" min="2" max="30" value="9" placeholder="e.g. 9">
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Championship round is always appended automatically</div>
       </div>
-      <div class="form-row">
+
+      <div class="form-row" id="random-rounds-row">
         <label class="form-label">Random Mix Rounds</label>
-        <select class="form-input" id="t-random">
-          <option value="1">1</option>
-          <option value="2" selected>2</option>
-          <option value="3">3</option>
+        <input class="form-input" type="number" id="t-random" min="1" max="10" value="2" placeholder="e.g. 2">
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">First N rounds use random pairing before switching to ranked draw</div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Scoring</label>
+        <select class="form-input" id="t-scoring-type" onchange="updateScoringUI()">
+          <option value="points">Points target</option>
+          <option value="sets">Set based</option>
         </select>
       </div>
-      <div class="form-row">
-        <label class="form-label">Points Target (per court)</label>
-        <select class="form-input" id="t-target">
-          <option value="16" selected>16</option>
-          <option value="18">18</option>
-          <option value="20">20</option>
-          <option value="21">21</option>
+
+      <div class="form-row" id="points-target-row">
+        <label class="form-label">Points Target</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="target-picker">
+          <button type="button" class="target-btn active" data-val="16" onclick="selectTarget(16)">16</button>
+          <button type="button" class="target-btn" data-val="20" onclick="selectTarget(20)">20</button>
+          <button type="button" class="target-btn" data-val="24" onclick="selectTarget(24)">24</button>
+          <button type="button" class="target-btn" data-val="28" onclick="selectTarget(28)">28</button>
+          <button type="button" class="target-btn" data-val="32" onclick="selectTarget(32)">32</button>
+        </div>
+        <input type="hidden" id="t-target" value="16">
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:0.78rem;color:var(--muted)">Custom:</span>
+          <input type="number" id="t-target-custom" min="10" max="100" placeholder="other" style="width:90px;padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:0.85rem" oninput="selectTarget(parseInt(this.value)||0, true)">
+        </div>
+      </div>
+
+      <div class="form-row" id="sets-target-row" style="display:none">
+        <label class="form-label">Set Format</label>
+        <select class="form-input" id="t-set-format">
+          <option value="single-set">Single Set Shootout</option>
+          <option value="best-of-3">Best of 3</option>
+          <option value="best-of-5">Best of 5</option>
         </select>
       </div>
     </div>
-    <div class="form-row" style="grid-column:1/-1">
-      <label class="form-label">Round Times (one per line, e.g. "6:00–6:22 PM")</label>
-      <textarea class="form-input" id="t-times" rows="4" placeholder="6:00–6:22 PM&#10;6:22–6:44 PM&#10;…"></textarea>
+
+    <div class="form-row" style="margin-top:12px">
+      <label class="form-label">Round Schedule <span style="color:var(--muted);font-weight:400">(one per line)</span></label>
+      <textarea class="form-input" id="t-times" rows="5" placeholder="6:00–6:22 PM&#10;6:22–6:44 PM&#10;6:44–7:06 PM&#10;…"></textarea>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Each line maps to a round — shown on the live scoreboard</div>
+    </div>
+
+    <div class="form-row" style="margin-top:12px">
+      <label class="form-label">Player Constraints <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+      <div id="constraint-list" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:3px">Player</div>
+          <input class="form-input" id="c-player" placeholder="Name…" style="width:160px">
+        </div>
+        <div>
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:3px">Unavailable / Late start</div>
+          <input class="form-input" id="c-note" placeholder="e.g. Arrives Round 3, Out R5–R7" style="width:220px">
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="addConstraint()" style="margin-bottom:1px">+ Add</button>
+      </div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:5px">Constraints are noted alongside the player — the scheduler will skip them for the affected rounds</div>
     </div>
   </div>
   <div class="card">
@@ -228,30 +281,57 @@
   <div class="card" id="edit-settings-panel" style="display:none;margin-bottom:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <h3 style="font-size:1rem">⚙️ Edit Tournament Settings</h3>
-      <button class="btn btn-secondary btn-sm" onclick="toggleEditSettings()">✕ Close</button>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('edit-settings-panel').style.display='none'">✕ Close</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
       <div>
         <label class="form-label">Total Rounds (excl. championship)</label>
-        <input class="form-input" type="number" id="edit-rounds" min="2" max="20" placeholder="e.g. 9">
-        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Championship is always added as the final round</div>
+        <input class="form-input" type="number" id="edit-rounds" min="2" max="30" placeholder="e.g. 9">
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Championship round appended automatically</div>
       </div>
-      <div>
+      <div id="edit-random-row">
         <label class="form-label">Random Mix Rounds</label>
         <input class="form-input" type="number" id="edit-random" min="1" max="10" placeholder="e.g. 2">
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Mexicano formats only</div>
       </div>
     </div>
     <div style="margin-bottom:12px">
-      <label class="form-label">Target Points per Match</label>
-      <input class="form-input" type="number" id="edit-target" min="10" max="100" placeholder="e.g. 32" style="max-width:160px">
+      <label class="form-label">Scoring</label>
+      <select class="form-input" id="edit-scoring-type" onchange="updateEditScoringUI()" style="max-width:220px">
+        <option value="points">Points target</option>
+        <option value="sets">Set based</option>
+      </select>
+    </div>
+    <div id="edit-points-row" style="margin-bottom:12px">
+      <label class="form-label">Points Target</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px" id="edit-target-picker"></div>
+      <input type="hidden" id="edit-target">
+      <input type="number" id="edit-target-custom" min="10" max="100" placeholder="Custom value…" style="width:140px;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:0.85rem" oninput="selectEditTarget(parseInt(this.value)||0, true)">
+    </div>
+    <div id="edit-sets-row" style="margin-bottom:12px;display:none">
+      <label class="form-label">Set Format</label>
+      <select class="form-input" id="edit-set-format" style="max-width:220px">
+        <option value="single-set">Single Set Shootout</option>
+        <option value="best-of-3">Best of 3</option>
+        <option value="best-of-5">Best of 5</option>
+      </select>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="form-label">Round Schedule (one per line)</label>
+      <textarea class="form-input" id="edit-times" rows="6" placeholder="6:00–6:22 PM&#10;6:22–6:44 PM&#10;…"></textarea>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Line 1 = Round 1 label on scoreboard</div>
     </div>
     <div style="margin-bottom:14px">
-      <label class="form-label">Round Schedule (one per line, e.g. "6:00–6:22 PM")</label>
-      <textarea class="form-input" id="edit-times" rows="6" placeholder="6:00–6:22 PM&#10;6:22–6:44 PM&#10;…"></textarea>
-      <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Line 1 = Round 1 time label shown on scoreboard</div>
+      <label class="form-label">Player Constraints</label>
+      <div id="edit-constraint-list" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <input class="form-input" id="edit-c-player" placeholder="Player name…" style="width:150px">
+        <input class="form-input" id="edit-c-note" placeholder="e.g. Out R5–R7, Arrives R3" style="width:200px">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="addEditConstraint()">+ Add</button>
+      </div>
     </div>
     <button class="btn btn-primary" onclick="saveEditedSettings()">💾 Save Changes</button>
-    <div id="edit-settings-msg" style="margin-top:8px;font-size:0.82rem;color:var(--success)"></div>
+    <div id="edit-settings-msg" style="margin-top:8px;font-size:0.82rem"></div>
   </div>
 
   <div id="rounds-container"><div class="loading">Load or create a tournament to see rounds.</div></div>
@@ -437,20 +517,25 @@ window.createTournament = async () => {
   const name = document.getElementById('t-name').value.trim();
   const date = document.getElementById('t-date').value;
   const format = document.getElementById('t-format').value;
-  const totalRounds = parseInt(document.getElementById('t-rounds').value) + 1; // +1 for championship
-  const randomRounds = parseInt(document.getElementById('t-random').value);
-  const target = parseInt(document.getElementById('t-target').value);
+  const mexRounds = parseInt(document.getElementById('t-rounds').value);
+  const randomRounds = isMexicanoFormat(format) ? parseInt(document.getElementById('t-random').value) : 0;
+  const scoringType = document.getElementById('t-scoring-type').value;
+  const target = scoringType === 'points' ? (parseInt(document.getElementById('t-target').value) || 16) : 0;
+  const setFormat = scoringType === 'sets' ? document.getElementById('t-set-format').value : null;
   const timesRaw = document.getElementById('t-times').value.trim();
   const times = timesRaw ? timesRaw.split('\n').map(s=>s.trim()).filter(Boolean) : [];
+  const constraints = [...currentConstraints];
   const res = document.getElementById('create-result');
 
   if (!name) { res.innerHTML = '<span style="color:var(--danger)">Enter a tournament name</span>'; return; }
+  if (!mexRounds || mexRounds < 2) { res.innerHTML = '<span style="color:var(--danger)">Total rounds must be at least 2</span>'; return; }
   if (selectedPlayers.length < 4) { res.innerHTML = '<span style="color:var(--danger)">Need at least 4 players</span>'; return; }
   if (activeTournament) { res.innerHTML = '<span style="color:var(--warn)">Archive the active tournament first</span>'; return; }
 
   const N = selectedPlayers.length;
-  const MEXICANO_END = totalRounds - 2; // last Mexicano round index (0-based)
-  const CHAMP = totalRounds - 1;
+  const totalRounds = mexRounds + 1; // +1 for championship
+  const MEXICANO_END = mexRounds - 2;
+  const CHAMP = mexRounds;
 
   // Generate initial state
   const state = {
@@ -466,7 +551,7 @@ window.createTournament = async () => {
   const tData = {
     name, status: 'active', createdAt: new Date().toISOString(),
     players: selectedPlayers,
-    config: { date, format, totalRounds, randomRounds, mexicanoEnd: MEXICANO_END, championshipRound: CHAMP, target, times },
+    config: { date, format, totalRounds, randomRounds, mexicanoEnd: MEXICANO_END, championshipRound: CHAMP, target, scoringType, setFormat, times, constraints },
     state,
   };
 
@@ -481,9 +566,117 @@ window.createTournament = async () => {
   clearNewForm();
 };
 
+// ===== Format / Scoring / Constraint helpers =====
+const FORMAT_DESCS = {
+  'mexicano': 'Random mix rounds → Mexicano ranked draws → Championship final',
+  'team-mexicano': 'Fixed teams — random → ranked draws → Championship final',
+  'americano': 'Partners rotate every round — ranked by individual points',
+  'team-americano': 'Fixed teams — round-robin style Americano draw',
+  'round-robin': 'Every player/team faces every other — full round-robin',
+  'knockout': 'Single elimination — losers are out each round',
+};
+
+function isMexicanoFormat(fmt) {
+  return fmt === 'mexicano' || fmt === 'team-mexicano';
+}
+
+window.selectFormat = (fmt) => {
+  document.getElementById('t-format').value = fmt;
+  document.querySelectorAll('.format-btn').forEach(b => b.classList.toggle('active', b.dataset.fmt === fmt));
+  document.getElementById('format-desc').textContent = FORMAT_DESCS[fmt] || '';
+  const showRandom = isMexicanoFormat(fmt);
+  document.getElementById('random-rounds-row').style.display = showRandom ? '' : 'none';
+};
+
+window.selectTarget = (val, fromCustom) => {
+  if (!fromCustom) document.getElementById('t-target-custom').value = '';
+  document.getElementById('t-target').value = val;
+  document.querySelectorAll('.target-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.val) === val));
+};
+
+window.updateScoringUI = () => {
+  const isPoints = document.getElementById('t-scoring-type').value === 'points';
+  document.getElementById('points-target-row').style.display = isPoints ? '' : 'none';
+  document.getElementById('sets-target-row').style.display = isPoints ? 'none' : '';
+};
+
+let currentConstraints = [];
+
+window.addConstraint = () => {
+  const player = document.getElementById('c-player').value.trim();
+  const note = document.getElementById('c-note').value.trim();
+  if (!player || !note) return;
+  currentConstraints.push({ player, note });
+  document.getElementById('c-player').value = '';
+  document.getElementById('c-note').value = '';
+  renderConstraints();
+};
+
+window.removeConstraint = (i) => {
+  currentConstraints.splice(i, 1);
+  renderConstraints();
+};
+
+function renderConstraints() {
+  document.getElementById('constraint-list').innerHTML = currentConstraints.map((c, i) =>
+    `<div class="constraint-item">
+      <span class="c-name">${c.player}</span>
+      <span class="c-note">${c.note}</span>
+      <span class="c-del" onclick="removeConstraint(${i})">✕ Remove</span>
+    </div>`
+  ).join('');
+}
+
+// Edit panel constraint helpers
+let editConstraints = [];
+
+window.addEditConstraint = () => {
+  const player = document.getElementById('edit-c-player').value.trim();
+  const note = document.getElementById('edit-c-note').value.trim();
+  if (!player || !note) return;
+  editConstraints.push({ player, note });
+  document.getElementById('edit-c-player').value = '';
+  document.getElementById('edit-c-note').value = '';
+  renderEditConstraints();
+};
+
+window.removeEditConstraint = (i) => {
+  editConstraints.splice(i, 1);
+  renderEditConstraints();
+};
+
+function renderEditConstraints() {
+  document.getElementById('edit-constraint-list').innerHTML = editConstraints.map((c, i) =>
+    `<div class="constraint-item">
+      <span class="c-name">${c.player}</span>
+      <span class="c-note">${c.note}</span>
+      <span class="c-del" onclick="removeEditConstraint(${i})">✕ Remove</span>
+    </div>`
+  ).join('');
+}
+
+window.selectEditTarget = (val, fromCustom) => {
+  document.getElementById('edit-target').value = val;
+  document.querySelectorAll('#edit-target-picker .target-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.val) === val));
+};
+
+window.updateEditScoringUI = () => {
+  const isPoints = document.getElementById('edit-scoring-type').value === 'points';
+  document.getElementById('edit-points-row').style.display = isPoints ? '' : 'none';
+  document.getElementById('edit-sets-row').style.display = isPoints ? 'none' : '';
+};
+
 window.clearNewForm = () => {
   document.getElementById('t-name').value = '';
   document.getElementById('t-times').value = '';
+  document.getElementById('t-rounds').value = '9';
+  document.getElementById('t-random').value = '2';
+  document.getElementById('t-scoring-type').value = 'points';
+  selectTarget(16);
+  updateScoringUI();
+  selectFormat('mexicano');
+  currentConstraints = [];
+  renderConstraints();
   selectedPlayers = [];
   renderSelectedPlayers();
   filterPicker();
@@ -508,10 +701,28 @@ function renderRoundsTab() {
   if (editPanel) {
     editPanel.style.display = 'block';
     // Populate current values
-    document.getElementById('edit-rounds').value = totalRounds - 1; // minus championship
+    document.getElementById('edit-rounds').value = totalRounds - 1;
+    const isMex = isMexicanoFormat(config.format);
+    const editRandRow = document.getElementById('edit-random-row');
+    if (editRandRow) editRandRow.style.display = isMex ? '' : 'none';
     document.getElementById('edit-random').value = randomRounds;
+    // Scoring
+    const scoringType = config.scoringType || 'points';
+    document.getElementById('edit-scoring-type').value = scoringType;
+    updateEditScoringUI();
+    // Target picker buttons
+    const targetVals = [16,20,24,28,32];
+    document.getElementById('edit-target-picker').innerHTML = targetVals.map(v =>
+      `<button type="button" class="target-btn${v===target?' active':''}" data-val="${v}" onclick="selectEditTarget(${v})">${v}</button>`
+    ).join('');
     document.getElementById('edit-target').value = target;
+    if (!targetVals.includes(target)) document.getElementById('edit-target-custom').value = target;
+    // Set format
+    if (config.setFormat) document.getElementById('edit-set-format').value = config.setFormat;
     document.getElementById('edit-times').value = (times || []).join('\n');
+    // Constraints
+    editConstraints = config.constraints ? [...config.constraints] : [];
+    renderEditConstraints();
   }
 
   let html = '';
@@ -759,19 +970,38 @@ window.saveEditedSettings = async () => {
   msg.textContent = '';
 
   const mexRounds = parseInt(document.getElementById('edit-rounds').value);
-  const randomRounds = parseInt(document.getElementById('edit-random').value);
-  const target = parseInt(document.getElementById('edit-target').value);
   const timesRaw = document.getElementById('edit-times').value.trim();
   const times = timesRaw ? timesRaw.split('\n').map(s => s.trim()).filter(Boolean) : [];
+  const scoringType = document.querySelector('input[name="edit-scoring-type"]:checked')?.value || 'points';
+  const fmt = t.config?.format || 'mexicano';
 
   if (!mexRounds || mexRounds < 2) { msg.style.color='var(--danger)'; msg.textContent = 'Total rounds must be at least 2.'; return; }
-  if (!randomRounds || randomRounds < 1) { msg.style.color='var(--danger)'; msg.textContent = 'Random rounds must be at least 1.'; return; }
-  if (randomRounds >= mexRounds) { msg.style.color='var(--danger)'; msg.textContent = 'Random rounds must be less than total rounds.'; return; }
-  if (!target || target < 10) { msg.style.color='var(--danger)'; msg.textContent = 'Target must be at least 10.'; return; }
+
+  // Points or sets target
+  let target = t.config.target;
+  let setFormat = t.config.setFormat;
+  if (scoringType === 'points') {
+    const editTargetInput = document.getElementById('edit-target-hidden');
+    const tVal = editTargetInput ? parseInt(editTargetInput.value) : NaN;
+    if (!tVal || tVal < 10) { msg.style.color='var(--danger)'; msg.textContent = 'Points target must be at least 10.'; return; }
+    target = tVal;
+    setFormat = null;
+  } else {
+    setFormat = document.getElementById('edit-set-format')?.value || 'best-of-3';
+    target = null;
+  }
+
+  // Random rounds (Mexicano formats only)
+  let randomRounds = t.config.randomRounds;
+  if (isMexicanoFormat(fmt)) {
+    randomRounds = parseInt(document.getElementById('edit-random').value);
+    if (!randomRounds || randomRounds < 1) { msg.style.color='var(--danger)'; msg.textContent = 'Random rounds must be at least 1.'; return; }
+    if (randomRounds >= mexRounds) { msg.style.color='var(--danger)'; msg.textContent = 'Random rounds must be less than total rounds.'; return; }
+  }
 
   const totalRounds = mexRounds + 1; // +1 for championship
   const mexicanoEnd = mexRounds - 2;
-  const championshipRound = mexRounds; // last round index
+  const championshipRound = mexRounds;
 
   const newConfig = {
     ...t.config,
@@ -780,7 +1010,10 @@ window.saveEditedSettings = async () => {
     mexicanoEnd,
     championshipRound,
     target,
-    times
+    scoringType,
+    setFormat,
+    times,
+    constraints: editConstraints
   };
 
   try {
