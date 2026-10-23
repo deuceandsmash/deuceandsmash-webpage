@@ -232,6 +232,22 @@
     </div>
 
     <div class="form-row" style="margin-top:12px">
+      <label class="form-label">Event Time</label>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="flex:1">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px">Start time</div>
+          <input class="form-input" type="time" id="t-start-time" style="width:100%">
+        </div>
+        <div style="color:var(--muted);padding-top:18px">→</div>
+        <div style="flex:1">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px">End time</div>
+          <input class="form-input" type="time" id="t-end-time" style="width:100%">
+        </div>
+      </div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Shown on the scoreboard header</div>
+    </div>
+
+    <div class="form-row" style="margin-top:12px">
       <label class="form-label">Round Schedule <span style="color:var(--muted);font-weight:400">(one per line)</span></label>
       <textarea class="form-input" id="t-times" rows="5" placeholder="6:00–6:22 PM&#10;6:22–6:44 PM&#10;6:44–7:06 PM&#10;…"></textarea>
       <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Each line maps to a round — shown on the live scoreboard</div>
@@ -316,6 +332,21 @@
         <option value="best-of-5">Best of 5</option>
       </select>
     </div>
+    <div style="margin-bottom:12px">
+      <label class="form-label">Event Time</label>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="flex:1">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px">Start time</div>
+          <input class="form-input" type="time" id="edit-start-time" style="width:100%">
+        </div>
+        <div style="color:var(--muted);padding-top:18px">→</div>
+        <div style="flex:1">
+          <div style="font-size:0.72rem;color:var(--muted);margin-bottom:4px">End time</div>
+          <input class="form-input" type="time" id="edit-end-time" style="width:100%">
+        </div>
+      </div>
+    </div>
+
     <div style="margin-bottom:12px">
       <label class="form-label">Round Schedule (one per line)</label>
       <textarea class="form-input" id="edit-times" rows="6" placeholder="6:00–6:22 PM&#10;6:22–6:44 PM&#10;…"></textarea>
@@ -524,6 +555,8 @@ window.createTournament = async () => {
   const setFormat = scoringType === 'sets' ? document.getElementById('t-set-format').value : null;
   const timesRaw = document.getElementById('t-times').value.trim();
   const times = timesRaw ? timesRaw.split('\n').map(s=>s.trim()).filter(Boolean) : [];
+  const startTime = document.getElementById('t-start-time').value || null;
+  const endTime = document.getElementById('t-end-time').value || null;
   const constraints = [...currentConstraints];
   const res = document.getElementById('create-result');
 
@@ -551,7 +584,7 @@ window.createTournament = async () => {
   const tData = {
     name, status: 'active', createdAt: new Date().toISOString(),
     players: selectedPlayers,
-    config: { date, format, totalRounds, randomRounds, mexicanoEnd: MEXICANO_END, championshipRound: CHAMP, target, scoringType, setFormat, times, constraints },
+    config: { date, format, totalRounds, randomRounds, mexicanoEnd: MEXICANO_END, championshipRound: CHAMP, target, scoringType, setFormat, startTime, endTime, times, constraints },
     state,
   };
 
@@ -668,6 +701,8 @@ window.updateEditScoringUI = () => {
 
 window.clearNewForm = () => {
   document.getElementById('t-name').value = '';
+  document.getElementById('t-start-time').value = '';
+  document.getElementById('t-end-time').value = '';
   document.getElementById('t-times').value = '';
   document.getElementById('t-rounds').value = '9';
   document.getElementById('t-random').value = '2';
@@ -720,6 +755,8 @@ function renderRoundsTab() {
     // Set format
     if (config.setFormat) document.getElementById('edit-set-format').value = config.setFormat;
     document.getElementById('edit-times').value = (times || []).join('\n');
+    document.getElementById('edit-start-time').value = config.startTime || '';
+    document.getElementById('edit-end-time').value = config.endTime || '';
     // Constraints
     editConstraints = config.constraints ? [...config.constraints] : [];
     renderEditConstraints();
@@ -972,6 +1009,8 @@ window.saveEditedSettings = async () => {
   const mexRounds = parseInt(document.getElementById('edit-rounds').value);
   const timesRaw = document.getElementById('edit-times').value.trim();
   const times = timesRaw ? timesRaw.split('\n').map(s => s.trim()).filter(Boolean) : [];
+  const startTime = document.getElementById('edit-start-time').value || null;
+  const endTime = document.getElementById('edit-end-time').value || null;
   const scoringType = document.querySelector('input[name="edit-scoring-type"]:checked')?.value || 'points';
   const fmt = t.config?.format || 'mexicano';
 
@@ -1013,6 +1052,8 @@ window.saveEditedSettings = async () => {
     scoringType,
     setFormat,
     times,
+    startTime,
+    endTime,
     constraints: editConstraints
   };
 

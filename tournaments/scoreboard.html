@@ -142,7 +142,10 @@ function render() {
   const roundsDone = (state.submitted || []).filter(Boolean).length;
 
   document.getElementById('t-name').textContent = name;
-  document.getElementById('t-sub').textContent = `${config.date || ''} · Round ${roundsDone}/${totalRounds}`;
+  const timePart = (config.startTime || config.endTime)
+    ? ` · ${config.startTime || ''}${config.startTime && config.endTime ? '–' : ''}${config.endTime || ''}`
+    : '';
+  document.getElementById('t-sub').textContent = `${config.date || ''}${timePart} · Round ${roundsDone}/${totalRounds}`;
 
   let html = '';
 
