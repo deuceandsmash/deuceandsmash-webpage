@@ -127,6 +127,42 @@
   .delta-neg { color: var(--danger); }
   .save-bar { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
 
+  /* Open Play — day history */
+  .op-day-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; max-width: 680px; }
+  .op-day-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; user-select: none; transition: background 0.12s; }
+  .op-day-header:hover { background: rgba(255,255,255,0.03); }
+  .op-day-date { font-weight: 700; font-size: 0.95rem; flex: 1; }
+  .op-day-meta { font-size: 0.78rem; color: var(--muted); }
+  .op-day-arrow { font-size: 0.7rem; color: var(--muted); transition: transform 0.2s; }
+  .op-day-card.open .op-day-arrow { transform: rotate(180deg); }
+  .op-day-body { display: none; border-top: 1px solid var(--border); padding: 14px 16px; }
+  .op-day-card.open .op-day-body { display: block; }
+
+  /* Day recap: players present that day */
+  .op-day-players { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .op-day-player-chip { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px 4px 6px; font-size: 0.78rem; }
+  .op-day-player-chip .chip-name { font-weight: 600; }
+  .op-day-player-chip .chip-rating { font-size: 0.7rem; font-weight: 700; }
+
+  /* Match rows inside a day */
+  .op-match-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.83rem; }
+  .op-match-row:last-child { border-bottom: none; }
+  .op-match-teams { flex: 1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .op-match-team { display: flex; gap: 4px; }
+  .op-match-vs { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+  .op-match-score { font-weight: 800; font-size: 1rem; white-space: nowrap; }
+
+  /* Member history view */
+  .op-member-header { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; max-width: 680px; }
+  .op-member-rating-big { font-size: 2rem; font-weight: 800; }
+  .op-member-stats { display: flex; gap: 16px; margin: 10px 0 14px; flex-wrap: wrap; max-width: 680px; }
+  .op-member-stat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; text-align: center; flex: 1; min-width: 80px; }
+  .op-member-stat-val { font-size: 1.4rem; font-weight: 800; }
+  .op-member-stat-lbl { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+  .op-member-section-title { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 16px 0 8px; }
+  .op-history-match { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 7px; max-width: 680px; font-size: 0.83rem; }
+  .op-history-match-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+
   /* Open Play entry */
   .op-form { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; max-width: 640px; }
   .op-form h3 { font-size: 1.1rem; margin-bottom: 16px; }
@@ -333,9 +369,14 @@
 
 <!-- Open Play tab -->
 <div class="section" id="tab-openplay">
-  <div class="search-row">
+  <div class="search-row" style="flex-wrap:wrap;gap:8px">
     <button class="btn btn-primary" onclick="showOpForm()">+ Log Match Result</button>
-    <button class="btn btn-secondary" onclick="showOpHistory()">📋 Session History</button>
+    <button class="btn btn-secondary" id="op-history-btn" onclick="showOpHistory()">📅 Day History</button>
+    <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+      <select id="op-member-filter" class="form-input" style="min-width:160px;padding:7px 10px;font-size:0.85rem" onchange="showOpMemberHistory()">
+        <option value="">👤 Filter by member…</option>
+      </select>
+    </div>
   </div>
   <div id="op-area">
     <div id="op-history"></div>
@@ -588,6 +629,7 @@ async function loadAll() {
   computeAllRatings();
   renderMembers();
   renderRatings();
+  populateOpMemberFilter();
   document.getElementById('header-count').textContent = `${Object.keys(members).length} members`;
 }
 
@@ -1100,22 +1142,213 @@ window.submitMatch = async () => {
   renderMembers();
   renderRatings();
   res.innerHTML = `<span style="color:var(--success)">✓ Match saved! Ratings updated.</span>`;
+  populateOpMemberFilter();
   showToast('Match logged & ratings updated', 'ok');
   setTimeout(showOpHistory, 1500);
 };
 
+function populateOpMemberFilter() {
+  const sel = document.getElementById('op-member-filter');
+  if (!sel) return;
+  // Collect only members who appear in at least one opMatch
+  const active = new Set();
+  Object.values(opMatches).forEach(m => {
+    (m.teamA||[]).forEach(n => active.add(n));
+    (m.teamB||[]).forEach(n => active.add(n));
+  });
+  const sorted = [...active].sort();
+  // Keep existing selection if valid
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">👤 Filter by member…</option>' +
+    sorted.map(n => `<option value="${n}"${n===cur?' selected':''}>${n}</option>`).join('');
+}
+
 window.showOpHistory = () => {
-  const list = Object.entries(opMatches).sort((a,b)=>b[1].date.localeCompare(a[1].date)).slice(0,30);
-  document.getElementById('op-area').innerHTML = list.length ? `
-    <div style="max-width:640px">
-      <ul class="history-list">
-        ${list.map(([id,m])=>`<li class="history-item">
-          <span>${m.date}</span>
-          <span>${m.teamA.join(' & ')} vs ${m.teamB.join(' & ')}</span>
-          <span style="color:var(--accent);font-weight:700">${m.score}</span>
-        </li>`).join('')}
-      </ul>
-    </div>` : '<p style="color:var(--muted);padding:20px">No matches logged yet.</p>';
+  // Reset member filter
+  const sel = document.getElementById('op-member-filter');
+  if (sel) sel.value = '';
+  // Group matches by date
+  const byDate = {};
+  Object.entries(opMatches).forEach(([id, m]) => {
+    const d = m.date || 'Unknown';
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push({ id, ...m });
+  });
+  const dates = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
+  if (!dates.length) {
+    document.getElementById('op-area').innerHTML = '<p style="color:var(--muted);padding:20px">No matches logged yet.</p>';
+    return;
+  }
+  const cards = dates.map((date, idx) => {
+    const matches = byDate[date];
+    // Unique players that day
+    const players = new Set();
+    matches.forEach(m => { (m.teamA||[]).forEach(n=>players.add(n)); (m.teamB||[]).forEach(n=>players.add(n)); });
+    const playerChips = [...players].map(name => {
+      const r = ratings[name];
+      const bc = r ? bandColor(r.band) : { color:'var(--muted)', bg:'rgba(136,136,136,0.1)' };
+      return `<div class="op-day-player-chip">
+        <span class="chip-rating" style="color:${bc.color}">${r ? r.r.toFixed(1) : '—'}</span>
+        <span class="chip-name">${name}</span>
+      </div>`;
+    }).join('');
+    const matchRows = matches.map(m => {
+      const sa = m.a ?? m.score?.split('-')[0] ?? '?';
+      const sb = m.b ?? m.score?.split('-')[1] ?? '?';
+      const aWon = parseInt(sa) > parseInt(sb);
+      const bWon = parseInt(sb) > parseInt(sa);
+      const scoreColor = 'var(--text)';
+      const aColor = aWon ? 'var(--success)' : bWon ? 'var(--danger)' : 'var(--muted)';
+      const bColor = bWon ? 'var(--success)' : aWon ? 'var(--danger)' : 'var(--muted)';
+      const teamANames = (m.teamA||[]).map(n => {
+        const r = ratings[n]; const bc = r ? bandColor(r.band) : {color:'var(--muted)'};
+        return `<span style="font-weight:600">${n}</span><sup style="font-size:0.6rem;color:${bc.color}">${r?r.r.toFixed(1):''}</sup>`;
+      }).join(' <span style="color:var(--muted);font-size:0.7rem">&</span> ');
+      const teamBNames = (m.teamB||[]).map(n => {
+        const r = ratings[n]; const bc = r ? bandColor(r.band) : {color:'var(--muted)'};
+        return `<span style="font-weight:600">${n}</span><sup style="font-size:0.6rem;color:${bc.color}">${r?r.r.toFixed(1):''}</sup>`;
+      }).join(' <span style="color:var(--muted);font-size:0.7rem">&</span> ');
+      return `<div class="op-match-row">
+        <div class="op-match-teams">
+          <span style="color:${aColor}">${teamANames}</span>
+          <span class="op-match-vs">vs</span>
+          <span style="color:${bColor}">${teamBNames}</span>
+        </div>
+        <div class="op-match-score">
+          <span style="color:${aColor}">${sa}</span>
+          <span style="color:var(--muted);font-size:0.8rem">–</span>
+          <span style="color:${bColor}">${sb}</span>
+        </div>
+      </div>`;
+    }).join('');
+    // Format date label
+    let dateLabel = date;
+    if (date !== 'Unknown') {
+      try { dateLabel = new Date(date).toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' }); } catch(e) {}
+    }
+    const openClass = idx === 0 ? ' open' : '';
+    return `<div class="op-day-card${openClass}" id="op-day-${idx}">
+      <div class="op-day-header" onclick="toggleOpDay(${idx})">
+        <span class="op-day-date">📅 ${dateLabel}</span>
+        <span class="op-day-meta">${matches.length} match${matches.length!==1?'es':''} · ${players.size} player${players.size!==1?'s':''}</span>
+        <span class="op-day-arrow">▼</span>
+      </div>
+      <div class="op-day-body">
+        <div class="op-member-section-title" style="margin-top:0">Players</div>
+        <div class="op-day-players">${playerChips}</div>
+        <div class="op-member-section-title">Match Results</div>
+        ${matchRows}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('op-area').innerHTML = `<div style="padding-top:4px">${cards}</div>`;
+};
+
+window.toggleOpDay = (idx) => {
+  const card = document.getElementById(`op-day-${idx}`);
+  if (card) card.classList.toggle('open');
+};
+
+window.showOpMemberHistory = () => {
+  const name = document.getElementById('op-member-filter')?.value;
+  if (!name) { showOpHistory(); return; }
+
+  const playerMatches = Object.values(opMatches)
+    .filter(m => m.teamA?.includes(name) || m.teamB?.includes(name))
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  const r = ratings[name];
+  const bc = r ? bandColor(r.band) : { color: 'var(--muted)', bg: 'rgba(136,136,136,0.1)' };
+  const memberObj = Object.values(members).find(m => m.name === name);
+
+  // Stats
+  let W=0, L=0, D=0;
+  const partnerMap = {}, opponentMap = {};
+  playerMatches.forEach(m => {
+    const onMyTeam  = m.teamA?.includes(name) ? m.teamA : m.teamB;
+    const otherTeam = m.teamA?.includes(name) ? m.teamB : m.teamA;
+    const myScore   = m.teamA?.includes(name) ? m.a : m.b;
+    const oppScore  = m.teamA?.includes(name) ? m.b : m.a;
+    const res       = myScore > oppScore ? 'W' : myScore < oppScore ? 'L' : 'D';
+    if (res==='W') W++; else if (res==='L') L++; else D++;
+    (onMyTeam||[]).filter(n=>n!==name).forEach(n => { partnerMap[n]=(partnerMap[n]||0)+1; });
+    (otherTeam||[]).forEach(n => { opponentMap[n]=(opponentMap[n]||0)+1; });
+  });
+
+  const statsHtml = `<div class="op-member-stats">
+    <div class="op-member-stat"><div class="op-member-stat-val">${playerMatches.length}</div><div class="op-member-stat-lbl">Matches</div></div>
+    <div class="op-member-stat"><div class="op-member-stat-val" style="color:var(--success)">${W}</div><div class="op-member-stat-lbl">Won</div></div>
+    <div class="op-member-stat"><div class="op-member-stat-val" style="color:var(--danger)">${L}</div><div class="op-member-stat-lbl">Lost</div></div>
+    ${D ? `<div class="op-member-stat"><div class="op-member-stat-val" style="color:var(--muted)">${D}</div><div class="op-member-stat-lbl">Drawn</div></div>` : ''}
+  </div>`;
+
+  // Frequent partners/opponents
+  function connList(map, color) {
+    const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+    if (!sorted.length) return '<span style="color:var(--muted);font-size:0.82rem">None</span>';
+    const max = sorted[0][1];
+    return sorted.map(([n,count]) => {
+      const rr = ratings[n]; const bcc = rr ? bandColor(rr.band) : {color:'var(--muted)'};
+      const pct = Math.round(count/max*100);
+      return `<div class="conn-bar-row" style="cursor:default">
+        <span class="conn-name" title="${n}">${n}</span>
+        <div class="conn-bar-wrap"><div class="conn-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <span class="conn-count">${count}×</span>
+        <span style="font-size:0.7rem;color:${bcc.color};font-weight:700">${rr?rr.r.toFixed(2):''}</span>
+      </div>`;
+    }).join('');
+  }
+
+  const connectionsHtml = `
+    <div class="conn-section"><h5>Most frequent partners</h5>${connList(partnerMap,'var(--accent2)')}</div>
+    <div class="conn-section"><h5>Most frequent opponents</h5>${connList(opponentMap,'#b47dff')}</div>`;
+
+  // Match history
+  const matchHistHtml = playerMatches.length ? playerMatches.map(m => {
+    const onMyTeam  = m.teamA?.includes(name) ? m.teamA : m.teamB;
+    const otherTeam = m.teamA?.includes(name) ? m.teamB : m.teamA;
+    const myScore   = m.teamA?.includes(name) ? m.a : m.b;
+    const oppScore  = m.teamA?.includes(name) ? m.b : m.a;
+    const res       = myScore > oppScore ? 'W' : myScore < oppScore ? 'L' : 'D';
+    const rc        = res==='W'?'var(--success)':res==='L'?'var(--danger)':'var(--muted)';
+    const partners  = (onMyTeam||[]).filter(n=>n!==name).map(n=>{
+      const rr=ratings[n]; const bcc=rr?bandColor(rr.band):{color:'var(--muted)'};
+      return `<strong>${n}</strong> <sup style="color:${bcc.color};font-size:0.65rem">${rr?rr.r.toFixed(1):''}</sup>`;
+    }).join(' & ') || '—';
+    const opps = (otherTeam||[]).map(n=>{
+      const rr=ratings[n]; const bcc=rr?bandColor(rr.band):{color:'var(--muted)'};
+      return `<strong>${n}</strong> <sup style="color:${bcc.color};font-size:0.65rem">${rr?rr.r.toFixed(1):''}</sup>`;
+    }).join(' & ') || '—';
+    let dateLabel = m.date||'—';
+    if (m.date) { try { dateLabel = new Date(m.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); } catch(e){} }
+    return `<div class="op-history-match">
+      <div class="op-history-match-top">
+        <span style="color:var(--muted);font-size:0.75rem">${dateLabel}</span>
+        <span style="font-weight:800;font-size:1rem;color:${rc}">${res} &nbsp;${myScore}–${oppScore}</span>
+      </div>
+      <div style="font-size:0.78rem">w/ ${partners} &nbsp;<span style="color:var(--muted)">vs</span>&nbsp; ${opps}</div>
+    </div>`;
+  }).join('') : '<p style="color:var(--muted);font-size:0.85rem">No matches recorded</p>';
+
+  let dateLabel = '';
+  if (memberObj?.createdAt) {
+    try { dateLabel = 'Member since ' + new Date(memberObj.createdAt).toLocaleDateString('en-IN',{month:'short',year:'numeric'}); } catch(e){}
+  }
+
+  document.getElementById('op-area').innerHTML = `
+    <div class="op-member-header">
+      <div class="op-member-rating-big" style="color:${bc.color}">${r ? r.r.toFixed(2) : '—'}</div>
+      <div>
+        <div style="font-size:1rem;font-weight:700">${name}</div>
+        ${r ? `<div style="margin:3px 0">${bandChip(r.band)}</div>` : ''}
+        <div style="font-size:0.72rem;color:var(--muted)">${dateLabel}</div>
+      </div>
+    </div>
+    ${statsHtml}
+    <div class="op-member-section-title">Court Connections</div>
+    ${connectionsHtml}
+    <div class="op-member-section-title">Match History</div>
+    ${matchHistHtml}`;
 };
 
 // ===== Add Member =====
