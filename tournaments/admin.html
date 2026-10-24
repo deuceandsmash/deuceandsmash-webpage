@@ -171,6 +171,13 @@
         <label class="form-label">Date</label>
         <input type="date" class="form-input" id="t-date">
       </div>
+      <div class="form-row">
+        <label class="form-label">Sport</label>
+        <select class="form-input" id="t-sport">
+          <option value="padel">Padel</option>
+          <option value="pickleball">Pickleball</option>
+        </select>
+      </div>
       <div class="form-row" style="grid-column:1/-1">
         <label class="form-label">Format</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px" id="format-picker">
@@ -553,6 +560,7 @@ window.createTournament = async () => {
   const scoringType = document.getElementById('t-scoring-type').value;
   const target = scoringType === 'points' ? (parseInt(document.getElementById('t-target').value) || 16) : 0;
   const setFormat = scoringType === 'sets' ? document.getElementById('t-set-format').value : null;
+  const sport = document.getElementById('t-sport').value || 'padel';
   const timesRaw = document.getElementById('t-times').value.trim();
   const times = timesRaw ? timesRaw.split('\n').map(s=>s.trim()).filter(Boolean) : [];
   const startTime = document.getElementById('t-start-time').value || null;
@@ -584,7 +592,7 @@ window.createTournament = async () => {
   const tData = {
     name, status: 'active', createdAt: new Date().toISOString(),
     players: selectedPlayers,
-    config: { date, format, totalRounds, randomRounds, mexicanoEnd: MEXICANO_END, championshipRound: CHAMP, target, scoringType, setFormat, startTime, endTime, times, constraints },
+    config: { date, sport, format, totalRounds, randomRounds, mexicanoEnd: MEXICANO_END, championshipRound: CHAMP, target, scoringType, setFormat, startTime, endTime, times, constraints },
     state,
   };
 
@@ -592,6 +600,9 @@ window.createTournament = async () => {
   await set(tRef, tData);
   activeTournament = { id: tRef.key, ...tData };
   subscribeToTournament(tRef.key);
+
+  // Register in _meta immediately so index/members tab shows it as upcoming
+  await saveTournamentMeta(activeTournament, []);
 
   res.innerHTML = `<span style="color:var(--success)">✓ Tournament "${name}" created with ${N} players!</span>`;
   showToast(`${name} created!`, 'ok');
@@ -991,8 +1002,78 @@ window.submitRound = async (ri) => {
   };
 
   await update(ref(db, `tournaments/${t.id}/state`), updates);
+
+  // ── DSR integration: write each match to openPlayMatches ──────────────────
+  const tDate = t.config?.date || new Date().toISOString().slice(0,10);
+  for (let mi = 0; mi < r.matches.length; mi++) {
+    const [sa, sb] = scores[mi];
+    const m = r.matches[mi];
+    const teamA = (Array.isArray(m.p1) ? m.p1 : [m.p1[0], m.p1[1]])
+      .map(idx => players[idx]).filter(Boolean);
+    const teamB = (Array.isArray(m.p2) ? m.p2 : [m.p2[0], m.p2[1]])
+      .map(idx => players[idx]).filter(Boolean);
+    if (!teamA.length || !teamB.length) continue;
+    const matchId = `${t.id}-r${ri+1}-m${mi+1}`;
+    await set(ref(db, `openPlayMatches/${matchId}`), {
+      teamA, teamB, a: sa, b: sb,
+      date:         tDate,
+      source:       'tournament',
+      tournamentId: t.id,
+      round:        ri + 1,
+      note:         `${t.name} · Round ${ri + 1}`,
+    });
+  }
+
+  // ── Update tournaments/_meta for index/members tab ────────────────────────
+  await saveTournamentMeta(t, newSubmitted);
+
   showToast(`Round ${ri + 1} scores saved!`, 'ok');
 };
+
+// ── Write tournament metadata to _meta node ────────────────────────────────
+async function saveTournamentMeta(t, submitted) {
+  const sub = submitted || t.state?.submitted || [];
+  const roundsDone = sub.filter(Boolean).length;
+  const total = t.config?.totalRounds || 0;
+  const isComplete = roundsDone >= total && total > 0;
+  const status = isComplete ? 'completed' : roundsDone > 0 ? 'live' : 'upcoming';
+
+  // Determine winner from standings if complete
+  let winner = null;
+  if (isComplete && t.players && t.state) {
+    const ranked = [...Array(t.players.length).keys()]
+      .sort((a,b) => (t.state.pts[b]||0) - (t.state.pts[a]||0) || (t.state.wins[b]||0) - (t.state.wins[a]||0));
+    winner = t.players[ranked[0]] || null;
+  }
+
+  const sport = t.config?.sport || 'padel';
+  const fmt = t.config?.format || 'mexicano';
+  const formatLabel =
+    fmt === 'mexicano'      ? 'Hybrid Mexicano' :
+    fmt === 'team-mexicano' ? 'Team Mexicano' :
+    fmt === 'americano'     ? 'Americano' :
+    fmt === 'team-americano'? 'Team Americano' :
+    fmt === 'round-robin'   ? 'Round Robin' :
+    fmt === 'knockout'      ? 'Knockout' : fmt;
+
+  const courts = t.players ? Math.floor(t.players.length / 4) : 0;
+
+  await set(ref(db, `tournaments/_meta/${t.id}`), {
+    key:        t.id,
+    name:       t.name,
+    format:     formatLabel,
+    sport,
+    date:       t.config?.date || '',
+    time:       [t.config?.startTime, t.config?.endTime].filter(Boolean).join(' – '),
+    players:    (t.players || []).length,
+    courts,
+    rounds:     total,
+    roundsDone,
+    status,
+    winner,
+    updatedAt:  Date.now(),
+  });
+}
 
 // ===== Edit Settings =====
 window.toggleEditSettings = () => {
@@ -1095,6 +1176,10 @@ window.archiveTournament = async () => {
   if (!confirm('Archive this tournament? It will move to archive and you can start a new one.')) return;
   const { id } = activeTournament;
   await update(ref(db, `tournaments/${id}`), { status: 'archived', archivedAt: new Date().toISOString() });
+
+  // Mark as completed in _meta
+  await saveTournamentMeta(activeTournament, activeTournament.state?.submitted);
+
   if (activeListener) off(activeListener);
   activeTournament = null;
   renderDashboard();
