@@ -99,6 +99,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDu7A0agFAT1jwfrjCRkQe6tHg2Qu_LnDc",
@@ -112,6 +113,10 @@ const FIREBASE_CONFIG = {
 
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getDatabase(app);
+const auth = getAuth(app);
+
+// Sign in anonymously so Firebase security rules allow reads
+signInAnonymously(auth).catch(e => console.warn('Anon auth failed:', e));
 
 let tournament = null;
 

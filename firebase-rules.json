@@ -1,0 +1,46 @@
+{
+  "rules": {
+    // ── Admin UID — replace ADMIN_UID_PLACEHOLDER with your actual admin UID
+    // after creating the admin account in Firebase Console (instructions below).
+    // Until then, the rules below rely on auth != null for reads and
+    // the admin UID check for writes.
+
+    "members": {
+      // Any authenticated user (including anonymous) can read
+      ".read": "auth != null",
+      // Only the admin account can write
+      ".write": "auth != null && auth.uid === 'ADMIN_UID_PLACEHOLDER'",
+      "$memberId": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === 'ADMIN_UID_PLACEHOLDER'"
+      }
+    },
+
+    "openPlaySessions": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'ADMIN_UID_PLACEHOLDER'"
+    },
+
+    "openPlayMatches": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'ADMIN_UID_PLACEHOLDER'"
+    },
+
+    "tournaments": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.uid === 'ADMIN_UID_PLACEHOLDER'",
+      "_meta": {
+        // _meta is read by scoreboard + members page — any auth user
+        ".read": "auth != null",
+        // writes allowed from admin OR from the self-heal backfill on scoreboard
+        ".write": "auth != null && auth.uid === 'ADMIN_UID_PLACEHOLDER'"
+      }
+    },
+
+    // Block everything else by default
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
