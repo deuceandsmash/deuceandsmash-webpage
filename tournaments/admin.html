@@ -783,7 +783,7 @@ function renderRoundsTab() {
         ${isChamp ? '🏆 Generate Championship Round' : `🎲 Generate Round ${current + 1}`}
       </button>
       <span style="font-size:0.82rem;color:var(--muted)">
-        ${isChamp ? 'Championship — top 4 vs top 4, 5–8 vs 5–8' : current < randomRounds ? 'Random Mix' : 'Mexicano draw'}
+        ${isChamp ? 'Championship — top 4 vs top 4, 5–8 vs 5–8' : (config.format==='americano'||config.format==='team-americano') ? 'Americano — rotating partners, no repeat pairs' : current < randomRounds ? 'Random Mix' : 'Mexicano draw'}
       </span>
     </div>`;
   }
@@ -795,7 +795,9 @@ function renderRoundsTab() {
     if (!r) continue;
     const isSubmitted = state.submitted && state.submitted[ri];
     const isChamp = r.isChamp;
-    const mode = r.isRestored ? 'RESTORED' : isChamp ? 'CHAMPIONSHIP' : ri < randomRounds ? 'RANDOM MIX' : 'MEXICANO';
+    const fmt = config.format || 'mexicano';
+    const isAmericano = fmt === 'americano' || fmt === 'team-americano';
+    const mode = r.isRestored ? 'RESTORED' : isChamp ? 'CHAMPIONSHIP' : isAmericano ? 'AMERICANO' : ri < randomRounds ? 'RANDOM MIX' : 'MEXICANO';
     const timeLabel = times && times[ri] ? times[ri] : '';
 
     html += `<div class="round-card">
@@ -851,6 +853,8 @@ function renderRoundBody(r, ri, players, target, isSubmitted, isChamp) {
   }
   if (!isSubmitted) {
     html += `<div class="submit-row"><button class="btn btn-primary btn-sm" onclick="submitRound(${ri})">Submit Round ${ri+1} Scores</button></div>`;
+  } else {
+    html += `<div class="submit-row"><button class="btn btn-secondary btn-sm" onclick="editRound(${ri})">✏️ Edit Scores</button></div>`;
   }
   return html;
 }
@@ -879,9 +883,12 @@ window.generateNextRound = async () => {
 
   let round;
   const isChamp = ri === championshipRound;
+  const fmt = config.format || 'mexicano';
 
   if (isChamp) {
     round = generateChampionship(state, N, players);
+  } else if (fmt === 'americano' || fmt === 'team-americano') {
+    round = generateAmericano(state, N, ri);
   } else if (ri < randomRounds) {
     round = generateRandom(state, N);
   } else {
@@ -910,6 +917,61 @@ function generateRandom(state, N) {
     matches.push({ c, p1: [order[c*4], order[c*4+1]], p2: [order[c*4+2], order[c*4+3]] });
   }
   const byes = order.slice(courts * 4);
+  return { matches, byes, scores: [] };
+}
+
+// Americano: partners rotate every round, no pair repeats; ranked by individual pts
+function generateAmericano(state, N, ri) {
+  const courts = Math.floor(N / 4);
+  const byeCount = N - courts * 4;
+
+  // Build history of past partnerships from submitted rounds
+  const partnerHistory = Array.from({ length: N }, () => new Set());
+  (state.rounds || []).forEach((r, rIdx) => {
+    if (!state.submitted?.[rIdx] || !r.matches) return;
+    r.matches.forEach(m => {
+      const [a, b] = m.p1; const [c, d] = m.p2;
+      partnerHistory[a].add(b); partnerHistory[b].add(a);
+      partnerHistory[c].add(d); partnerHistory[d].add(c);
+    });
+  });
+
+  // Rank players by points (for seeding court assignments)
+  const ranked = [...Array(N).keys()].sort((a, b) => state.pts[b] - state.pts[a]);
+
+  // Assign byes to those with most byes already, then lowest pts
+  const byes = [];
+  if (byeCount > 0) {
+    const byeCandidates = [...ranked].sort((a, b) => state.byeCnt[a] - state.byeCnt[b] || state.pts[a] - state.pts[b]);
+    byes.push(...byeCandidates.slice(0, byeCount));
+  }
+  const active = ranked.filter(p => !byes.includes(p)); // 4*courts players
+
+  // Greedy partner assignment: for each court slot, pick best available partner
+  // who hasn't partnered this player before (or least recently if everyone has)
+  const assigned = new Set();
+  const matches = [];
+
+  for (let c = 0; c < courts; c++) {
+    // Pick first unassigned player (highest ranked)
+    const p1 = active.find(p => !assigned.has(p));
+    if (p1 === undefined) break;
+    assigned.add(p1);
+
+    // Best partner: unassigned, not previously paired with p1
+    let p2 = active.find(p => !assigned.has(p) && !partnerHistory[p1].has(p));
+    if (p2 === undefined) p2 = active.find(p => !assigned.has(p)); // fallback
+    assigned.add(p2);
+
+    // Opponents: next two unassigned (prefer those who haven't played this pair)
+    let p3 = active.find(p => !assigned.has(p));
+    assigned.add(p3);
+    let p4 = active.find(p => !assigned.has(p));
+    assigned.add(p4);
+
+    matches.push({ c, p1: [p1, p2], p2: [p3, p4] });
+  }
+
   return { matches, byes, scores: [] };
 }
 
@@ -953,6 +1015,55 @@ function shuffle(arr) {
   }
   return arr;
 }
+
+// ===== Score Edit (unlock a submitted round) =====
+window.editRound = async (ri) => {
+  if (!activeTournament) return;
+  if (!confirm(`Unlock Round ${ri+1} for editing? Scores and standings will be recalculated when you re-submit.`)) return;
+  const t = activeTournament;
+  const { players, state } = t;
+  const r = state.rounds[ri];
+  if (!r || !r.scores) return;
+
+  // Reverse the points/played/wins that were added by this round
+  const newPts    = [...state.pts];
+  const newPlayed = [...state.played];
+  const newWins   = [...state.wins];
+  const newByeCnt = [...state.byeCnt];
+
+  for (let mi = 0; mi < r.matches.length; mi++) {
+    const [sa, sb] = r.scores[mi] || [0, 0];
+    const [p1a, p1b] = r.matches[mi].p1;
+    const [p2a, p2b] = r.matches[mi].p2;
+    newPts[p1a] -= sa; newPts[p1b] -= sa;
+    newPts[p2a] -= sb; newPts[p2b] -= sb;
+    newPlayed[p1a]--; newPlayed[p1b]--;
+    newPlayed[p2a]--; newPlayed[p2b]--;
+    if (sa > sb) { newWins[p1a]--; newWins[p1b]--; }
+    else if (sb > sa) { newWins[p2a]--; newWins[p2b]--; }
+  }
+  for (const bi of (r.byes || [])) { newByeCnt[bi]--; }
+
+  // Clear scores and mark unsubmitted
+  const newRounds = [...state.rounds];
+  newRounds[ri] = { ...r, scores: [] };
+  const newSubmitted = [...(state.submitted || [])];
+  newSubmitted[ri] = false;
+
+  await update(ref(db, `tournaments/${t.id}/state`), {
+    pts: newPts, played: newPlayed, wins: newWins, byeCnt: newByeCnt,
+    rounds: newRounds, submitted: newSubmitted,
+  });
+
+  // Remove DSR writes for this round so they get re-written on re-submit
+  const { remove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+  for (let mi = 0; mi < r.matches.length; mi++) {
+    await remove(ref(db, `openPlayMatches/${t.id}-r${ri+1}-m${mi+1}`));
+  }
+
+  await saveTournamentMeta(t, newSubmitted);
+  showToast(`Round ${ri + 1} unlocked — update scores and re-submit`, 'ok');
+};
 
 // ===== Score Submission =====
 window.submitRound = async (ri) => {
