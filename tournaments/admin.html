@@ -260,6 +260,15 @@
       <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Each line maps to a round — shown on the live scoreboard</div>
     </div>
 
+    <!-- Team pairing UI — shown only for Team Mexicano / Team Americano -->
+    <div class="form-row" id="team-setup-row" style="margin-top:12px;display:none">
+      <label class="form-label">Team Pairings <span style="color:var(--muted);font-weight:400">(fixed for the whole tournament)</span></label>
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:8px">Select players first, then assign them to teams below. Teams stay fixed — only opponents rotate each round.</div>
+      <div id="team-pairs-list" style="margin-bottom:10px;display:flex;flex-direction:column;gap:8px"></div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="autoAssignTeams()" style="margin-bottom:4px">⚡ Auto-assign teams</button>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:4px">Auto-assign pairs players in the order they were added. You can manually change pairs above.</div>
+    </div>
+
     <div class="form-row" style="margin-top:12px">
       <label class="form-label">Player Constraints <span style="color:var(--muted);font-weight:400">(optional)</span></label>
       <div id="constraint-list" style="margin-bottom:8px"></div>
@@ -413,6 +422,7 @@ const db = getDatabase(app);
 let members = {};
 let activeTournament = null;  // { id, ...data }
 let selectedPlayers = [];     // names
+let teamPairings = [];        // [[p1name, p2name], ...] — built from team-setup UI
 let activeListener = null;
 
 // ===== PIN =====
@@ -532,6 +542,8 @@ function renderSelectedPlayers() {
   const byes = n % 4 === 0 ? 0 : 4 - (n % 4);
   document.getElementById('player-count-msg').textContent =
     n ? `${n} players · ${courts} court${courts!==1?'s':''} · ${byes > 0 ? byes + ' sitting out per round' : 'no byes'}` : '';
+  const fmt = document.getElementById('t-format')?.value;
+  if (isTeamFormat(fmt)) renderTeamPairs();
 }
 
 window.addGuest = async () => {
@@ -571,6 +583,13 @@ window.createTournament = async () => {
   if (!name) { res.innerHTML = '<span style="color:var(--danger)">Enter a tournament name</span>'; return; }
   if (!mexRounds || mexRounds < 2) { res.innerHTML = '<span style="color:var(--danger)">Total rounds must be at least 2</span>'; return; }
   if (selectedPlayers.length < 4) { res.innerHTML = '<span style="color:var(--danger)">Need at least 4 players</span>'; return; }
+  if (isTeamFormat(format) && selectedPlayers.length % 2 !== 0) { res.innerHTML = '<span style="color:var(--danger)">Team formats need an even number of players</span>'; return; }
+  if (isTeamFormat(format)) {
+    const allPaired = teamPairings.every(p => p[0] !== -1 && p[1] !== -1);
+    if (!allPaired || teamPairings.length * 2 !== selectedPlayers.length) {
+      res.innerHTML = '<span style="color:var(--danger)">Assign all players to teams before creating</span>'; return;
+    }
+  }
   if (activeTournament) { res.innerHTML = '<span style="color:var(--warn)">Archive the active tournament first</span>'; return; }
 
   const N = selectedPlayers.length;
@@ -592,7 +611,7 @@ window.createTournament = async () => {
   const tData = {
     name, status: 'active', createdAt: new Date().toISOString(),
     players: selectedPlayers,
-    config: { date, sport, format, totalRounds, randomRounds, mexicanoEnd: MEXICANO_END, championshipRound: CHAMP, target, scoringType, setFormat, startTime, endTime, times, constraints },
+    config: { date, sport, format, totalRounds, randomRounds, mexicanoEnd: MEXICANO_END, championshipRound: CHAMP, target, scoringType, setFormat, startTime, endTime, times, constraints, teams: isTeamFormat(format) ? teamPairings : null },
     state,
   };
 
@@ -610,6 +629,58 @@ window.createTournament = async () => {
   clearNewForm();
 };
 
+// ===== Team pairing helpers =====
+function renderTeamPairs() {
+  const el = document.getElementById('team-pairs-list');
+  if (!el) return;
+  const N = selectedPlayers.length;
+  const numTeams = Math.ceil(N / 2);
+
+  // Grow/shrink teamPairings to match needed teams
+  while (teamPairings.length < numTeams) teamPairings.push([null, null]);
+  while (teamPairings.length > numTeams) teamPairings.pop();
+
+  // Figure out which players are already assigned
+  const assigned = new Set(teamPairings.flat().filter(p => p !== null));
+
+  el.innerHTML = teamPairings.map((pair, ti) => {
+    const opts = (slot) => {
+      const current = pair[slot];
+      const options = selectedPlayers.filter(p => p === current || !assigned.has(p) || pair.includes(p));
+      return `<option value="">— pick player —</option>` +
+        options.map(p => `<option value="${p}" ${p === current ? 'selected' : ''}>${p}</option>`).join('');
+    };
+    return `<div style="display:flex;align-items:center;gap:8px;background:var(--surface);padding:8px 12px;border-radius:8px;border:1px solid var(--border)">
+      <span style="font-size:0.78rem;color:var(--muted);min-width:52px;font-weight:600">Team ${ti + 1}</span>
+      <select class="form-input" style="flex:1;padding:6px 8px" onchange="setTeamPlayer(${ti},0,this.value)">${opts(0)}</select>
+      <span style="color:var(--muted)">/</span>
+      <select class="form-input" style="flex:1;padding:6px 8px" onchange="setTeamPlayer(${ti},1,this.value)">${opts(1)}</select>
+    </div>`;
+  }).join('');
+}
+
+window.setTeamPlayer = (teamIdx, slot, name) => {
+  // Remove this player from any other slot
+  for (let ti = 0; ti < teamPairings.length; ti++) {
+    for (let s = 0; s < 2; s++) {
+      if ((ti !== teamIdx || s !== slot) && teamPairings[ti][s] === name) {
+        teamPairings[ti][s] = null;
+      }
+    }
+  }
+  teamPairings[teamIdx][slot] = name || null;
+  renderTeamPairs();
+};
+
+window.autoAssignTeams = () => {
+  const N = selectedPlayers.length;
+  teamPairings = [];
+  for (let i = 0; i < N; i += 2) {
+    teamPairings.push([selectedPlayers[i], selectedPlayers[i + 1] || null]);
+  }
+  renderTeamPairs();
+};
+
 // ===== Format / Scoring / Constraint helpers =====
 const FORMAT_DESCS = {
   'mexicano': 'Random mix rounds → Mexicano ranked draws → Championship final',
@@ -624,12 +695,19 @@ function isMexicanoFormat(fmt) {
   return fmt === 'mexicano' || fmt === 'team-mexicano';
 }
 
+function isTeamFormat(fmt) {
+  return fmt === 'team-mexicano' || fmt === 'team-americano';
+}
+
 window.selectFormat = (fmt) => {
   document.getElementById('t-format').value = fmt;
   document.querySelectorAll('.format-btn').forEach(b => b.classList.toggle('active', b.dataset.fmt === fmt));
   document.getElementById('format-desc').textContent = FORMAT_DESCS[fmt] || '';
   const showRandom = isMexicanoFormat(fmt);
   document.getElementById('random-rounds-row').style.display = showRandom ? '' : 'none';
+  const showTeams = isTeamFormat(fmt);
+  document.getElementById('team-setup-row').style.display = showTeams ? '' : 'none';
+  if (showTeams) renderTeamPairs();
 };
 
 window.selectTarget = (val, fromCustom) => {
@@ -724,6 +802,7 @@ window.clearNewForm = () => {
   currentConstraints = [];
   renderConstraints();
   selectedPlayers = [];
+  teamPairings = [];
   renderSelectedPlayers();
   filterPicker();
   document.getElementById('create-result').innerHTML = '';
@@ -828,6 +907,7 @@ function renderRestoredRound(r, ri, players) {
 
 function renderRoundBody(r, ri, players, target, isSubmitted, isChamp) {
   if (!r.matches || !r.matches.length) return '<div class="empty">No matches</div>';
+  const isTeam = !!r.matches[0]?.teamIdx; // team rounds carry teamIdx
   let html = '';
   for (let mi = 0; mi < r.matches.length; mi++) {
     const m = r.matches[mi];
@@ -835,16 +915,24 @@ function renderRoundBody(r, ri, players, target, isSubmitted, isChamp) {
     const [p2a, p2b] = m.p2;
     const scoreA = r.scores?.[mi]?.[0] ?? '';
     const scoreB = r.scores?.[mi]?.[1] ?? '';
+    // For team formats show "Name / Name" as a unit label
+    const label1 = isTeam
+      ? `<strong>${players[p1a]}</strong><br><span style="color:var(--muted);font-size:0.8rem">/ ${players[p1b]}</span>`
+      : `${players[p1a]}<br><span style="color:var(--muted)">${players[p1b]}</span>`;
+    const label2 = isTeam
+      ? `<strong>${players[p2a]}</strong><br><span style="color:var(--muted);font-size:0.8rem">/ ${players[p2b]}</span>`
+      : `${players[p2a]}<br><span style="color:var(--muted)">${players[p2b]}</span>`;
+    const courtTitle = m.label ? `${m.label}` : `Court ${m.c + 1}`;
     html += `<div class="court-block">
-      <div class="court-title">Court ${m.c + 1}</div>
+      <div class="court-title">${courtTitle}</div>
       <div class="match-row">
-        <div class="team-name">${players[p1a]}<br><span style="color:var(--muted)">${players[p1b]}</span></div>
+        <div class="team-name">${label1}</div>
         <div class="score-pair">
           <input class="score-box" type="number" min="0" max="99" value="${scoreA}" id="s-${ri}-${mi}-0" ${isSubmitted?'readonly':''} placeholder="—">
           <span style="color:var(--muted)">–</span>
           <input class="score-box" type="number" min="0" max="99" value="${scoreB}" id="s-${ri}-${mi}-1" ${isSubmitted?'readonly':''} placeholder="—">
         </div>
-        <div class="team-name right">${players[p2a]}<br><span style="color:var(--muted)">${players[p2b]}</span></div>
+        <div class="team-name right">${label2}</div>
       </div>
     </div>`;
   }
@@ -884,10 +972,23 @@ window.generateNextRound = async () => {
   let round;
   const isChamp = ri === championshipRound;
   const fmt = config.format || 'mexicano';
+  const teams = config.teams || null; // [[p1name, p2name], ...]
 
-  if (isChamp) {
+  // For team formats, convert name-based teams to index-based
+  let teamIndices = null;
+  if (teams && isTeamFormat(fmt)) {
+    teamIndices = teams.map(pair => pair.map(name => players.indexOf(name)).filter(i => i >= 0));
+  }
+
+  if (isChamp && teamIndices) {
+    round = generateTeamChampionship(state, teamIndices);
+  } else if (isChamp) {
     round = generateChampionship(state, N, players);
-  } else if (fmt === 'americano' || fmt === 'team-americano') {
+  } else if (fmt === 'team-mexicano' && teamIndices) {
+    round = generateTeamMexicano(state, teamIndices, ri, randomRounds);
+  } else if (fmt === 'team-americano' && teamIndices) {
+    round = generateTeamAmericano(state, teamIndices);
+  } else if (fmt === 'americano') {
     round = generateAmericano(state, N, ri);
   } else if (ri < randomRounds) {
     round = generateRandom(state, N);
@@ -1005,6 +1106,111 @@ function generateChampionship(state, N, players) {
     matches.push({ c: 1, p1: [ranked[4], ranked[5]], p2: [ranked[6], ranked[7]], label: 'Consolation Final' });
   }
   const byes = ranked.slice(8);
+  return { matches, byes, scores: [], isChamp: true };
+}
+
+// Team Mexicano: fixed teams, rank by combined pts, pair top vs top (like Mexicano but unit is a team)
+function generateTeamMexicano(state, teams, ri, randomRounds) {
+  const T = teams.length; // number of teams
+  const courts = Math.floor(T / 2);
+  const byeTeamCount = T - courts * 2;
+
+  // Sum pts for each team
+  const teamPts = teams.map(([a, b]) => (state.pts[a] || 0) + (state.pts[b] || 0));
+  const teamByes = teams.map(([a, b]) => (state.byeCnt[a] || 0) + (state.byeCnt[b] || 0));
+
+  // Rank teams
+  let ranked;
+  if (ri < randomRounds) {
+    ranked = shuffle([...Array(T).keys()]);
+  } else {
+    ranked = [...Array(T).keys()].sort((a, b) => teamPts[b] - teamPts[a] || teamByes[a] - teamByes[b]);
+  }
+
+  // Byes: teams with most byes first, then lowest pts
+  const byeTeams = [];
+  if (byeTeamCount > 0) {
+    const cands = [...ranked].sort((a, b) => teamByes[a] - teamByes[b] || teamPts[a] - teamPts[b]);
+    byeTeams.push(...cands.slice(0, byeTeamCount));
+  }
+  const active = ranked.filter(t => !byeTeams.includes(t));
+
+  const matches = [];
+  for (let c = 0; c < courts; c++) {
+    const t1 = active[c * 2];
+    const t2 = active[c * 2 + 1];
+    matches.push({ c, p1: [...teams[t1]], p2: [...teams[t2]], teamIdx: [t1, t2] });
+  }
+
+  // Flatten bye player indices
+  const byes = byeTeams.flatMap(ti => teams[ti]);
+  return { matches, byes, scores: [], byeTeams };
+}
+
+// Team Americano: fixed teams, rotate opponents round-by-round in round-robin style
+function generateTeamAmericano(state, teams) {
+  const T = teams.length;
+  const courts = Math.floor(T / 2);
+  const byeTeamCount = T - courts * 2;
+
+  // Build opponent history — which teams has each team faced
+  const opponentHistory = Array.from({ length: T }, () => new Set());
+  (state.rounds || []).forEach((r, rIdx) => {
+    if (!state.submitted?.[rIdx] || !r.matches) return;
+    r.matches.forEach(m => {
+      const [t1, t2] = m.teamIdx || [];
+      if (t1 !== undefined && t2 !== undefined) {
+        opponentHistory[t1].add(t2);
+        opponentHistory[t2].add(t1);
+      }
+    });
+  });
+
+  // Rank teams by pts for seeding
+  const teamPts = teams.map(([a, b]) => (state.pts[a] || 0) + (state.pts[b] || 0));
+  const teamByeCnt = teams.map(([a, b]) => (state.byeCnt[a] || 0) + (state.byeCnt[b] || 0));
+  const ranked = [...Array(T).keys()].sort((a, b) => teamPts[b] - teamPts[a]);
+
+  // Byes
+  const byeTeams = [];
+  if (byeTeamCount > 0) {
+    const cands = [...ranked].sort((a, b) => teamByeCnt[a] - teamByeCnt[b] || teamPts[a] - teamPts[b]);
+    byeTeams.push(...cands.slice(0, byeTeamCount));
+  }
+  const active = ranked.filter(t => !byeTeams.includes(t));
+
+  const assigned = new Set();
+  const matches = [];
+  for (let c = 0; c < courts; c++) {
+    const t1 = active.find(t => !assigned.has(t));
+    if (t1 === undefined) break;
+    assigned.add(t1);
+    // Prefer opponent not yet faced
+    let t2 = active.find(t => !assigned.has(t) && !opponentHistory[t1].has(t));
+    if (t2 === undefined) t2 = active.find(t => !assigned.has(t));
+    assigned.add(t2);
+    matches.push({ c, p1: [...teams[t1]], p2: [...teams[t2]], teamIdx: [t1, t2] });
+  }
+
+  const byes = byeTeams.flatMap(ti => teams[ti]);
+  return { matches, byes, scores: [], byeTeams };
+}
+
+// Team championship: top 2 teams vs next 2 teams
+function generateTeamChampionship(state, teams) {
+  const T = teams.length;
+  const teamPts = teams.map(([a, b]) => (state.pts[a] || 0) + (state.pts[b] || 0));
+  const teamWins = teams.map(([a, b]) => (state.wins[a] || 0) + (state.wins[b] || 0));
+  const ranked = [...Array(T).keys()].sort((a, b) => teamPts[b] - teamPts[a] || teamWins[b] - teamWins[a]);
+
+  const matches = [];
+  // Grand Final: #1 team vs #2 team
+  matches.push({ c: 0, p1: [...teams[ranked[0]]], p2: [...teams[ranked[1]]], teamIdx: [ranked[0], ranked[1]], label: 'Grand Final' });
+  // Consolation: #3 vs #4
+  if (T >= 4) {
+    matches.push({ c: 1, p1: [...teams[ranked[2]]], p2: [...teams[ranked[3]]], teamIdx: [ranked[2], ranked[3]], label: 'Consolation Final' });
+  }
+  const byes = ranked.slice(4).flatMap(ti => teams[ti]);
   return { matches, byes, scores: [], isChamp: true };
 }
 
@@ -1152,9 +1358,21 @@ async function saveTournamentMeta(t, submitted) {
   // Determine winner from standings if complete
   let winner = null;
   if (isComplete && t.players && t.state) {
-    const ranked = [...Array(t.players.length).keys()]
-      .sort((a,b) => (t.state.pts[b]||0) - (t.state.pts[a]||0) || (t.state.wins[b]||0) - (t.state.wins[a]||0));
-    winner = t.players[ranked[0]] || null;
+    const fmt2 = t.config?.format || 'mexicano';
+    if (isTeamFormat(fmt2) && t.config?.teams) {
+      const teams = t.config.teams.map(pair => pair.map(name => t.players.indexOf(name)).filter(i => i >= 0));
+      const teamRanked = [...Array(teams.length).keys()].sort((a, b) => {
+        const ptsA = teams[a].reduce((s, i) => s + (t.state.pts[i] || 0), 0);
+        const ptsB = teams[b].reduce((s, i) => s + (t.state.pts[i] || 0), 0);
+        return ptsB - ptsA;
+      });
+      const winTeam = teams[teamRanked[0]];
+      winner = winTeam.map(i => t.players[i]).join(' / ');
+    } else {
+      const ranked = [...Array(t.players.length).keys()]
+        .sort((a,b) => (t.state.pts[b]||0) - (t.state.pts[a]||0) || (t.state.wins[b]||0) - (t.state.wins[a]||0));
+      winner = t.players[ranked[0]] || null;
+    }
   }
 
   const sport = t.config?.sport || 'padel';
@@ -1266,19 +1484,48 @@ window.renderStandings = () => {
     document.getElementById('standings-tbody').innerHTML = '<tr><td colspan="6" style="color:var(--muted);padding:20px">No active tournament</td></tr>';
     return;
   }
-  const { players, state } = activeTournament;
-  const ranked = [...Array(players.length).keys()]
-    .sort((a, b) => state.pts[b] - state.pts[a] || state.wins[b] - state.wins[a]);
-  document.getElementById('standings-tbody').innerHTML = ranked.map((pi, pos) =>
-    `<tr>
-      <td class="pos">${pos + 1}</td>
-      <td>${players[pi]}</td>
-      <td class="pts-cell">${state.pts[pi]}</td>
-      <td>${state.played[pi]}</td>
-      <td>${state.wins[pi]}</td>
-      <td>${state.byeCnt[pi]}</td>
-    </tr>`
-  ).join('');
+  const { players, state, config } = activeTournament;
+  const fmt = config?.format || 'mexicano';
+
+  if (isTeamFormat(fmt) && config?.teams) {
+    // Show team standings
+    const teams = config.teams.map(pair => pair.map(name => players.indexOf(name)).filter(i => i >= 0));
+    const teamRanked = [...Array(teams.length).keys()].sort((a, b) => {
+      const ptsA = teams[a].reduce((s, i) => s + (state.pts[i] || 0), 0);
+      const ptsB = teams[b].reduce((s, i) => s + (state.pts[i] || 0), 0);
+      const winsA = teams[a].reduce((s, i) => s + (state.wins[i] || 0), 0);
+      const winsB = teams[b].reduce((s, i) => s + (state.wins[i] || 0), 0);
+      return ptsB - ptsA || winsB - winsA;
+    });
+    document.getElementById('standings-tbody').innerHTML = teamRanked.map((ti, pos) => {
+      const [i1, i2] = teams[ti];
+      const pts = (state.pts[i1] || 0) + (state.pts[i2] || 0);
+      const played = state.played[i1] || 0;
+      const wins = (state.wins[i1] || 0) + (state.wins[i2] || 0);
+      const byeC = (state.byeCnt[i1] || 0) + (state.byeCnt[i2] || 0);
+      return `<tr>
+        <td class="pos">${pos + 1}</td>
+        <td><strong>${players[i1]}</strong> / ${players[i2]}</td>
+        <td class="pts-cell">${pts}</td>
+        <td>${played}</td>
+        <td>${wins}</td>
+        <td>${byeC}</td>
+      </tr>`;
+    }).join('');
+  } else {
+    const ranked = [...Array(players.length).keys()]
+      .sort((a, b) => state.pts[b] - state.pts[a] || state.wins[b] - state.wins[a]);
+    document.getElementById('standings-tbody').innerHTML = ranked.map((pi, pos) =>
+      `<tr>
+        <td class="pos">${pos + 1}</td>
+        <td>${players[pi]}</td>
+        <td class="pts-cell">${state.pts[pi]}</td>
+        <td>${state.played[pi]}</td>
+        <td>${state.wins[pi]}</td>
+        <td>${state.byeCnt[pi]}</td>
+      </tr>`
+    ).join('');
+  }
 };
 
 // ===== Archive =====
