@@ -98,7 +98,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDu7A0agFAT1jwfrjCRkQe6tHg2Qu_LnDc",
@@ -130,6 +130,10 @@ if (urlId) {
     }
     tournament = { id: urlId, ...data };
     render();
+    // Self-healing: if this is a completed/archived tournament with no standings in _meta, backfill it
+    if ((data.status === 'archived' || data.status === 'completed') && data.players && data.state) {
+      backfillMetaStandingsIfMissing(urlId, data);
+    }
     // Show LIVE badge only if still active
     const isLive = data.status === 'active';
     document.getElementById('live-dot').style.display = isLive ? 'block' : 'none';
@@ -258,6 +262,35 @@ function render() {
   </div>`;
 
   document.getElementById('main-content').innerHTML = html;
+}
+
+// Backfill _meta standings for archived tournaments that were closed before the fix was deployed
+async function backfillMetaStandingsIfMissing(id, data) {
+  try {
+    const metaRef = ref(db, `tournaments/_meta/${id}`);
+    // Read current _meta once to check if standings already exist
+    onValue(metaRef, async metaSnap => {
+      const meta = metaSnap.val();
+      if (!meta || (meta.standings && meta.standings.length)) return; // already has standings
+      // Compute standings from state.pts
+      const { players, state, config } = data;
+      if (!players || !state?.pts) return;
+      const N = players.length;
+      const ranked = [...Array(N).keys()].sort((a,b) => state.pts[b]-state.pts[a] || (state.wins[b]||0)-(state.wins[a]||0));
+      const standings = ranked.slice(0,4).map((pi, i) => ({ pos: i+1, name: players[pi], pts: state.pts[pi] }));
+      const winner = players[ranked[0]];
+      const roundsDone = (state.submitted||[]).filter(Boolean).length;
+      await update(metaRef, {
+        winner,
+        standings,
+        roundsDone,
+        rounds: config?.totalRounds || roundsDone,
+        players: N,
+        format: config?.format || meta?.format || '',
+        sport: config?.sport || meta?.sport || 'padel'
+      });
+    }, { onlyOnce: true });
+  } catch(e) { /* silent — backfill is best-effort */ }
 }
 </script>
 </body>
