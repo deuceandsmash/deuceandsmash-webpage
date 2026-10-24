@@ -187,6 +187,43 @@
   .assess-result-breakdown { background: var(--card); border-radius: 10px; padding: 14px 16px; text-align: left; font-size: 0.8rem; margin-bottom: 20px; }
   .assess-result-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); }
   .assess-result-row:last-child { border-bottom: none; }
+
+  /* Rating Guide Panel */
+  .guide-toggle { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; font-size: 0.82rem; font-weight: 600; color: var(--muted); cursor: pointer; width: 100%; text-align: left; margin-bottom: 12px; transition: border-color 0.15s, color 0.15s; }
+  .guide-toggle:hover { border-color: var(--accent2); color: var(--text); }
+  .guide-toggle .gt-icon { font-size: 1rem; }
+  .guide-toggle .gt-arrow { margin-left: auto; transition: transform 0.2s; font-size: 0.75rem; }
+  .guide-toggle.open { border-color: var(--accent2); color: var(--text); }
+  .guide-toggle.open .gt-arrow { transform: rotate(180deg); }
+  .guide-panel { display: none; margin-bottom: 18px; }
+  .guide-panel.open { display: block; }
+  .guide-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .guide-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 560px; }
+  .guide-table thead tr { background: var(--surface); }
+  .guide-table th { padding: 10px 14px; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .guide-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; line-height: 1.45; }
+  .guide-table tr:last-child td { border-bottom: none; }
+  .guide-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .gr-range { font-weight: 800; font-size: 0.95rem; color: var(--accent); white-space: nowrap; }
+  .gr-band { font-weight: 700; white-space: nowrap; }
+  .gr-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.3px; }
+  .gr-desc { color: var(--muted); font-size: 0.78rem; }
+  /* Per-level colour accents on the left border */
+  .guide-table tr.tier-init td:first-child { border-left: 3px solid #666; }
+  .guide-table tr.tier-init-i td:first-child { border-left: 3px solid #aaa; }
+  .guide-table tr.tier-inter td:first-child { border-left: 3px solid var(--accent2); }
+  .guide-table tr.tier-inter-h td:first-child { border-left: 3px solid #3bd9ff; }
+  .guide-table tr.tier-inter-a td:first-child { border-left: 3px solid #3baaff; }
+  .guide-table tr.tier-adv td:first-child { border-left: 3px solid #b47dff; }
+  .guide-table tr.tier-elite td:first-child { border-left: 3px solid var(--accent); }
+  /* Badge colours */
+  .badge-init { background: rgba(150,150,150,0.15); color: #aaa; }
+  .badge-init-i { background: rgba(200,200,200,0.12); color: #ccc; }
+  .badge-inter { background: rgba(59,255,232,0.12); color: var(--accent2); }
+  .badge-inter-h { background: rgba(59,217,255,0.12); color: #3bd9ff; }
+  .badge-inter-a { background: rgba(59,170,255,0.12); color: #3baaff; }
+  .badge-adv { background: rgba(180,125,255,0.15); color: #b47dff; }
+  .badge-elite { background: rgba(232,255,59,0.15); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -235,6 +272,14 @@
       <option value="manual">Manual</option>
     </select>
   </div>
+  <button class="guide-toggle" id="guide-toggle-members" onclick="toggleGuide('members')">
+    <span class="gt-icon">📊</span>
+    <span>Smash Rating &amp; Skill Level Quick Reference</span>
+    <span class="gt-arrow">▼</span>
+  </button>
+  <div class="guide-panel" id="guide-panel-members">
+    <div id="guide-table-members"></div>
+  </div>
   <div id="members-list" class="member-grid">
     <div class="loading"><div class="spinner"></div><br><br>Loading members…</div>
   </div>
@@ -245,6 +290,14 @@
   <div class="search-row">
     <input type="search" class="search-input" id="rating-search" placeholder="Search player…" oninput="renderRatings()">
     <button class="btn btn-secondary" onclick="recalcRatings()">🔄 Recalculate</button>
+  </div>
+  <button class="guide-toggle" id="guide-toggle-ratings" onclick="toggleGuide('ratings')">
+    <span class="gt-icon">📊</span>
+    <span>Smash Rating &amp; Skill Level Quick Reference</span>
+    <span class="gt-arrow">▼</span>
+  </button>
+  <div class="guide-panel" id="guide-panel-ratings">
+    <div id="guide-table-ratings"></div>
   </div>
   <div style="overflow-x:auto">
     <table class="rating-table" id="rating-table">
@@ -963,6 +1016,98 @@ window.showTab = (name) => {
   document.getElementById(`tab-${name}`).classList.add('active');
   currentTab = name;
   if (name === 'openplay') showOpHistory();
+};
+
+// ===== Rating Guide Table =====
+const RATING_GUIDE = [
+  {
+    tier: 'tier-init', badge: 'badge-init', badgeLabel: 'Initiation',
+    range: '0.0 – 0.5', band: 'Initiation',
+    levelLabel: 'Beginner',
+    desc: 'Never picked up a racquet, or first session ever. No technique, no rally ability. Just learning how to hold the paddle and make contact.'
+  },
+  {
+    tier: 'tier-init', badge: 'badge-init', badgeLabel: 'Initiation',
+    range: '0.75 – 1.0', band: 'Initiation',
+    levelLabel: 'Beginner',
+    desc: 'Has played a handful of times. Can make contact and get a few shots back but lacks consistency. No structured technique yet, many missed shots.'
+  },
+  {
+    tier: 'tier-init-i', badge: 'badge-init-i', badgeLabel: 'Initiation–Inter',
+    range: '1.5 – 2.0', band: 'Initiation–Intermediate',
+    levelLabel: 'Beginner+',
+    desc: 'A few months of play or lessons. Starts to rally short distances. Basic forehand developing; backhand inconsistent. Plays 1–2× per month socially.'
+  },
+  {
+    tier: 'tier-inter', badge: 'badge-inter', badgeLabel: 'Intermediate',
+    range: '2.5 – 3.0', band: 'Intermediate',
+    levelLabel: 'Intermediate',
+    desc: 'Can sustain a rally. Solid forehand and developing backhand. Understands basic positioning. Some unforced errors. Plays regularly at club / social level.'
+  },
+  {
+    tier: 'tier-inter', badge: 'badge-inter', badgeLabel: 'Intermediate',
+    range: '3.0 – 3.5', band: 'Intermediate',
+    levelLabel: 'Intermediate+',
+    desc: 'Consistent on both wings. Controls direction reasonably well. Starting to use angles and varied pace. Fewer errors, starting to construct points.'
+  },
+  {
+    tier: 'tier-inter-h', badge: 'badge-inter-h', badgeLabel: 'Inter High',
+    range: '4.0 – 4.5', band: 'Intermediate High',
+    levelLabel: 'Intermediate+',
+    desc: 'Masters forehand and backhand with control. Few unforced errors. Plays volleys confidently. Understands shot selection and court positioning. Competes at local club tournaments.'
+  },
+  {
+    tier: 'tier-inter-a', badge: 'badge-inter-a', badgeLabel: 'Inter Advanced',
+    range: '5.0', band: 'Intermediate Advanced',
+    levelLabel: 'Strong Inter',
+    desc: 'Good tactical mindset — reads opponents, varies play, exploits weaknesses. Uses topspin, slice, and net play effectively. Competitive at open club events.'
+  },
+  {
+    tier: 'tier-adv', badge: 'badge-adv', badgeLabel: 'Advanced',
+    range: '5.5 – 6.0', band: 'Advanced',
+    levelLabel: 'Advanced',
+    desc: 'Dominates technically and tactically. Full shot repertoire with high control and pace. Constructs winning patterns, dictates rallies. Plays and wins in open tournaments.'
+  },
+  {
+    tier: 'tier-elite', badge: 'badge-elite', badgeLabel: 'Elite',
+    range: '6.5 – 7.0', band: 'Elite / Professional',
+    levelLabel: 'Elite',
+    desc: 'Top-tier competitive level. Near-flawless technique, elite tactical decision-making, exceptional consistency under pressure. Regional or national ranking level / WPT equivalent.'
+  },
+];
+
+function buildGuideTableHTML() {
+  const rows = RATING_GUIDE.map(r => `
+    <tr class="${r.tier}">
+      <td><span class="gr-range">${r.range}</span></td>
+      <td><span class="gr-badge ${r.badge}">${r.badgeLabel}</span></td>
+      <td class="gr-band">${r.levelLabel}</td>
+      <td class="gr-desc">${r.desc}</td>
+    </tr>`).join('');
+  return `<div class="guide-table-wrap">
+    <table class="guide-table">
+      <thead><tr>
+        <th>DSR Range</th>
+        <th>Band</th>
+        <th>Level</th>
+        <th>What it means</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+  <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:0 2px">
+    DSR = Deuce &amp; Smash Rating · Scale 0–7 · Aligned with Playtomic Level system
+  </div>`;
+}
+
+window.toggleGuide = (which) => {
+  const btn = document.getElementById(`guide-toggle-${which}`);
+  const panel = document.getElementById(`guide-panel-${which}`);
+  const tableEl = document.getElementById(`guide-table-${which}`);
+  const isOpen = panel.classList.contains('open');
+  if (!isOpen && !tableEl.innerHTML) tableEl.innerHTML = buildGuideTableHTML();
+  panel.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
 };
 
 // ===== Skill Assessment Wizard =====
