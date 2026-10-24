@@ -85,15 +85,21 @@
   #drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(480px, 100vw); background: var(--surface); border-left: 1px solid var(--border); z-index: 201; display: none; flex-direction: column; overflow: hidden; }
   #drawer.open, #drawer-overlay.open { display: flex; }
   .drawer-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
-  .drawer-close { margin-left: auto; background: var(--pill-bg); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; }
+  .drawer-close { background: var(--pill-bg); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; }
+  .drawer-edit-btn { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 7px 16px; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+  .drawer-header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
   .drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
   .drawer-section { margin-bottom: 24px; }
   .drawer-section h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
-  .field-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
-  .field-label { font-size: 0.8rem; color: var(--muted); width: 100px; flex-shrink: 0; }
-  .field-val { flex: 1; font-size: 0.9rem; }
-  .field-edit { flex: 1; padding: 7px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem; outline: none; }
+  /* View mode rows */
+  .field-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start; }
+  .field-label { font-size: 0.78rem; color: var(--muted); width: 110px; flex-shrink: 0; padding-top: 2px; }
+  .field-val { flex: 1; font-size: 0.9rem; font-weight: 500; word-break: break-word; }
+  /* Edit mode inputs */
+  .field-edit { flex: 1; padding: 7px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem; outline: none; width: 100%; }
   .field-edit:focus { border-color: var(--accent); }
+  /* Rating pin note */
+  .pin-note { font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
   .history-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
   .history-item { background: var(--card); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; }
   .history-date { color: var(--muted); font-size: 0.75rem; }
@@ -298,12 +304,15 @@
       <div id="drawer-name" style="font-size:1.2rem;font-weight:800;"></div>
       <div id="drawer-meta" style="font-size:0.8rem;color:var(--muted);margin-top:2px;"></div>
     </div>
-    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    <div class="drawer-header-actions">
+      <button class="drawer-edit-btn" id="drawer-edit-btn" onclick="enterEditMode()">✏️ Edit</button>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
   </div>
   <div class="drawer-body" id="drawer-body"></div>
   <div class="save-bar" id="save-bar" style="display:none">
-    <button class="btn btn-primary" onclick="saveMember()">Save Changes</button>
-    <button class="btn btn-secondary" onclick="closeDrawer()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveMember()">✓ Save Changes</button>
+    <button class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
   </div>
 </div>
 
@@ -536,45 +545,42 @@ window.renderMembers = () => {
   }).join('');
 };
 
-// ===== Drawer =====
-window.openDrawer = (id) => {
-  drawerMemberId = id;
-  drawerEdits = {};
-  const m = members[id];
-  if (!m) return;
-  document.getElementById('drawer-name').textContent = m.name || id;
-  const metaParts = [];
-  if (m.levelOverride) metaParts.push(m.levelOverride);
-  if (m.ratingOverride != null && m.ratingOverride !== '') metaParts.push(`Rating pinned: ${parseFloat(m.ratingOverride).toFixed(2)}`);
-  document.getElementById('drawer-meta').textContent = metaParts.join(' · ') || 'No level set';
-  const r = ratings[m.name];
+// ===== Drawer helpers =====
+function drawerMeta(m) {
+  const parts = [];
+  if (m.levelOverride) parts.push(m.levelOverride);
+  if (m.ratingOverride != null && m.ratingOverride !== '') parts.push(`Rating pinned: ${parseFloat(m.ratingOverride).toFixed(2)}`);
+  return parts.join(' · ') || 'No level set';
+}
 
-  // Build rating history
-  const histHtml = r && r.hist.length
-    ? `<ul class="history-list">${r.hist.slice().reverse().slice(0,10).map(h => {
-        const cls = h.delta > 0.001 ? 'delta-pos' : h.delta < -0.001 ? 'delta-neg' : '';
-        const sign = h.delta > 0.001 ? '+' : '';
-        return `<li class="history-item">
-          <span>${h.date}</span>
-          <span class="${cls}">${sign}${h.delta.toFixed(3)}</span>
-          <span style="color:var(--accent)">${h.r.toFixed(2)}</span>
-        </li>`;
-      }).join('')}</ul>` : '<p style="color:var(--muted);font-size:0.85rem">No rated matches yet</p>';
+function buildHistHtml(r) {
+  if (!r || !r.hist.length) return '<p style="color:var(--muted);font-size:0.85rem">No rated matches yet</p>';
+  return `<ul class="history-list">${r.hist.slice().reverse().slice(0,10).map(h => {
+    const cls = h.delta > 0.001 ? 'delta-pos' : h.delta < -0.001 ? 'delta-neg' : '';
+    const sign = h.delta > 0.001 ? '+' : '';
+    return `<li class="history-item">
+      <span>${h.date}</span>
+      <span class="${cls}">${sign}${h.delta.toFixed(3)}</span>
+      <span style="color:var(--accent)">${h.r.toFixed(2)}</span>
+    </li>`;
+  }).join('')}</ul>`;
+}
 
-  // Player sessions
-  const playerSessions = Object.values(sessions).filter(s => Array.isArray(s.players) && s.players.includes(m.name) && s.status === 'Played');
-  const sessHtml = playerSessions.length
-    ? `<ul class="history-list">${playerSessions.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8).map(s =>
-        `<li class="history-item"><span>${s.date}</span><span>${s.level}</span><span style="color:var(--muted)">${s.time}</span></li>`
-      ).join('')}</ul>` : '<p style="color:var(--muted);font-size:0.85rem">No sessions recorded</p>';
-
+function renderDrawerView(m, r, playerSessions) {
   const ratingSource = m.ratingOverride != null && m.ratingOverride !== ''
-    ? `📌 Staff pinned`
+    ? '📌 Staff pinned'
     : m.levelOverride
       ? `Seeded from level: ${m.levelOverride}`
       : (r?.hist?.length ? `Calculated from ${r.matches} matches` : 'Default seed — no history');
+  const sessHtml = playerSessions.length
+    ? `<ul class="history-list">${playerSessions.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8).map(s =>
+        `<li class="history-item"><span>${s.date}</span><span>${s.level}</span><span style="color:var(--muted)">${s.time}</span></li>`
+      ).join('')}</ul>`
+    : '<p style="color:var(--muted);font-size:0.85rem">No sessions recorded</p>';
 
-  document.getElementById('drawer-body').innerHTML = `
+  const val = (v, fallback='—') => v || `<span style="color:var(--muted)">${fallback}</span>`;
+
+  return `
     <div class="drawer-section">
       <h4>Smash Rating</h4>
       ${r ? `<div style="display:flex;gap:16px;align-items:center;margin-bottom:8px">
@@ -586,51 +592,116 @@ window.openDrawer = (id) => {
         </div>
       </div>` : '<p style="color:var(--muted);font-size:0.85rem;margin-bottom:8px">Rating not yet calculated</p>'}
       <div style="font-size:0.75rem;color:var(--accent2);margin-bottom:12px">Source: ${ratingSource}</div>
-      ${histHtml}
+      ${buildHistHtml(r)}
     </div>
     <div class="drawer-section">
       <h4>Profile</h4>
-      <div class="field-row"><span class="field-label">Name</span><input class="field-edit" value="${m.name || ''}" onchange="drawerEdits.name=this.value;showSave()"></div>
-      <div class="field-row"><span class="field-label">Full Name</span><input class="field-edit" value="${m.fullName || ''}" onchange="drawerEdits.fullName=this.value;showSave()"></div>
-      <div class="field-row"><span class="field-label">Phone</span><input class="field-edit" value="${m.phone || ''}" onchange="drawerEdits.phone=this.value;showSave()" inputmode="tel"></div>
-      <div class="field-row"><span class="field-label">Email</span><input class="field-edit" value="${m.email || ''}" onchange="drawerEdits.email=this.value;showSave()" inputmode="email"></div>
-      <div class="field-row"><span class="field-label">Skill Level</span>
-        <select class="field-edit" onchange="drawerEdits.levelOverride=this.value;showSave()">
-          <option value="">— not set —</option>
-          ${['Beginner','Beginner+','Intermediate','Intermediate+','Advanced','Advanced High','Elite'].map(l =>
-            `<option${m.levelOverride===l?' selected':''}>${l}</option>`).join('')}
-        </select>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Smash Rating</span>
-        <div style="flex:1;display:flex;gap:8px;align-items:center">
-          <input class="field-edit" type="number" min="0" max="7" step="0.01"
-            style="width:90px;flex:none"
-            placeholder="e.g. 2.50"
-            value="${m.ratingOverride ?? ''}"
-            onchange="drawerEdits.ratingOverride=this.value===''?'':parseFloat(this.value);showSave()">
-          <span style="font-size:0.72rem;color:var(--muted)">Pin a fixed rating (0–7). Leave blank to let DSR calculate it.</span>
-        </div>
-      </div>
-      <div class="field-row"><span class="field-label">Membership</span>
-        <select class="field-edit" onchange="drawerEdits.membership=this.value;showSave()">
-          <option value="">None</option>
-          ${['Monthly','Annual','Trial'].map(l => `<option${m.membership===l?' selected':''}>${l}</option>`).join('')}
-        </select>
-      </div>
-      <div class="field-row"><span class="field-label">Notes</span><input class="field-edit" value="${m.notes || ''}" onchange="drawerEdits.notes=this.value;showSave()"></div>
+      <div class="field-row"><span class="field-label">Name</span><span class="field-val">${val(m.name)}</span></div>
+      <div class="field-row"><span class="field-label">Full Name</span><span class="field-val">${val(m.fullName)}</span></div>
+      <div class="field-row"><span class="field-label">Phone</span><span class="field-val">${val(m.phone)}</span></div>
+      <div class="field-row"><span class="field-label">Email</span><span class="field-val">${val(m.email)}</span></div>
+      <div class="field-row"><span class="field-label">Skill Level</span><span class="field-val">${val(m.levelOverride, 'Not set')}</span></div>
+      <div class="field-row"><span class="field-label">Rating Pin</span><span class="field-val">${m.ratingOverride != null && m.ratingOverride !== '' ? `📌 ${parseFloat(m.ratingOverride).toFixed(2)}` : '<span style="color:var(--muted)">Auto (DSR)</span>'}</span></div>
+      <div class="field-row"><span class="field-label">Membership</span><span class="field-val">${val(m.membership, 'None')}</span></div>
+      <div class="field-row"><span class="field-label">Notes</span><span class="field-val">${val(m.notes)}</span></div>
     </div>
     <div class="drawer-section">
       <h4>Open Play Sessions (${playerSessions.length})</h4>
       ${sessHtml}
+    </div>`;
+}
+
+function renderDrawerEdit(m) {
+  const LEVELS = ['Beginner','Beginner+','Intermediate','Intermediate+','Advanced','Advanced High','Elite'];
+  const MEMBERSHIPS = ['Monthly','Annual','Trial'];
+  return `
+    <div class="drawer-section">
+      <h4>Profile</h4>
+      <div class="field-row">
+        <span class="field-label">Name</span>
+        <input class="field-edit" id="edit-name" value="${m.name || ''}" placeholder="Display name">
+      </div>
+      <div class="field-row">
+        <span class="field-label">Full Name</span>
+        <input class="field-edit" id="edit-fullname" value="${m.fullName || ''}" placeholder="Full name">
+      </div>
+      <div class="field-row">
+        <span class="field-label">Phone</span>
+        <input class="field-edit" id="edit-phone" value="${m.phone || ''}" placeholder="+91 …" inputmode="tel">
+      </div>
+      <div class="field-row">
+        <span class="field-label">Email</span>
+        <input class="field-edit" id="edit-email" value="${m.email || ''}" placeholder="email@…" inputmode="email">
+      </div>
+      <div class="field-row">
+        <span class="field-label">Skill Level</span>
+        <select class="field-edit" id="edit-level">
+          <option value="">— not set —</option>
+          ${LEVELS.map(l => `<option${m.levelOverride===l?' selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Membership</span>
+        <select class="field-edit" id="edit-membership">
+          <option value="">None</option>
+          ${MEMBERSHIPS.map(l => `<option${m.membership===l?' selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Notes</span>
+        <input class="field-edit" id="edit-notes" value="${m.notes || ''}" placeholder="Any notes…">
+      </div>
     </div>
-  `;
+    <div class="drawer-section">
+      <h4>Smash Rating Override</h4>
+      <div class="field-row">
+        <span class="field-label">Pin Rating</span>
+        <input class="field-edit" id="edit-rating" type="number" min="0" max="7" step="0.01"
+          style="max-width:120px"
+          placeholder="e.g. 2.50"
+          value="${m.ratingOverride ?? ''}">
+      </div>
+      <p class="pin-note" style="margin-left:118px">Enter 0–7 to fix this player's rating. Clear the field to let DSR calculate it automatically from match history.</p>
+    </div>`;
+}
+
+// ===== Drawer =====
+window.openDrawer = (id) => {
+  drawerMemberId = id;
+  drawerEdits = {};
+  const m = members[id];
+  if (!m) return;
+  const r = ratings[m.name];
+  const playerSessions = Object.values(sessions).filter(s => Array.isArray(s.players) && s.players.includes(m.name) && s.status === 'Played');
+
+  document.getElementById('drawer-name').textContent = m.name || id;
+  document.getElementById('drawer-meta').textContent = drawerMeta(m);
+  document.getElementById('drawer-edit-btn').style.display = '';
+  document.getElementById('drawer-body').innerHTML = renderDrawerView(m, r, playerSessions);
   document.getElementById('drawer').style.display = 'flex';
   document.getElementById('drawer-overlay').classList.add('open');
   document.getElementById('save-bar').style.display = 'none';
 };
 
-window.showSave = () => document.getElementById('save-bar').style.display = 'flex';
+window.enterEditMode = () => {
+  const m = members[drawerMemberId];
+  if (!m) return;
+  document.getElementById('drawer-body').innerHTML = renderDrawerEdit(m);
+  document.getElementById('drawer-edit-btn').style.display = 'none';
+  document.getElementById('save-bar').style.display = 'flex';
+};
+
+window.cancelEdit = () => {
+  const m = members[drawerMemberId];
+  const r = ratings[m?.name];
+  const playerSessions = Object.values(sessions).filter(s => Array.isArray(s.players) && s.players.includes(m?.name) && s.status === 'Played');
+  drawerEdits = {};
+  document.getElementById('drawer-name').textContent = m.name || drawerMemberId;
+  document.getElementById('drawer-meta').textContent = drawerMeta(m);
+  document.getElementById('drawer-edit-btn').style.display = '';
+  document.getElementById('drawer-body').innerHTML = renderDrawerView(m, r, playerSessions);
+  document.getElementById('save-bar').style.display = 'none';
+};
 
 window.closeDrawer = () => {
   document.getElementById('drawer').style.display = 'none';
@@ -640,14 +711,38 @@ window.closeDrawer = () => {
 };
 
 window.saveMember = async () => {
-  if (!drawerMemberId || !Object.keys(drawerEdits).length) return;
-  const updates = { ...drawerEdits, updatedAt: new Date().toISOString() };
+  if (!drawerMemberId) return;
+  const m = members[drawerMemberId];
+  // Read all fields from edit form
+  const updates = {
+    name:         document.getElementById('edit-name')?.value.trim() || m.name,
+    fullName:     document.getElementById('edit-fullname')?.value.trim() || '',
+    phone:        document.getElementById('edit-phone')?.value.trim() || '',
+    email:        document.getElementById('edit-email')?.value.trim() || '',
+    levelOverride:document.getElementById('edit-level')?.value || '',
+    membership:   document.getElementById('edit-membership')?.value || '',
+    notes:        document.getElementById('edit-notes')?.value.trim() || '',
+    ratingOverride: (() => {
+      const v = document.getElementById('edit-rating')?.value;
+      if (v === '' || v == null) return '';
+      const n = parseFloat(v);
+      return isNaN(n) ? '' : n;
+    })(),
+    updatedAt: new Date().toISOString(),
+  };
   await update(ref(db, `members/${drawerMemberId}`), updates);
   Object.assign(members[drawerMemberId], updates);
   computeAllRatings();
   renderMembers();
   renderRatings();
-  closeDrawer();
+  // Return to view mode with updated data
+  const r = ratings[updates.name || m.name];
+  const playerSessions = Object.values(sessions).filter(s => Array.isArray(s.players) && s.players.includes(updates.name || m.name) && s.status === 'Played');
+  document.getElementById('drawer-name').textContent = updates.name || m.name;
+  document.getElementById('drawer-meta').textContent = drawerMeta(members[drawerMemberId]);
+  document.getElementById('drawer-edit-btn').style.display = '';
+  document.getElementById('drawer-body').innerHTML = renderDrawerView(members[drawerMemberId], r, playerSessions);
+  document.getElementById('save-bar').style.display = 'none';
   showToast('Member updated ✓', 'ok');
 };
 
