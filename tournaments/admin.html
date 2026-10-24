@@ -1476,9 +1476,10 @@ async function saveTournamentMeta(t, submitted) {
   const isComplete = roundsDone >= total && total > 0;
   const status = isComplete ? 'completed' : roundsDone > 0 ? 'live' : 'upcoming';
 
-  // Determine winner from standings if complete
+  // Determine winner and top standings whenever rounds have been played
   let winner = null;
-  if (isComplete && t.players && t.state) {
+  let standings = [];
+  if (roundsDone > 0 && t.players && t.state) {
     const fmt2 = t.config?.format || 'mexicano';
     if (isTeamFormat(fmt2) && t.config?.teams) {
       const teams = t.config.teams.map(pair => pair.map(name => t.players.indexOf(name)).filter(i => i >= 0));
@@ -1487,12 +1488,21 @@ async function saveTournamentMeta(t, submitted) {
         const ptsB = teams[b].reduce((s, i) => s + (t.state.pts[i] || 0), 0);
         return ptsB - ptsA;
       });
-      const winTeam = teams[teamRanked[0]];
-      winner = winTeam.map(i => t.players[i]).join(' / ');
+      winner = teams[teamRanked[0]].map(i => t.players[i]).join(' / ');
+      standings = teamRanked.slice(0, 4).map((ti, pos) => ({
+        pos: pos + 1,
+        name: teams[ti].map(i => t.players[i]).join(' / '),
+        pts: teams[ti].reduce((s, i) => s + (t.state.pts[i] || 0), 0),
+      }));
     } else {
       const ranked = [...Array(t.players.length).keys()]
         .sort((a,b) => (t.state.pts[b]||0) - (t.state.pts[a]||0) || (t.state.wins[b]||0) - (t.state.wins[a]||0));
       winner = t.players[ranked[0]] || null;
+      standings = ranked.slice(0, 4).map((pi, pos) => ({
+        pos: pos + 1,
+        name: t.players[pi],
+        pts: t.state.pts[pi] || 0,
+      }));
     }
   }
 
@@ -1521,6 +1531,7 @@ async function saveTournamentMeta(t, submitted) {
     roundsDone,
     status,
     winner,
+    standings,
     updatedAt:  Date.now(),
   });
 }
@@ -1674,8 +1685,9 @@ window.closeTournamentEarly = async () => {
   const submittedCount = (t.state?.submitted || []).filter(Boolean).length;
   if (!confirm(`Close the tournament now and declare a winner based on standings after Round ${submittedCount}?`)) return;
   const { id } = t;
-  // Save final standings/winner then archive
+  // Save final standings/winner then archive; force status=completed in _meta
   await saveTournamentMeta(t, t.state?.submitted);
+  await update(ref(db, `tournaments/_meta/${id}`), { status: 'completed' });
   await update(ref(db, `tournaments/${id}`), {
     status: 'archived',
     archivedAt: new Date().toISOString(),
