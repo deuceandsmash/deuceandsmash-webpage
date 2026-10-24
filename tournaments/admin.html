@@ -855,15 +855,27 @@ function renderRoundsTab() {
   let html = '';
 
   // Generate Next Round button
+  const submittedCount = (state.submitted || []).filter(Boolean).length;
+  const lastRoundUnsubmitted = current > 0 && state.rounds && state.rounds[current - 1] && !(state.submitted && state.submitted[current - 1]);
   if (canGenerate) {
     const isChamp = current === championshipRound;
-    html += `<div style="margin-bottom:16px;display:flex;gap:10px;align-items:center">
+    html += `<div style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="generateNextRound()" id="gen-btn">
         ${isChamp ? '🏆 Generate Championship Round' : `🎲 Generate Round ${current + 1}`}
       </button>
       <span style="font-size:0.82rem;color:var(--muted)">
         ${isChamp ? 'Championship — top 4 vs top 4, 5–8 vs 5–8' : (config.format==='americano'||config.format==='team-americano') ? 'Americano — rotating partners, no repeat pairs' : current < randomRounds ? 'Random Mix' : 'Mexicano draw'}
       </span>
+      ${lastRoundUnsubmitted ? `<button class="btn btn-secondary btn-sm" onclick="cancelLastRound()" style="margin-left:auto;color:var(--warn);border-color:var(--warn)">✕ Cancel Round ${current}</button>` : ''}
+    </div>`;
+  }
+  // Close tournament early — shown whenever at least one round is submitted and tournament isn't done
+  if (submittedCount > 0 && canGenerate) {
+    html += `<div style="margin-bottom:16px">
+      <button class="btn btn-secondary btn-sm" onclick="closeTournamentEarly()" style="color:var(--warn);border-color:var(--warn)">
+        🏁 Close Tournament &amp; Declare Winner
+      </button>
+      <span style="font-size:0.78rem;color:var(--muted);margin-left:8px">End now based on current standings (Round ${submittedCount} of ${totalRounds})</span>
     </div>`;
   }
 
@@ -1635,6 +1647,46 @@ window.renderStandings = () => {
       </tr>`
     ).join('');
   }
+};
+
+// ===== Cancel last unsubmitted round =====
+window.cancelLastRound = async () => {
+  const t = activeTournament;
+  if (!t) return;
+  const { id, state } = t;
+  const ri = (state.current || 0) - 1;
+  if (ri < 0) return;
+  if (state.submitted && state.submitted[ri]) { showToast('Round already submitted — cannot cancel', 'err'); return; }
+  if (!confirm(`Cancel Round ${ri + 1}? This will remove it so you can regenerate or close the tournament.`)) return;
+  // Remove round from Firebase and decrement current
+  const rounds = [...(state.rounds || [])];
+  rounds[ri] = null;
+  const submitted = [...(state.submitted || [])];
+  submitted[ri] = false;
+  await update(ref(db, `tournaments/${id}/state`), { rounds, submitted, current: ri });
+  showToast(`Round ${ri + 1} cancelled`, 'ok');
+};
+
+// ===== Close tournament early =====
+window.closeTournamentEarly = async () => {
+  const t = activeTournament;
+  if (!t) return;
+  const submittedCount = (t.state?.submitted || []).filter(Boolean).length;
+  if (!confirm(`Close the tournament now and declare a winner based on standings after Round ${submittedCount}?`)) return;
+  const { id } = t;
+  // Save final standings/winner then archive
+  await saveTournamentMeta(t, t.state?.submitted);
+  await update(ref(db, `tournaments/${id}`), {
+    status: 'archived',
+    archivedAt: new Date().toISOString(),
+    closedEarlyAfterRound: submittedCount,
+  });
+  if (activeListener) off(activeListener);
+  activeTournament = null;
+  renderDashboard();
+  renderRoundsTab();
+  renderStandings();
+  showToast(`Tournament closed after Round ${submittedCount} — winner declared from standings`, 'ok');
 };
 
 // ===== Archive =====
