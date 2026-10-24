@@ -158,6 +158,35 @@
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
   .form-full { grid-column: 1 / -1; }
+
+  /* Skill Assessment Modal */
+  #assess-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 400; display: none; align-items: center; justify-content: center; padding: 16px; }
+  #assess-overlay.open { display: flex; }
+  #assess-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; }
+  .assess-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); }
+  .assess-header h2 { font-size: 1.15rem; font-weight: 800; margin-bottom: 2px; }
+  .assess-header p { font-size: 0.8rem; color: var(--muted); }
+  .assess-progress { display: flex; gap: 6px; margin-top: 14px; }
+  .assess-pip { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background 0.2s; }
+  .assess-pip.done { background: var(--accent); }
+  .assess-pip.active { background: var(--accent2); }
+  .assess-body { padding: 24px; flex: 1; }
+  .assess-q { font-size: 1rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
+  .assess-hint { font-size: 0.78rem; color: var(--muted); margin-bottom: 20px; }
+  .assess-options { display: flex; flex-direction: column; gap: 10px; }
+  .assess-opt { background: var(--card); border: 2px solid var(--border); border-radius: 10px; padding: 13px 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; text-align: left; }
+  .assess-opt:hover { border-color: var(--accent2); background: rgba(59,255,232,0.05); }
+  .assess-opt.selected { border-color: var(--accent); background: rgba(232,255,59,0.08); }
+  .assess-opt-label { font-size: 0.92rem; font-weight: 600; }
+  .assess-opt-desc { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+  .assess-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: space-between; align-items: center; }
+  .assess-result { padding: 24px; text-align: center; }
+  .assess-result-num { font-size: 4rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .assess-result-band { font-size: 1.1rem; font-weight: 700; margin: 8px 0 4px; }
+  .assess-result-desc { font-size: 0.85rem; color: var(--muted); max-width: 360px; margin: 0 auto 20px; }
+  .assess-result-breakdown { background: var(--card); border-radius: 10px; padding: 14px 16px; text-align: left; font-size: 0.8rem; margin-bottom: 20px; }
+  .assess-result-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .assess-result-row:last-child { border-bottom: none; }
 </style>
 </head>
 <body>
@@ -283,6 +312,13 @@
           <option>Trial</option>
         </select>
       </div>
+      <div>
+        <label class="form-label">Smash Rating</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="form-input" id="new-rating" type="number" min="0" max="7" step="0.01" placeholder="0–7 (optional)" style="flex:1">
+          <button class="btn btn-secondary" type="button" onclick="openAssess('new')" title="Run skill assessment to suggest a rating" style="white-space:nowrap;padding:8px 12px">🎯 Assess</button>
+        </div>
+      </div>
       <div class="form-full">
         <label class="form-label">Notes</label>
         <input class="form-input" id="new-notes" placeholder="Any notes…">
@@ -313,6 +349,19 @@
   <div class="save-bar" id="save-bar" style="display:none">
     <button class="btn btn-primary" onclick="saveMember()">✓ Save Changes</button>
     <button class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+  </div>
+</div>
+
+<!-- Skill Assessment Modal -->
+<div id="assess-overlay">
+  <div id="assess-modal">
+    <div class="assess-header">
+      <h2>🎯 Skill Assessment</h2>
+      <p>Answer 5 quick questions to get a suggested Smash Rating</p>
+      <div class="assess-progress" id="assess-progress"></div>
+    </div>
+    <div class="assess-body" id="assess-body"></div>
+    <div class="assess-footer" id="assess-footer"></div>
   </div>
 </div>
 
@@ -656,10 +705,13 @@ function renderDrawerEdit(m) {
       <h4>Smash Rating Override</h4>
       <div class="field-row">
         <span class="field-label">Pin Rating</span>
-        <input class="field-edit" id="edit-rating" type="number" min="0" max="7" step="0.01"
-          style="max-width:120px"
-          placeholder="e.g. 2.50"
-          value="${m.ratingOverride ?? ''}">
+        <div style="display:flex;gap:8px;align-items:center;flex:1">
+          <input class="field-edit" id="edit-rating" type="number" min="0" max="7" step="0.01"
+            style="max-width:120px"
+            placeholder="e.g. 2.50"
+            value="${m.ratingOverride ?? ''}">
+          <button class="btn btn-secondary" type="button" onclick="openAssess('edit')" title="Run skill assessment" style="padding:6px 12px;font-size:0.82rem;white-space:nowrap">🎯 Assess</button>
+        </div>
       </div>
       <p class="pin-note" style="margin-left:118px">Enter 0–7 to fix this player's rating. Clear the field to let DSR calculate it automatically from match history.</p>
     </div>`;
@@ -868,6 +920,8 @@ window.addMember = async () => {
   const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const existing = members[id];
   if (existing) { document.getElementById('add-result').innerHTML = `<span style="color:var(--warn)">Member "${existing.name}" already exists with this ID</span>`; return; }
+  const ratingVal = document.getElementById('new-rating')?.value;
+  const ratingOverride = (ratingVal !== '' && ratingVal != null) ? (isNaN(parseFloat(ratingVal)) ? '' : parseFloat(ratingVal)) : '';
   const newMember = {
     id, name,
     fullName: document.getElementById('new-fullname').value.trim(),
@@ -876,6 +930,7 @@ window.addMember = async () => {
     levelOverride: document.getElementById('new-level').value,
     membership: document.getElementById('new-membership').value,
     notes: document.getElementById('new-notes').value.trim(),
+    ratingOverride,
     source: 'manual', sport: 'Padel',
     whatsappName: '',
     createdAt: new Date().toISOString(),
@@ -894,7 +949,7 @@ window.addMember = async () => {
 };
 
 window.clearNewForm = () => {
-  ['new-name','new-fullname','new-phone','new-email','new-notes'].forEach(id => document.getElementById(id).value = '');
+  ['new-name','new-fullname','new-phone','new-email','new-notes','new-rating'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('new-level').value = '';
   document.getElementById('new-membership').value = '';
   document.getElementById('add-result').innerHTML = '';
@@ -908,6 +963,208 @@ window.showTab = (name) => {
   document.getElementById(`tab-${name}`).classList.add('active');
   currentTab = name;
   if (name === 'openplay') showOpHistory();
+};
+
+// ===== Skill Assessment Wizard =====
+const ASSESS_QUESTIONS = [
+  {
+    q: 'What is your racquet sport background?',
+    hint: 'Include any sport — tennis, badminton, squash, table tennis, padel, pickleball…',
+    opts: [
+      { label: 'Complete beginner', desc: 'Never played any racquet sport before', score: 0 },
+      { label: 'Casual player', desc: 'Played a little for fun — no real training', score: 1.0 },
+      { label: 'Some experience', desc: 'A few months of lessons or regular casual play', score: 2.0 },
+      { label: 'Experienced player', desc: '1–3 years regular play with proper technique', score: 3.5 },
+      { label: 'Competitive background', desc: '3+ years, plays / played club level or tournaments', score: 5.5 },
+    ]
+  },
+  {
+    q: 'How long have you been playing padel or pickleball specifically?',
+    hint: 'Focus on padel/pickleball — not other racquet sports',
+    opts: [
+      { label: 'Never played', desc: 'This would be my very first session', score: 0 },
+      { label: 'Less than 6 months', desc: 'Still learning the basics of the game', score: 1.0 },
+      { label: '6 months – 1 year', desc: 'Getting comfortable with the game', score: 2.0 },
+      { label: '1 – 3 years', desc: 'Reasonably consistent, know the game well', score: 3.5 },
+      { label: '3+ years', desc: 'Very experienced, plays regularly and competitively', score: 5.5 },
+    ]
+  },
+  {
+    q: 'How would you describe your stroke technique?',
+    hint: 'Be honest — this helps get the most accurate rating',
+    opts: [
+      { label: 'Can\'t rally yet', desc: 'Still making contact consistently is a challenge', score: 0 },
+      { label: 'Basic strokes only', desc: 'Can rally but technique is rough, many errors', score: 1.0 },
+      { label: 'Solid basic strokes', desc: 'Consistent forehand/backhand, can sustain a rally', score: 2.5 },
+      { label: 'Good technique', desc: 'Controls direction and pace, few unforced errors', score: 4.0 },
+      { label: 'Masters all strokes', desc: 'Topspin, slice, volleys, lobs — full toolkit, high control', score: 6.0 },
+    ]
+  },
+  {
+    q: 'How would you describe your tactical understanding of the game?',
+    hint: 'Tactics = positioning, shot selection, reading the opponent',
+    opts: [
+      { label: 'No tactical awareness', desc: 'Just trying to get the ball back over the net', score: 0 },
+      { label: 'Basic tactics', desc: 'Aware of basic positioning but mostly reactive', score: 1.5 },
+      { label: 'Developing tactics', desc: 'Plays angles, uses different shots, starting to read play', score: 3.0 },
+      { label: 'Good tactical player', desc: 'Constructs points, varies play, reads opponents well', score: 5.0 },
+      { label: 'High tactical mindset', desc: 'Exploits weaknesses, dominates tactically, dictates rallies', score: 6.5 },
+    ]
+  },
+  {
+    q: 'What best describes your match play experience?',
+    hint: 'Competitive matches — not just social/fun games',
+    opts: [
+      { label: 'Never played a match', desc: 'Only practised or played social/fun games', score: 0 },
+      { label: 'A few social matches', desc: 'Played casually with friends, not competitive', score: 1.5 },
+      { label: 'Regular club/social matches', desc: 'Plays matches regularly at club or social level', score: 3.0 },
+      { label: 'Club competitive level', desc: 'Competes in club leagues or local tournaments', score: 5.0 },
+      { label: 'Tournament / high level', desc: 'Plays in open or ranked tournaments, wins regularly', score: 7.0 },
+    ]
+  },
+];
+
+const ASSESS_BANDS = [
+  { max: 0.8,  band: 'Initiation',            desc: 'Just starting out — never played or brand new to racquet sports' },
+  { max: 1.5,  band: 'Initiation',            desc: 'Very early stage — some exposure but still learning the very basics' },
+  { max: 2.2,  band: 'Initiation–Intermediate', desc: 'Getting started — a few months of play, developing basic consistency' },
+  { max: 3.2,  band: 'Intermediate',          desc: 'Solid foundations — can rally, basic tactical understanding' },
+  { max: 4.2,  band: 'Intermediate',          desc: 'Good intermediate player — consistent strokes, plays tactically' },
+  { max: 4.8,  band: 'Intermediate High',     desc: 'Strong player — few unforced errors, constructs points well' },
+  { max: 5.3,  band: 'Intermediate Advanced', desc: 'High-intermediate — strong tactical game, competitive at club level' },
+  { max: 6.2,  band: 'Advanced',              desc: 'Advanced player — dominates technically and tactically' },
+  { max: 7.0,  band: 'Elite',                 desc: 'Elite / Professional level' },
+];
+
+let assessTarget = 'new'; // 'new' | 'edit'
+let assessAnswers = [];
+let assessStep = 0;
+
+function assessBandInfo(rating) {
+  return ASSESS_BANDS.find(b => rating <= b.max) || ASSESS_BANDS[ASSESS_BANDS.length - 1];
+}
+
+function calcAssessRating() {
+  if (assessAnswers.length === 0) return 0;
+  // Weighted average: Q3 (strokes) and Q4 (tactics) count double, others single
+  const weights = [1, 1, 2, 2, 1];
+  let total = 0, wSum = 0;
+  assessAnswers.forEach((score, i) => {
+    const w = weights[i] || 1;
+    total += score * w;
+    wSum += w;
+  });
+  const raw = total / wSum;
+  // Round to nearest 0.25
+  return Math.round(raw * 4) / 4;
+}
+
+window.openAssess = (target) => {
+  assessTarget = target;
+  assessAnswers = [];
+  assessStep = 0;
+  document.getElementById('assess-overlay').classList.add('open');
+  renderAssessStep();
+};
+
+window.closeAssess = () => {
+  document.getElementById('assess-overlay').classList.remove('open');
+};
+
+function renderAssessPips() {
+  const total = ASSESS_QUESTIONS.length;
+  return Array.from({length: total}, (_, i) => {
+    const cls = i < assessAnswers.length ? 'done' : i === assessStep ? 'active' : '';
+    return `<div class="assess-pip ${cls}"></div>`;
+  }).join('');
+}
+
+function renderAssessStep() {
+  const overlay = document.getElementById('assess-overlay');
+  if (!overlay.classList.contains('open')) return;
+
+  document.getElementById('assess-progress').innerHTML = renderAssessPips();
+
+  if (assessStep >= ASSESS_QUESTIONS.length) {
+    renderAssessResult();
+    return;
+  }
+
+  const q = ASSESS_QUESTIONS[assessStep];
+  const body = document.getElementById('assess-body');
+  body.innerHTML = `
+    <div class="assess-q">Q${assessStep + 1} of ${ASSESS_QUESTIONS.length}: ${q.q}</div>
+    <div class="assess-hint">${q.hint}</div>
+    <div class="assess-options">
+      ${q.opts.map((o, i) => `
+        <button class="assess-opt" onclick="selectAssessOpt(${i})">
+          <div class="assess-opt-label">${o.label}</div>
+          <div class="assess-opt-desc">${o.desc}</div>
+        </button>`).join('')}
+    </div>`;
+
+  const footer = document.getElementById('assess-footer');
+  footer.innerHTML = `
+    <button class="btn btn-secondary" onclick="closeAssess()">Cancel</button>
+    <span style="font-size:0.8rem;color:var(--muted)">Select an answer to continue</span>`;
+}
+
+window.selectAssessOpt = (optIndex) => {
+  const q = ASSESS_QUESTIONS[assessStep];
+  const score = q.opts[optIndex].score;
+  assessAnswers[assessStep] = score;
+
+  // Highlight selected
+  const opts = document.querySelectorAll('.assess-opt');
+  opts.forEach((el, i) => el.classList.toggle('selected', i === optIndex));
+
+  // Auto-advance after brief highlight
+  setTimeout(() => {
+    assessStep++;
+    renderAssessStep();
+  }, 320);
+};
+
+function renderAssessResult() {
+  const rating = calcAssessRating();
+  const info = assessBandInfo(rating);
+  const qLabels = ['Racquet Background', 'Padel/Pickleball Experience', 'Stroke Technique', 'Tactical Understanding', 'Match Play'];
+  const weightNote = ['(1×)', '(1×)', '(2×)', '(2×)', '(1×)'];
+
+  document.getElementById('assess-body').innerHTML = `
+    <div class="assess-result">
+      <div style="font-size:0.85rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Suggested Rating</div>
+      <div class="assess-result-num">${rating.toFixed(2)}</div>
+      <div class="assess-result-band">${info.band}</div>
+      <div class="assess-result-desc">${info.desc}</div>
+      <div class="assess-result-breakdown">
+        <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px">Score Breakdown</div>
+        ${assessAnswers.map((score, i) => `
+          <div class="assess-result-row">
+            <span>${qLabels[i]} <span style="color:var(--muted);font-size:0.72rem">${weightNote[i]}</span></span>
+            <span style="color:var(--accent);font-weight:700">${score.toFixed(1)}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  document.getElementById('assess-footer').innerHTML = `
+    <button class="btn btn-secondary" onclick="assessStep=0;assessAnswers=[];renderAssessStep()">↩ Redo</button>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-secondary" onclick="closeAssess()">Discard</button>
+      <button class="btn btn-primary" onclick="applyAssessRating(${rating})">✓ Use ${rating.toFixed(2)}</button>
+    </div>`;
+}
+
+window.applyAssessRating = (rating) => {
+  if (assessTarget === 'new') {
+    const el = document.getElementById('new-rating');
+    if (el) el.value = rating.toFixed(2);
+  } else {
+    const el = document.getElementById('edit-rating');
+    if (el) el.value = rating.toFixed(2);
+  }
+  closeAssess();
+  showToast(`Rating set to ${rating.toFixed(2)} ✓`, 'ok');
 };
 
 // ===== Toast =====
