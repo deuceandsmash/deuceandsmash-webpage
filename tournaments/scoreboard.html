@@ -115,24 +115,52 @@ const db = getDatabase(app);
 
 let tournament = null;
 
-// Listen for all tournaments, find active
-onValue(ref(db, 'tournaments'), snap => {
-  const all = snap.val() || {};
-  const active = Object.entries(all).find(([id,t]) => t.status === 'active');
-  if (active) {
-    tournament = { id: active[0], ...active[1] };
+// If ?id= param is present, load that specific tournament (completed or active)
+const urlId = new URLSearchParams(location.search).get('id');
+
+if (urlId) {
+  // Load a specific tournament by ID (e.g. from members page card link)
+  onValue(ref(db, `tournaments/${urlId}`), snap => {
+    const data = snap.val();
+    if (!data) {
+      document.getElementById('main-content').innerHTML = '<div class="idle"><div class="big">🏓</div>Tournament not found</div>';
+      document.getElementById('t-name').textContent = 'Not found';
+      document.getElementById('t-sub').textContent = '';
+      return;
+    }
+    tournament = { id: urlId, ...data };
     render();
-    document.getElementById('live-dot').style.display = 'block';
-    document.getElementById('live-label').style.display = 'block';
-  } else {
-    tournament = null;
-    document.getElementById('main-content').innerHTML = '<div class="idle"><div class="big">🏓</div>No active tournament</div>';
-    document.getElementById('t-name').textContent = '—';
-    document.getElementById('t-sub').textContent = 'No tournament running';
-    document.getElementById('live-dot').style.display = 'none';
-    document.getElementById('live-label').style.display = 'none';
-  }
-});
+    // Show LIVE badge only if still active
+    const isLive = data.status === 'active';
+    document.getElementById('live-dot').style.display = isLive ? 'block' : 'none';
+    document.getElementById('live-label').style.display = isLive ? 'block' : 'none';
+    if (!isLive) {
+      // Show a "Completed" badge instead
+      document.getElementById('live-label').textContent = data.status === 'archived' ? 'Completed' : (data.status || '');
+      document.getElementById('live-label').style.display = 'block';
+      document.getElementById('live-label').style.color = '#7DC515';
+    }
+  });
+} else {
+  // Default: listen for the currently active tournament
+  onValue(ref(db, 'tournaments'), snap => {
+    const all = snap.val() || {};
+    const active = Object.entries(all).find(([id,t]) => t.status === 'active');
+    if (active) {
+      tournament = { id: active[0], ...active[1] };
+      render();
+      document.getElementById('live-dot').style.display = 'block';
+      document.getElementById('live-label').style.display = 'block';
+    } else {
+      tournament = null;
+      document.getElementById('main-content').innerHTML = '<div class="idle"><div class="big">🏓</div>No active tournament</div>';
+      document.getElementById('t-name').textContent = '—';
+      document.getElementById('t-sub').textContent = 'No tournament running';
+      document.getElementById('live-dot').style.display = 'none';
+      document.getElementById('live-label').style.display = 'none';
+    }
+  });
+}
 
 function render() {
   if (!tournament) return;
@@ -145,7 +173,11 @@ function render() {
   const timePart = (config.startTime || config.endTime)
     ? ` · ${config.startTime || ''}${config.startTime && config.endTime ? '–' : ''}${config.endTime || ''}`
     : '';
-  document.getElementById('t-sub').textContent = `${config.date || ''}${timePart} · Round ${roundsDone}/${totalRounds}`;
+  const closedEarly = tournament.closedEarlyAfterRound;
+  const roundInfo = closedEarly
+    ? `Closed after Round ${closedEarly} of ${totalRounds}`
+    : `Round ${roundsDone}/${totalRounds}`;
+  document.getElementById('t-sub').textContent = `${config.date || ''}${timePart} · ${roundInfo}`;
 
   let html = '';
 
@@ -156,9 +188,10 @@ function render() {
     html += `<div class="champ-banner"><h2>🏆 Championship Round</h2><p>Finals underway — Grand Final &amp; Consolation Final</p></div>`;
   }
 
-  // Round status pills
+  // Round status pills — only show rounds that were actually played for early-closed tournaments
+  const pillCount = closedEarly ? closedEarly : totalRounds;
   html += '<div class="section-title">Rounds</div><div class="rounds-row">';
-  for (let ri = 0; ri < totalRounds; ri++) {
+  for (let ri = 0; ri < pillCount; ri++) {
     const done = state.submitted?.[ri];
     const isChamp = ri === config.championshipRound;
     const isCurrent = ri === roundsDone && (state.rounds||[])[ri];
