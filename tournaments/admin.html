@@ -921,11 +921,8 @@ function renderRoundBody(r, ri, players, target, isSubmitted, isChamp) {
   const byeSet = new Set(r.byes || []);
 
   function playerSelect(currentIdx, mi, slot) {
-    // Options: all players not assigned elsewhere (plus current)
-    const others = players
-      .map((name, idx) => ({ name, idx }))
-      .filter(({ idx }) => idx === currentIdx || (!allAssigned.includes(idx) || byeSet.has(idx)));
-    const opts = others.map(({ name, idx }) =>
+    // Options: all players (swap logic in swapRoundPlayer handles the exchange)
+    const opts = players.map((name, idx) =>
       `<option value="${idx}" ${idx === currentIdx ? 'selected' : ''}>${name}</option>`
     ).join('');
     return `<select class="pairing-select" onchange="swapRoundPlayer(${ri},${mi},'${slot}',+this.value)"
