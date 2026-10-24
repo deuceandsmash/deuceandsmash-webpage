@@ -103,6 +103,26 @@
   .history-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
   .history-item { background: var(--card); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; }
   .history-date { color: var(--muted); font-size: 0.75rem; }
+
+  /* Connections chart */
+  .conn-section { margin-bottom: 18px; }
+  .conn-section h5 { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 8px; }
+  .conn-bar-row { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; cursor: pointer; border-radius: 8px; padding: 5px 6px; transition: background 0.12s; }
+  .conn-bar-row:hover { background: rgba(255,255,255,0.04); }
+  .conn-name { font-size: 0.8rem; font-weight: 600; width: 100px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conn-bar-wrap { flex: 1; height: 8px; background: rgba(255,255,255,0.07); border-radius: 4px; overflow: hidden; }
+  .conn-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+  .conn-count { font-size: 0.75rem; color: var(--muted); width: 28px; text-align: right; flex-shrink: 0; }
+  .conn-pill { display: inline-flex; gap: 5px; font-size: 0.72rem; flex-shrink: 0; }
+  .conn-pill span { padding: 1px 6px; border-radius: 20px; font-weight: 700; }
+  .conn-w { background: rgba(59,230,133,0.15); color: var(--success); }
+  .conn-l { background: rgba(255,88,88,0.15); color: var(--danger); }
+  .conn-d { background: rgba(136,136,136,0.15); color: var(--muted); }
+  /* Last match popover */
+  .conn-popover { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 0 6px 10px; font-size: 0.8rem; animation: fadeIn 0.15s; }
+  .conn-popover-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .conn-popover-score { font-size: 1.1rem; font-weight: 800; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform: translateY(0); } }
   .delta-pos { color: var(--success); }
   .delta-neg { color: var(--danger); }
   .save-bar { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
@@ -684,6 +704,101 @@ function buildHistHtml(r) {
   }).join('')}</ul>`;
 }
 
+function buildConnectionsHTML(m, playerSessions) {
+  if (!playerSessions.length) return '';
+
+  // Build per-person stats: partners and opponents
+  const partners = {}, opponents = {};
+
+  playerSessions.forEach(s => {
+    const onMyTeam  = s.teamA?.includes(m.name) ? s.teamA : s.teamB;
+    const otherTeam = s.teamA?.includes(m.name) ? s.teamB : s.teamA;
+    const myScore   = s.teamA?.includes(m.name) ? s.a : s.b;
+    const oppScore  = s.teamA?.includes(m.name) ? s.b : s.a;
+    const result    = myScore > oppScore ? 'W' : myScore < oppScore ? 'L' : 'D';
+
+    // Partners (teammates, excluding self)
+    (onMyTeam || []).filter(n => n !== m.name).forEach(name => {
+      if (!partners[name]) partners[name] = { count: 0, W: 0, L: 0, D: 0, last: null };
+      partners[name].count++;
+      partners[name][result]++;
+      if (!partners[name].last || (s.date || '') > (partners[name].last.date || ''))
+        partners[name].last = s;
+    });
+
+    // Opponents
+    (otherTeam || []).forEach(name => {
+      if (!opponents[name]) opponents[name] = { count: 0, W: 0, L: 0, D: 0, last: null };
+      opponents[name].count++;
+      opponents[name][result]++;
+      if (!opponents[name].last || (s.date || '') > (opponents[name].last.date || ''))
+        opponents[name].last = s;
+    });
+  });
+
+  function renderGroup(map, label, barColor) {
+    const sorted = Object.entries(map).sort((a, b) => b[1].count - a[1].count);
+    if (!sorted.length) return '';
+    const maxCount = sorted[0][1].count;
+    const rows = sorted.map(([name, d], idx) => {
+      const widthPct = Math.round((d.count / maxCount) * 100);
+      const popId = `conn-pop-${m.id}-${label.slice(0,1)}-${idx}`;
+      // Last match summary for popover
+      const s = d.last;
+      let popoverContent = '';
+      if (s) {
+        const onMyTeam  = s.teamA?.includes(m.name) ? s.teamA : s.teamB;
+        const otherTeam = s.teamA?.includes(m.name) ? s.teamB : s.teamA;
+        const myScore   = s.teamA?.includes(m.name) ? s.a : s.b;
+        const oppScore  = s.teamA?.includes(m.name) ? s.b : s.a;
+        const res       = myScore > oppScore ? 'W' : myScore < oppScore ? 'L' : 'D';
+        const rc        = res==='W'?'var(--success)':res==='L'?'var(--danger)':'var(--muted)';
+        const teammates = (onMyTeam||[]).filter(n=>n!==m.name).join(' & ') || 'Solo';
+        const opps      = (otherTeam||[]).join(' & ') || '—';
+        popoverContent = `
+          <div class="conn-popover-head">
+            <span style="color:var(--muted);font-size:0.72rem">${s.date||'Unknown date'}</span>
+            <span class="conn-popover-score" style="color:${rc}">${res} &nbsp;${myScore}–${oppScore}</span>
+          </div>
+          <div style="font-size:0.77rem;color:var(--muted)">w/ ${teammates} &nbsp;vs&nbsp; ${opps}</div>`;
+      }
+      return `
+        <div>
+          <div class="conn-bar-row" onclick="toggleConnPop('${popId}')">
+            <span class="conn-name" title="${name}">${name}</span>
+            <div class="conn-bar-wrap"><div class="conn-bar-fill" style="width:${widthPct}%;background:${barColor}"></div></div>
+            <span class="conn-count">${d.count}×</span>
+            <span class="conn-pill">
+              ${d.W ? `<span class="conn-w">${d.W}W</span>` : ''}
+              ${d.L ? `<span class="conn-l">${d.L}L</span>` : ''}
+              ${d.D ? `<span class="conn-d">${d.D}D</span>` : ''}
+            </span>
+          </div>
+          <div id="${popId}" style="display:none">
+            ${s ? `<div class="conn-popover">${popoverContent}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    return `<div class="conn-section"><h5>${label}</h5>${rows}</div>`;
+  }
+
+  return `
+    <div style="margin-top:4px">
+      ${renderGroup(partners, 'Partners', 'var(--accent2)')}
+      ${renderGroup(opponents, 'Opponents', '#b47dff')}
+    </div>`;
+}
+
+window.toggleConnPop = (id) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  // close all others in the same drawer
+  document.querySelectorAll('[id^="conn-pop-"]').forEach(e => e.style.display = 'none');
+  if (!isOpen) el.style.display = 'block';
+};
+
 function renderDrawerView(m, r, playerSessions) {
   const ratingSource = m.ratingOverride != null && m.ratingOverride !== ''
     ? '📌 Staff pinned'
@@ -737,6 +852,7 @@ function renderDrawerView(m, r, playerSessions) {
     </div>
     <div class="drawer-section">
       <h4>Open Play Sessions (${playerSessions.length})</h4>
+      ${buildConnectionsHTML(m, playerSessions)}
       ${sessHtml}
     </div>`;
 }
