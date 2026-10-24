@@ -1450,8 +1450,26 @@ function renderTournaments(list) {
       : t.status==='completed' ? '✓ Completed' : '◦ Upcoming';
     const progress = t.rounds ? Math.round(((t.roundsDone||0)/t.rounds)*100) : 0;
     const sport = (t.sport||'padel').charAt(0).toUpperCase()+(t.sport||'padel').slice(1);
+    // Link: live → scoreboard; completed/archived → scoreboard with ?id=; static pages use key.html
+    const isFirebaseKey = t.key && t.key.startsWith('-');
+    const href = isFirebaseKey
+      ? `../tournaments/scoreboard.html?id=${encodeURIComponent(t.key)}`
+      : `../tournaments/${t.key}.html`;
+    // Standings block for completed tournaments
+    const standingsHtml = (t.status==='completed' && t.standings && t.standings.length)
+      ? `<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">
+          <div style="font-size:0.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Final Standings</div>
+          ${t.standings.map(s => {
+            const medal = s.pos===1?'🥇':s.pos===2?'🥈':s.pos===3?'🥉':'';
+            return `<div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;padding:3px 0;${s.pos===1?'color:#7DC515;font-weight:700':'color:var(--text)'}">
+              <span>${medal} ${s.name}</span>
+              <span style="color:var(--text-muted)">${s.pts} pts</span>
+            </div>`;
+          }).join('')}
+        </div>`
+      : (t.winner ? `<div style="margin-top:10px;font-size:0.8rem;color:#7DC515;font-weight:600">🏆 ${t.winner}</div>` : '');
     return `
-    <a href="../tournaments/${t.key}.html" target="_blank" style="text-decoration:none;color:inherit">
+    <a href="${href}" target="_blank" style="text-decoration:none;color:inherit">
       <div style="background:var(--card-bg,#1a1a2e);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;transition:border-color .2s,transform .2s;cursor:pointer"
            onmouseover="this.style.borderColor='rgba(125,197,21,0.35)';this.style.transform='translateY(-2px)'"
            onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.transform=''">
@@ -1476,7 +1494,7 @@ function renderTournaments(list) {
           <div style="background:rgba(255,255,255,0.08);border-radius:4px;height:5px;overflow:hidden">
             <div style="height:100%;width:${progress}%;background:${progress===100?'#7DC515':'#3A8FFF'};border-radius:4px;transition:width .4s"></div>
           </div>` : ''}
-          ${t.winner ? `<div style="margin-top:10px;font-size:0.8rem;color:#7DC515;font-weight:600">🏆 ${t.winner}</div>` : ''}
+          ${standingsHtml}
         </div>
       </div>
     </a>`;
