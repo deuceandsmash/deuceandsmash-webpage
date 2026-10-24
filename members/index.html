@@ -856,6 +856,99 @@ window.toggleConnPop = (id) => {
   if (!isOpen) el.style.display = 'block';
 };
 
+function buildPlayerSpotlight(playerName) {
+  // Aggregate tournament stats for this player from trnMeta + openPlayMatches (tournament source)
+  const tournamentMatches = Object.values(opMatches).filter(
+    m => m.source === 'tournament' && (m.teamA?.includes(playerName) || m.teamB?.includes(playerName))
+  );
+
+  if (!tournamentMatches.length) return '';
+
+  let wins = 0, ties = 0, losses = 0, ptsFor = 0, ptsAgainst = 0;
+  const oppRecord = {}; // oppName -> { w, l, t }
+
+  tournamentMatches.forEach(m => {
+    const inA = m.teamA?.includes(playerName);
+    const myScore = inA ? (m.a||0) : (m.b||0);
+    const oppScore = inA ? (m.b||0) : (m.a||0);
+    ptsFor += myScore; ptsAgainst += oppScore;
+    if (myScore > oppScore) wins++;
+    else if (myScore < oppScore) losses++;
+    else ties++;
+    const opps = inA ? (m.teamB||[]) : (m.teamA||[]);
+    opps.forEach(opp => {
+      if (!oppRecord[opp]) oppRecord[opp] = { w:0, l:0, t:0 };
+      if (myScore > oppScore) oppRecord[opp].w++;
+      else if (myScore < oppScore) oppRecord[opp].l++;
+      else oppRecord[opp].t++;
+    });
+  });
+
+  const total = wins + ties + losses;
+  const ptsDiff = ptsFor - ptsAgainst;
+  const ptsDiffStr = ptsDiff >= 0 ? `+${ptsDiff}` : `${ptsDiff}`;
+  const avgScored = total > 0 ? (ptsFor / total).toFixed(1) : '—';
+  const totalPts = ptsFor;
+
+  let toughestOpp = null, toughestL = 0;
+  Object.entries(oppRecord).forEach(([opp, rec]) => {
+    if (rec.l > toughestL) { toughestL = rec.l; toughestOpp = opp; }
+  });
+
+  // Tournaments participated in
+  const trnKeys = new Set(tournamentMatches.map(m => m.tournamentId).filter(Boolean));
+  const trnList = [...trnKeys].map(k => trnMeta[k]).filter(Boolean)
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  return `
+    <div class="drawer-section">
+      <h4>🏆 Tournament Spotlight</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div style="background:var(--card,#1a1a2e);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:1.3rem;font-weight:800;color:var(--text)">${wins}-${ties}-${losses}</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">W–T–L</div>
+        </div>
+        <div style="background:var(--card,#1a1a2e);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:1.3rem;font-weight:800;color:${ptsDiff>=0?'#7DC515':'#FF4D6D'}">${ptsDiffStr}</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Point difference</div>
+        </div>
+        <div style="background:var(--card,#1a1a2e);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:1.3rem;font-weight:800;color:var(--text)">${avgScored}</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Avg scored/match</div>
+        </div>
+        <div style="background:var(--card,#1a1a2e);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:1.3rem;font-weight:800;color:#7DC515">${totalPts}</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Total pts scored</div>
+        </div>
+      </div>
+      ${toughestOpp ? `
+      <div style="background:var(--card,#1a1a2e);border-radius:10px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.06)">
+        <div>
+          <div style="font-weight:700;color:var(--text)">${toughestOpp}</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Toughest opponent</div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted)">${toughestL} loss${toughestL!==1?'es':''}</div>
+      </div>` : ''}
+      ${trnList.length ? `
+      <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Tournaments (${trnList.length})</div>
+      ${trnList.map(t => {
+        const isFirebaseKey = t.key && t.key.startsWith('-');
+        const href = isFirebaseKey
+          ? `../tournaments/scoreboard.html?id=${encodeURIComponent(t.key)}`
+          : `../tournaments/${t.key}.html`;
+        // Find this player's rank in standings
+        const rank = t.standings?.findIndex(s => s.name === playerName);
+        const rankStr = rank != null && rank >= 0
+          ? ['🥇','🥈','🥉','4th','5th','6th','7th','8th'][rank] || `${rank+1}th`
+          : '';
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.8rem">
+          <a href="${href}" target="_blank" style="color:var(--accent2,#3A8FFF);text-decoration:none;font-weight:600">${t.name||t.key}</a>
+          <span style="color:var(--text-muted)">${rankStr}${t.date?' · '+t.date:''}</span>
+        </div>`;
+      }).join('')}` : ''}
+    </div>`;
+}
+
 function renderDrawerView(m, r, playerSessions) {
   const ratingSource = m.ratingOverride != null && m.ratingOverride !== ''
     ? '📌 Staff pinned'
@@ -911,7 +1004,8 @@ function renderDrawerView(m, r, playerSessions) {
       <h4>Open Play Sessions (${playerSessions.length})</h4>
       ${buildConnectionsHTML(m, playerSessions)}
       ${sessHtml}
-    </div>`;
+    </div>
+    ${buildPlayerSpotlight(m.name)}`;
 }
 
 function renderDrawerEdit(m) {
@@ -1421,11 +1515,13 @@ window.showTab = (name) => {
 
 // ===== Tournaments Tab =====
 let trnLoaded = false;
+let trnMeta = {}; // key -> _meta entry, kept in sync
 function loadTournaments() {
   if (trnLoaded) return; // already listening
   trnLoaded = true;
   onValue(ref(db, 'tournaments/_meta'), snap => {
     const data = snap.val() || {};
+    trnMeta = data;
     const list = Object.values(data).sort((a,b) => (b.date||'').localeCompare(a.date||''));
     renderTournaments(list);
   });

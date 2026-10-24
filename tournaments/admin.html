@@ -150,6 +150,7 @@
   <button class="tab" onclick="showTab('new','New Tournament')">➕ New</button>
   <button class="tab" onclick="showTab('rounds','Rounds')">🎾 Rounds</button>
   <button class="tab" onclick="showTab('standings','Standings')">📊 Standings</button>
+  <button class="tab" onclick="showTab('performance','Performance')">📈 Performance</button>
 </div>
 
 <!-- Dashboard -->
@@ -398,6 +399,40 @@
   </div>
 </div>
 
+<!-- Performance -->
+<div class="section" id="tab-performance">
+  <div id="perf-no-tournament" style="color:var(--muted);padding:20px">No active tournament</div>
+  <div id="perf-content" style="display:none">
+
+    <!-- Rank chart -->
+    <div class="card" style="margin-bottom:16px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <h3 style="margin:0;font-size:1rem">Rank Over Rounds</h3>
+        <div style="display:flex;gap:8px">
+          <button id="perf-btn-rank" class="btn btn-primary btn-sm" onclick="setPerfMode('rank')">Rank</button>
+          <button id="perf-btn-pts" class="btn btn-secondary btn-sm" onclick="setPerfMode('pts')">Points</button>
+        </div>
+      </div>
+      <div style="position:relative;width:100%;overflow-x:auto">
+        <canvas id="perf-chart" style="width:100%;max-width:700px;height:260px;display:block"></canvas>
+      </div>
+      <!-- Legend -->
+      <div id="perf-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"></div>
+    </div>
+
+    <!-- Player Spotlight -->
+    <div class="card" style="padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <h3 style="margin:0;font-size:1rem">Player Spotlight</h3>
+        <select id="spotlight-player" class="form-input" style="max-width:180px;padding:6px 10px" onchange="renderSpotlight()">
+        </select>
+      </div>
+      <div id="spotlight-content"></div>
+    </div>
+
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script type="module">
@@ -461,6 +496,7 @@ async function loadInit() {
   renderDashboard();
   renderRoundsTab();
   renderStandings();
+  renderPerformance();
 }
 
 function subscribeToTournament(id) {
@@ -472,6 +508,7 @@ function subscribeToTournament(id) {
     renderDashboard();
     renderRoundsTab();
     renderStandings();
+    renderPerformance();
   });
 }
 
@@ -1660,6 +1697,261 @@ window.renderStandings = () => {
   }
 };
 
+// ===== Performance Tab =====
+const PERF_COLORS = ['#3A8FFF','#FF4D6D','#7DC515','#FF9F1C','#A78BFA','#22D3EE','#F472B6','#34D399','#FB923C','#818CF8'];
+let perfMode = 'rank'; // 'rank' or 'pts'
+
+window.setPerfMode = (mode) => {
+  perfMode = mode;
+  document.getElementById('perf-btn-rank').className = 'btn btn-sm ' + (mode==='rank' ? 'btn-primary' : 'btn-secondary');
+  document.getElementById('perf-btn-pts').className  = 'btn btn-sm ' + (mode==='pts'  ? 'btn-primary' : 'btn-secondary');
+  renderPerformanceChart();
+};
+
+window.renderPerformance = () => {
+  if (!activeTournament) {
+    document.getElementById('perf-no-tournament').style.display = '';
+    document.getElementById('perf-content').style.display = 'none';
+    return;
+  }
+  document.getElementById('perf-no-tournament').style.display = 'none';
+  document.getElementById('perf-content').style.display = '';
+
+  // Populate player dropdown
+  const sel = document.getElementById('spotlight-player');
+  const cur = sel.value;
+  sel.innerHTML = activeTournament.players.map((name, i) =>
+    `<option value="${i}" ${i == cur ? 'selected' : ''}>${name}</option>`).join('');
+  if (!cur) sel.value = '0';
+
+  renderPerformanceChart();
+  renderSpotlight();
+};
+
+window.renderPerformanceChart = () => {
+  const t = activeTournament;
+  if (!t) return;
+  const { players, state } = t;
+  const N = players.length;
+  const canvas = document.getElementById('perf-chart');
+  if (!canvas) return;
+
+  // Build round-by-round cumulative pts per player
+  const submittedRounds = (state.rounds || []).filter((r, ri) => r && state.submitted?.[ri]);
+  const numRounds = submittedRounds.length;
+
+  // cumPts[player][round] — round 0 = start (all 0), round k = after round k
+  const cumPts = Array.from({length: N}, () => [0]);
+  submittedRounds.forEach((r, ri) => {
+    const prev = cumPts.map(p => p[p.length - 1]);
+    r.matches?.forEach(m => {
+      const sc = r.scores?.[ri] ?? r.scores?.[submittedRounds.indexOf(r)];
+      // scores are stored in round.scores array indexed by match index
+    });
+    // Recalculate per-round pts delta from scores
+    const delta = new Array(N).fill(0);
+    if (r.matches && r.scores) {
+      r.matches.forEach((m, mi) => {
+        const [sa, sb] = r.scores[mi] || [0, 0];
+        [m.p1[0], m.p1[1]].forEach(p => { if (p != null) delta[p] += sa; });
+        [m.p2[0], m.p2[1]].forEach(p => { if (p != null) delta[p] += sb; });
+      });
+    }
+    cumPts.forEach((arr, pi) => arr.push(prev[pi] + delta[pi]));
+  });
+
+  // Rank at each checkpoint (0 = start, 1..n = after round n)
+  const numCols = numRounds + 1;
+  const rankAt = Array.from({length: N}, () => new Array(numCols));
+  for (let col = 0; col < numCols; col++) {
+    const sorted = [...Array(N).keys()].sort((a, b) => cumPts[b][col] - cumPts[a][col] || a - b);
+    sorted.forEach((pi, rank) => { rankAt[pi][col] = rank + 1; });
+  }
+
+  const data = perfMode === 'rank' ? rankAt : cumPts;
+
+  // Canvas sizing
+  const dpr = window.devicePixelRatio || 1;
+  const W = Math.min(canvas.parentElement.clientWidth || 600, 700);
+  const H = 260;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const PAD = { top: 20, right: 20, bottom: 32, left: 36 };
+  const cw = W - PAD.left - PAD.right;
+  const ch = H - PAD.top - PAD.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  if (numRounds < 1) {
+    ctx.fillStyle = '#8C8B85';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Submit at least one round to see the chart', W / 2, H / 2);
+    return;
+  }
+
+  // Y range
+  const allVals = data.flat();
+  let yMin = Math.min(...allVals), yMax = Math.max(...allVals);
+  if (perfMode === 'rank') { yMin = 1; yMax = N; }
+  else { yMin = 0; }
+  const yRange = yMax - yMin || 1;
+
+  const xPos = col => PAD.left + (col / (numCols - 1)) * cw;
+  const yPos = val => PAD.top + (perfMode === 'rank'
+    ? ((val - 1) / (N - 1 || 1)) * ch
+    : (1 - (val - yMin) / yRange) * ch);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  const gridLines = perfMode === 'rank' ? Math.min(N, 8) : 4;
+  for (let g = 0; g <= gridLines; g++) {
+    const y = PAD.top + (g / gridLines) * ch;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + cw, y); ctx.stroke();
+  }
+
+  // X axis labels (R0, R1, ...)
+  ctx.fillStyle = '#8C8B85';
+  ctx.font = `${Math.max(10, Math.min(12, cw / (numCols * 2)))}px sans-serif`;
+  ctx.textAlign = 'center';
+  for (let col = 0; col < numCols; col++) {
+    ctx.fillText(`R${col}`, xPos(col), H - PAD.bottom + 16);
+  }
+
+  // Y axis labels
+  ctx.textAlign = 'right';
+  if (perfMode === 'rank') {
+    [1, Math.ceil(N/2), N].forEach(v => {
+      ctx.fillText(v, PAD.left - 6, yPos(v) + 4);
+    });
+  } else {
+    for (let g = 0; g <= 4; g++) {
+      const v = Math.round(yMin + (g / 4) * yRange);
+      ctx.fillText(v, PAD.left - 6, PAD.top + ((4-g)/4)*ch + 4);
+    }
+  }
+
+  // Draw lines
+  players.forEach((name, pi) => {
+    const color = PERF_COLORS[pi % PERF_COLORS.length];
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let col = 0; col < numCols; col++) {
+      const x = xPos(col), y = yPos(data[pi][col]);
+      col === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    // Dots
+    ctx.fillStyle = color;
+    for (let col = 0; col < numCols; col++) {
+      ctx.beginPath();
+      ctx.arc(xPos(col), yPos(data[pi][col]), 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+
+  // Legend
+  document.getElementById('perf-legend').innerHTML = players.map((name, pi) =>
+    `<div style="display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;padding:3px 8px;border-radius:12px;border:1px solid ${PERF_COLORS[pi % PERF_COLORS.length]}40">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${PERF_COLORS[pi % PERF_COLORS.length]}"></span>
+      <span style="color:var(--fg)">${name}</span>
+    </div>`).join('');
+};
+
+window.renderSpotlight = () => {
+  const t = activeTournament;
+  if (!t) return;
+  const { players, state } = t;
+  const pi = parseInt(document.getElementById('spotlight-player').value);
+  const name = players[pi];
+
+  // W / T / L — scan all submitted rounds
+  let wins = 0, ties = 0, losses = 0, ptsFor = 0, ptsAgainst = 0, matchCount = 0;
+  const oppFaceOff = {}; // opponent index -> { wins, losses, ties }
+
+  (state.rounds || []).forEach((r, ri) => {
+    if (!r || !state.submitted?.[ri] || !r.matches) return;
+    r.matches.forEach((m, mi) => {
+      const inP1 = m.p1.includes(pi);
+      const inP2 = m.p2.includes(pi);
+      if (!inP1 && !inP2) return;
+      const [sa, sb] = r.scores?.[mi] || [0, 0];
+      const myScore = inP1 ? sa : sb;
+      const oppScore = inP1 ? sb : sa;
+      ptsFor += myScore; ptsAgainst += oppScore; matchCount++;
+      if (myScore > oppScore) wins++;
+      else if (myScore === oppScore) ties++;
+      else losses++;
+      // Track opponents
+      const opps = inP1 ? m.p2 : m.p1;
+      opps.forEach(oi => {
+        if (!oppFaceOff[oi]) oppFaceOff[oi] = { w: 0, l: 0, t: 0 };
+        if (myScore > oppScore) oppFaceOff[oi].w++;
+        else if (myScore < oppScore) oppFaceOff[oi].l++;
+        else oppFaceOff[oi].t++;
+      });
+    });
+  });
+
+  // Toughest opponent = most losses against a single player
+  let toughestOpp = null, toughestLosses = 0;
+  Object.entries(oppFaceOff).forEach(([oi, rec]) => {
+    if (rec.l > toughestLosses || (rec.l === toughestLosses && rec.l > 0 && !toughestOpp)) {
+      toughestLosses = rec.l; toughestOpp = players[parseInt(oi)];
+    }
+  });
+
+  const totalPts = state.pts[pi] || 0;
+  const avgScored = matchCount > 0 ? (ptsFor / matchCount).toFixed(1) : '—';
+  const ptsDiff = ptsFor - ptsAgainst;
+  const ptsDiffStr = ptsDiff > 0 ? `+${ptsDiff}` : `${ptsDiff}`;
+
+  // Rank
+  const ranked = [...Array(players.length).keys()]
+    .sort((a, b) => (state.pts[b]||0) - (state.pts[a]||0) || (state.wins[b]||0) - (state.wins[a]||0));
+  const rank = ranked.indexOf(pi) + 1;
+
+  document.getElementById('spotlight-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div style="background:var(--card);border-radius:10px;padding:14px">
+        <div style="font-size:1.4rem;font-weight:800;color:var(--fg)">${wins}-${ties}-${losses}</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">W–T–L</div>
+      </div>
+      <div style="background:var(--card);border-radius:10px;padding:14px">
+        <div style="font-size:1.4rem;font-weight:800;color:${ptsDiff>=0?'#7DC515':'#FF4D6D'}">${ptsDiffStr}</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Point difference</div>
+      </div>
+      <div style="background:var(--card);border-radius:10px;padding:14px">
+        <div style="font-size:1.4rem;font-weight:800;color:var(--fg)">${avgScored}</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Average scored</div>
+      </div>
+      <div style="background:var(--card);border-radius:10px;padding:14px">
+        <div style="font-size:1.4rem;font-weight:800;color:var(--accent)">${totalPts}</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Total points</div>
+      </div>
+    </div>
+    ${toughestOpp ? `
+    <div style="background:var(--card);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:700;color:var(--fg)">${toughestOpp} <span style="font-size:0.72rem;color:var(--muted)">ⓘ</span></div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px">Toughest opponent</div>
+      </div>
+      <div style="font-size:0.78rem;color:var(--muted)">${toughestLosses} loss${toughestLosses!==1?'es':''} against</div>
+    </div>` : ''}
+    <div style="margin-top:12px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:0.75rem;color:var(--muted)">Current rank:</span>
+      <span style="font-weight:800;color:#3A8FFF;font-size:1rem">#${rank}</span>
+    </div>`;
+};
+
 // ===== Cancel last unsubmitted round =====
 window.cancelLastRound = async () => {
   const t = activeTournament;
@@ -1698,6 +1990,7 @@ window.closeTournamentEarly = async () => {
   renderDashboard();
   renderRoundsTab();
   renderStandings();
+  renderPerformance();
   showToast(`Tournament closed after Round ${submittedCount} — winner declared from standings`, 'ok');
 };
 
@@ -1716,6 +2009,7 @@ window.archiveTournament = async () => {
   renderDashboard();
   renderRoundsTab();
   renderStandings();
+  renderPerformance();
   showToast('Tournament archived', 'ok');
 };
 
@@ -1725,6 +2019,7 @@ window.showTab = (name) => {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   event.target?.classList.add('active');
   document.getElementById(`tab-${name}`).classList.add('active');
+  if (name === 'performance') renderPerformance();
 };
 
 // ===== Toast =====
