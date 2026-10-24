@@ -458,8 +458,12 @@ function computeAllRatings() {
         playerGames.push({ date: s.date, level: s.level });
       }
     }
-    if (m.levelOverride) {
-      // Staff override takes priority
+    if (m.ratingOverride != null && m.ratingOverride !== '') {
+      // Direct rating pin — strongest override
+      const pinned = parseFloat(m.ratingOverride);
+      if (!isNaN(pinned)) seeds[name] = { seed: pinned, source: `Staff pinned rating: ${pinned}` };
+    } else if (m.levelOverride) {
+      // Level → seed override takes priority over history
       const LEVEL_MAP = { 'Beginner': 0.75, 'Beginner+': 1.5, 'Inter': 2.5, 'Intermediate': 2.5, 'Intermediate+': 3.5, 'Strong Inter': 3.5, 'Advanced': 4.5, 'Advanced High': 5.5, 'Elite': 6.5 };
       const s = LEVEL_MAP[m.levelOverride] ?? 1.5;
       seeds[name] = { seed: s, source: `Staff override: ${m.levelOverride}` };
@@ -472,6 +476,19 @@ function computeAllRatings() {
   const allMatches = Object.entries(opMatches).map(([id, m]) => ({ id, ...m }));
   const result = DSR.compute(seeds, allMatches, today);
   ratings = result.players;
+  // Apply hard rating pins post-compute (override any drift from matches)
+  for (const [id, m] of Object.entries(members)) {
+    if (m.ratingOverride != null && m.ratingOverride !== '') {
+      const pinned = parseFloat(m.ratingOverride);
+      if (!isNaN(pinned) && ratings[m.name]) {
+        ratings[m.name].r = pinned;
+        ratings[m.name].band = DSR.band(pinned);
+        ratings[m.name].badge = 'Staff Set';
+        ratings[m.name].zone = DSR.zone(pinned).name;
+        ratings[m.name].pinned = true;
+      }
+    }
+  }
 }
 
 // ===== Members tab =====
@@ -495,6 +512,7 @@ window.renderMembers = () => {
     const rval = r ? r.r.toFixed(2) : '—';
     const band = r ? r.band : (m.levelOverride || '—');
     const badge = r ? `<span class="badge-${r.badge.toLowerCase().slice(0,4)}">${r.badge}</span>` : '';
+    const pinned = m.ratingOverride != null && m.ratingOverride !== '';
     const games = r ? r.matches : 0;
     return `<div class="member-card" onclick="openDrawer('${id}')">
       <div class="member-card-top">
@@ -504,7 +522,7 @@ window.renderMembers = () => {
           <div class="member-meta">${m.fullName || ''} ${m.phone ? '· ' + m.phone : ''}</div>
         </div>
         <div class="rating-badge">
-          <div class="rating-num">${rval}</div>
+          <div class="rating-num">${rval}${pinned ? ' 📌' : ''}</div>
           <div class="rating-band">${band}</div>
           ${badge}
         </div>
@@ -525,7 +543,10 @@ window.openDrawer = (id) => {
   const m = members[id];
   if (!m) return;
   document.getElementById('drawer-name').textContent = m.name || id;
-  document.getElementById('drawer-meta').textContent = m.levelOverride || 'No level set';
+  const metaParts = [];
+  if (m.levelOverride) metaParts.push(m.levelOverride);
+  if (m.ratingOverride != null && m.ratingOverride !== '') metaParts.push(`Rating pinned: ${parseFloat(m.ratingOverride).toFixed(2)}`);
+  document.getElementById('drawer-meta').textContent = metaParts.join(' · ') || 'No level set';
   const r = ratings[m.name];
 
   // Build rating history
@@ -547,17 +568,24 @@ window.openDrawer = (id) => {
         `<li class="history-item"><span>${s.date}</span><span>${s.level}</span><span style="color:var(--muted)">${s.time}</span></li>`
       ).join('')}</ul>` : '<p style="color:var(--muted);font-size:0.85rem">No sessions recorded</p>';
 
+  const ratingSource = m.ratingOverride != null && m.ratingOverride !== ''
+    ? `📌 Staff pinned`
+    : m.levelOverride
+      ? `Seeded from level: ${m.levelOverride}`
+      : (r?.hist?.length ? `Calculated from ${r.matches} matches` : 'Default seed — no history');
+
   document.getElementById('drawer-body').innerHTML = `
     <div class="drawer-section">
       <h4>Smash Rating</h4>
-      ${r ? `<div style="display:flex;gap:16px;align-items:center;margin-bottom:12px">
+      ${r ? `<div style="display:flex;gap:16px;align-items:center;margin-bottom:8px">
         <div style="font-size:2.5rem;font-weight:800;color:var(--accent)">${r.r.toFixed(2)}</div>
         <div>
           <div style="font-size:1rem;font-weight:600">${r.band}</div>
           <div style="font-size:0.75rem;color:var(--muted)">${r.badge} · ${r.zone} zone</div>
           <div style="font-size:0.75rem;color:var(--muted)">${r.matches} matches · ${r.sets.toFixed(1)} sets equiv.</div>
         </div>
-      </div>` : '<p style="color:var(--muted);font-size:0.85rem">Rating not yet calculated</p>'}
+      </div>` : '<p style="color:var(--muted);font-size:0.85rem;margin-bottom:8px">Rating not yet calculated</p>'}
+      <div style="font-size:0.75rem;color:var(--accent2);margin-bottom:12px">Source: ${ratingSource}</div>
       ${histHtml}
     </div>
     <div class="drawer-section">
@@ -566,12 +594,23 @@ window.openDrawer = (id) => {
       <div class="field-row"><span class="field-label">Full Name</span><input class="field-edit" value="${m.fullName || ''}" onchange="drawerEdits.fullName=this.value;showSave()"></div>
       <div class="field-row"><span class="field-label">Phone</span><input class="field-edit" value="${m.phone || ''}" onchange="drawerEdits.phone=this.value;showSave()" inputmode="tel"></div>
       <div class="field-row"><span class="field-label">Email</span><input class="field-edit" value="${m.email || ''}" onchange="drawerEdits.email=this.value;showSave()" inputmode="email"></div>
-      <div class="field-row"><span class="field-label">Level</span>
+      <div class="field-row"><span class="field-label">Skill Level</span>
         <select class="field-edit" onchange="drawerEdits.levelOverride=this.value;showSave()">
           <option value="">— not set —</option>
           ${['Beginner','Beginner+','Intermediate','Intermediate+','Advanced','Advanced High','Elite'].map(l =>
             `<option${m.levelOverride===l?' selected':''}>${l}</option>`).join('')}
         </select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Smash Rating</span>
+        <div style="flex:1;display:flex;gap:8px;align-items:center">
+          <input class="field-edit" type="number" min="0" max="7" step="0.01"
+            style="width:90px;flex:none"
+            placeholder="e.g. 2.50"
+            value="${m.ratingOverride ?? ''}"
+            onchange="drawerEdits.ratingOverride=this.value===''?'':parseFloat(this.value);showSave()">
+          <span style="font-size:0.72rem;color:var(--muted)">Pin a fixed rating (0–7). Leave blank to let DSR calculate it.</span>
+        </div>
       </div>
       <div class="field-row"><span class="field-label">Membership</span>
         <select class="field-edit" onchange="drawerEdits.membership=this.value;showSave()">
