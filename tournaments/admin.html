@@ -988,7 +988,7 @@ function renderRoundBody(r, ri, players, target, isSubmitted, isChamp) {
 window.togglePairingEdit = (ri) => {
   if (pairingEditModes.has(ri)) pairingEditModes.delete(ri);
   else pairingEditModes.add(ri);
-  renderRounds(); // re-render to show/hide dropdowns
+  renderRoundsTab(); // re-render to show/hide dropdowns
 };
 
 // Swap a player in an unsubmitted round and persist to Firebase
@@ -1034,7 +1034,7 @@ window.swapRoundPlayer = async (ri, mi, slot, newIdx) => {
     byes[byePos] = newIdx;
     await update(ref(db, `tournaments/${t.id}/state/rounds/${ri}`), { matches, byes });
     t.state.rounds[ri] = { ...r, matches, byes };
-    renderRounds();
+    renderRoundsTab();
     return;
   }
 
@@ -1056,7 +1056,7 @@ window.swapRoundPlayer = async (ri, mi, slot, newIdx) => {
 
   await update(ref(db, `tournaments/${t.id}/state/rounds/${ri}`), { matches, byes });
   t.state.rounds[ri] = { ...r, matches, byes };
-  renderRounds();
+  renderRoundsTab();
 };
 
 window.toggleRound = (ri) => {
