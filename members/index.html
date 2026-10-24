@@ -307,6 +307,7 @@
   <button class="tab active" onclick="showTab('members')">👥 Members</button>
   <button class="tab" onclick="showTab('ratings')">⭐ Smash Ratings</button>
   <button class="tab" onclick="showTab('openplay')">🎾 Open Play</button>
+  <button class="tab" onclick="showTab('tournaments')">🏆 Tournaments</button>
   <button class="tab" onclick="showTab('add-member')">➕ Add Member</button>
 </div>
 
@@ -380,6 +381,20 @@
   </div>
   <div id="op-area">
     <div id="op-history"></div>
+  </div>
+</div>
+
+<!-- Tournaments tab -->
+<div class="section" id="tab-tournaments">
+  <div class="search-row" style="flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center">
+    <div>
+      <span style="font-size:1.1rem;font-weight:700;color:var(--text)">Club Tournaments</span>
+      <span id="trn-count" style="font-size:0.8rem;color:var(--text-muted);margin-left:8px"></span>
+    </div>
+    <a href="../tournaments/index.html" target="_blank" class="btn btn-secondary" style="font-size:0.8rem;padding:6px 14px">🔗 Full Tournament Hub</a>
+  </div>
+  <div id="trn-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:16px">
+    <div class="loading"><div class="spinner"></div><br>Loading tournaments…</div>
   </div>
 </div>
 
@@ -1401,7 +1416,72 @@ window.showTab = (name) => {
   document.getElementById(`tab-${name}`).classList.add('active');
   currentTab = name;
   if (name === 'openplay') showOpHistory();
+  if (name === 'tournaments') loadTournaments();
 };
+
+// ===== Tournaments Tab =====
+let trnLoaded = false;
+function loadTournaments() {
+  if (trnLoaded) return; // already listening
+  trnLoaded = true;
+  onValue(ref(db, 'tournaments/_meta'), snap => {
+    const data = snap.val() || {};
+    const list = Object.values(data).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    renderTournaments(list);
+  });
+}
+
+function renderTournaments(list) {
+  const grid = document.getElementById('trn-grid');
+  const countEl = document.getElementById('trn-count');
+  if (!list.length) {
+    grid.innerHTML = `<div style="color:var(--text-muted);padding:32px 0;font-size:0.9rem">No tournaments recorded yet.</div>`;
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+  if (countEl) {
+    const live = list.filter(t => t.status === 'live').length;
+    countEl.textContent = `${list.length} event${list.length!==1?'s':''}${live?' · '+live+' live':''}`;
+  }
+  grid.innerHTML = list.map(t => {
+    const statusColor = t.status==='live' ? '#FF6B35' : t.status==='completed' ? '#7DC515' : '#8C8B85';
+    const statusDot   = t.status==='live'
+      ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#FF6B35;animation:pulse 1.5s infinite;margin-right:5px"></span>Live`
+      : t.status==='completed' ? '✓ Completed' : '◦ Upcoming';
+    const progress = t.rounds ? Math.round(((t.roundsDone||0)/t.rounds)*100) : 0;
+    const sport = (t.sport||'padel').charAt(0).toUpperCase()+(t.sport||'padel').slice(1);
+    return `
+    <a href="../tournaments/${t.key}.html" target="_blank" style="text-decoration:none;color:inherit">
+      <div style="background:var(--card-bg,#1a1a2e);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;transition:border-color .2s,transform .2s;cursor:pointer"
+           onmouseover="this.style.borderColor='rgba(125,197,21,0.35)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.transform=''">
+        <div style="padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:0.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:4px 10px;border-radius:20px;background:rgba(26,111,212,.15);color:#3A8FFF">${t.format||'Tournament'}</span>
+            <span style="font-size:0.75rem;font-weight:600;color:${statusColor}">${statusDot}</span>
+          </div>
+          <div style="font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:4px">${t.name||t.key}</div>
+          <div style="font-size:0.78rem;color:var(--text-muted)">${t.date||''}${t.time?' · '+t.time:''}</div>
+        </div>
+        <div style="padding:12px 18px">
+          <div style="display:flex;gap:16px;font-size:0.78rem;color:var(--text-muted);margin-bottom:10px">
+            <span>🎾 ${sport}</span>
+            <span>👥 ${t.players||'?'} players</span>
+            <span>🏟️ ${t.courts||'?'} courts</span>
+          </div>
+          ${t.rounds ? `
+          <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted);margin-bottom:4px">
+            <span>Rounds</span><span>${t.roundsDone||0} / ${t.rounds}</span>
+          </div>
+          <div style="background:rgba(255,255,255,0.08);border-radius:4px;height:5px;overflow:hidden">
+            <div style="height:100%;width:${progress}%;background:${progress===100?'#7DC515':'#3A8FFF'};border-radius:4px;transition:width .4s"></div>
+          </div>` : ''}
+          ${t.winner ? `<div style="margin-top:10px;font-size:0.8rem;color:#7DC515;font-weight:600">🏆 ${t.winner}</div>` : ''}
+        </div>
+      </div>
+    </a>`;
+  }).join('');
+}
 
 // ===== Rating Guide Table =====
 // Guide table — band names match DSR.BANDS exactly

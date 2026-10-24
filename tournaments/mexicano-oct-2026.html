@@ -84,7 +84,7 @@ function saveToFirebase() {
 
 function loadFromFirebase(snap) {
   const data = snap.val();
-  if (!data) { firebaseReady = true; initRound(0); render(); return; }
+  if (!data) { firebaseReady = true; initRound(0); saveTournamentMeta(); render(); return; }
   state.pts            = data.pts            || new Array(12).fill(0);
   state.played         = data.played         || new Array(12).fill(0);
   state.wins           = data.wins           || new Array(12).fill(0);
@@ -95,6 +95,7 @@ function loadFromFirebase(snap) {
   state.current        = data.current        || 0;
   if (!state.rounds[state.current]) initRound(state.current);
   firebaseReady = true;
+  saveTournamentMeta();
   render();
 }
 
@@ -202,6 +203,9 @@ function recordPartnerships(roundIdx) {
   });
 }
 
+// ─── TOURNAMENT DATE ─────────────────────────────────────────────────────────
+const TOURNAMENT_DATE = "2026-10-21"; // YYYY-MM-DD — update for each new event
+
 function submitRound(roundIdx) {
   const round = state.rounds[roundIdx];
   round.matches.forEach((m,mi) => {
@@ -211,6 +215,9 @@ function submitRound(roundIdx) {
     const t2 = Array.isArray(m.p2) ? m.p2 : [m.p2[0],m.p2[1]];
     t1.forEach(id=>{ if(id<12){state.pts[id]+=s1;state.played[id]++;if(s1>s2)state.wins[id]++;} });
     t2.forEach(id=>{ if(id<12){state.pts[id]+=s2;state.played[id]++;if(s2>s1)state.wins[id]++;} });
+
+    // Write each match to openPlayMatches so DSR engine picks it up
+    writeTournamentMatchToDSR(m, s1, s2, t1, t2, roundIdx, mi);
   });
   round.byes.forEach(id=>{ if(id<12) state.byeCnt[id]++; });
   recordPartnerships(roundIdx);
@@ -218,7 +225,54 @@ function submitRound(roundIdx) {
   state.current = roundIdx+1;
   if(roundIdx+1 < TOTAL_ROUNDS) initRound(roundIdx+1);
   saveToFirebase();
+
+  // Update tournament metadata in Firebase for the index page
+  saveTournamentMeta();
+
   render();
+}
+
+function writeTournamentMatchToDSR(m, s1, s2, t1, t2, roundIdx, matchIdx) {
+  const teamANames = t1.map(id => id < 12 ? PLAYERS[id].name : null).filter(Boolean);
+  const teamBNames = t2.map(id => id < 12 ? PLAYERS[id].name : null).filter(Boolean);
+  if (!teamANames.length || !teamBNames.length) return;
+
+  const matchId = `${TOURNAMENT_KEY}-r${roundIdx+1}-m${matchIdx+1}`;
+  const matchData = {
+    teamA:        teamANames,
+    teamB:        teamBNames,
+    a:            s1,
+    b:            s2,
+    date:         TOURNAMENT_DATE,
+    source:       "tournament",
+    tournamentId: TOURNAMENT_KEY,
+    round:        roundIdx + 1,
+    note:         `${TOURNAMENT_KEY} · Round ${roundIdx+1}`,
+  };
+  set(ref(db, `openPlayMatches/${matchId}`), matchData);
+}
+
+function saveTournamentMeta() {
+  // Write a summary record to tournaments/_meta/${TOURNAMENT_KEY} for the index page
+  const done = state.submitted.filter(Boolean).length;
+  const status = done >= TOTAL_ROUNDS ? 'completed' : done > 0 ? 'live' : 'upcoming';
+  const topPlayer = ranked()[0];
+  const meta = {
+    key:      TOURNAMENT_KEY,
+    name:     "Mexicano Oct 2026",
+    format:   "Hybrid Mexicano",
+    sport:    "padel",
+    date:     TOURNAMENT_DATE,
+    time:     "6:00 – 9:00 PM",
+    players:  PLAYERS.length,
+    courts:   2,
+    rounds:   TOTAL_ROUNDS,
+    status,
+    winner:   (status === 'completed' && topPlayer) ? topPlayer.name : null,
+    roundsDone: done,
+    updatedAt: Date.now(),
+  };
+  set(ref(db, `tournaments/_meta/${TOURNAMENT_KEY}`), meta);
 }
 
 // ─── PLAYER HELPERS ──────────────────────────────────────────────────────────

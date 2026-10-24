@@ -120,40 +120,35 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);-webk
   </div>
 </div>
 
-<script>
-// ─── TOURNAMENT REGISTRY ───────────────────────────────────────────────────
-// Add each new tournament here as an object. The page auto-renders the grid.
-const TOURNAMENTS = [
-  {
-    slug:       "mexicano-oct-2026",
-    name:       "Mexicano Oct 2026",
-    format:     "Hybrid Mexicano",
-    sport:      "padel",
-    date:       "21 Oct 2026",
-    time:       "6:00 – 9:00 PM",
-    players:    12,
-    courts:     2,
-    rounds:     6,
-    status:     "live",        // "upcoming" | "live" | "completed"
-    winner:     null,          // fill after event: "Nikhil A."
-    highlight:  null,
-  },
-  // ── Add future events below ──────────────────────────────────────────────
-  // {
-  //   slug: "pickleball-nov-2026",
-  //   name: "Pickleball Doubles Nov 2026",
-  //   format: "Round Robin",
-  //   sport: "pickleball",
-  //   date: "15 Nov 2026",
-  //   time: "5:00 – 8:00 PM",
-  //   players: 8,
-  //   courts: 2,
-  //   rounds: 4,
-  //   status: "upcoming",
-  //   winner: null,
-  //   highlight: null,
-  // },
-];
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyDu7A0agFAT1jwfrjCRkQe6tHg2Qu_LnDc",
+  authDomain:        "deuceandsmash-club.firebaseapp.com",
+  databaseURL:       "https://deuceandsmash-club-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "deuceandsmash-club",
+  storageBucket:     "deuceandsmash-club.firebasestorage.app",
+  messagingSenderId: "953747553630",
+  appId:             "1:953747553630:web:316645b323ae12019fa3cf"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+let TOURNAMENTS = [];
+let currentFilter = 'all';
+
+// Show loading state immediately
+document.getElementById('tournamentsGrid').innerHTML =
+  `<div class="empty-state"><h3>Loading…</h3><p>Fetching tournament data.</p></div>`;
+
+// Listen for live updates from Firebase _meta
+onValue(ref(db, 'tournaments/_meta'), snap => {
+  const data = snap.val() || {};
+  TOURNAMENTS = Object.values(data).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  renderGrid(currentFilter);
+});
 
 // ─── RENDER ────────────────────────────────────────────────────────────────
 function sportIcon(sport) {
@@ -209,23 +204,22 @@ function renderGrid(filter = 'all') {
     </a>
   `).join('');
 
-  // Update stats
+  // Update stats (always from full TOURNAMENTS list, not filtered)
   const total = TOURNAMENTS.length;
-  const uniquePlayers = [...new Set(TOURNAMENTS.map(t => t.players))].reduce((a,b) => a+b, 0);
+  const totalPlayerSlots = TOURNAMENTS.reduce((sum, t) => sum + (t.players || 0), 0);
   const totalMatches = TOURNAMENTS.filter(t => t.status !== 'upcoming')
-    .reduce((sum, t) => sum + Math.floor(t.rounds * t.courts), 0);
-  document.getElementById('statEvents').textContent = total;
-  document.getElementById('statPlayers').textContent = uniquePlayers + '+';
+    .reduce((sum, t) => sum + ((t.roundsDone || 0) * (t.courts || 0)), 0);
+  document.getElementById('statEvents').textContent = total || '—';
+  document.getElementById('statPlayers').textContent = totalPlayerSlots || '—';
   document.getElementById('statMatches').textContent = totalMatches || '—';
 }
 
-function filterCards(filter, btn) {
+window.filterCards = function(filter, btn) {
+  currentFilter = filter;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderGrid(filter);
-}
-
-renderGrid();
+};
 </script>
 </body>
 </html>
