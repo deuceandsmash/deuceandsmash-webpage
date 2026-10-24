@@ -905,9 +905,33 @@ function renderRestoredRound(r, ri, players) {
   </div>`;
 }
 
+// Tracks which round indices are in pairing-edit mode
+const pairingEditModes = new Set();
+
 function renderRoundBody(r, ri, players, target, isSubmitted, isChamp) {
   if (!r.matches || !r.matches.length) return '<div class="empty">No matches</div>';
   const isTeam = !!r.matches[0]?.teamIdx; // team rounds carry teamIdx
+  const editPairings = !isSubmitted && !isTeam && pairingEditModes.has(ri);
+
+  // Build flat list of all player indices currently assigned (for dropdown exclusion)
+  const allAssigned = editPairings
+    ? r.matches.flatMap(m => [...m.p1, ...m.p2])
+    : [];
+  // Also include byes in assigned set so they can be swapped in
+  const byeSet = new Set(r.byes || []);
+
+  function playerSelect(currentIdx, mi, slot) {
+    // Options: all players not assigned elsewhere (plus current)
+    const others = players
+      .map((name, idx) => ({ name, idx }))
+      .filter(({ idx }) => idx === currentIdx || (!allAssigned.includes(idx) || byeSet.has(idx)));
+    const opts = others.map(({ name, idx }) =>
+      `<option value="${idx}" ${idx === currentIdx ? 'selected' : ''}>${name}</option>`
+    ).join('');
+    return `<select class="pairing-select" onchange="swapRoundPlayer(${ri},${mi},'${slot}',+this.value)"
+      style="background:var(--card);color:var(--fg);border:1px solid var(--muted);border-radius:6px;padding:2px 4px;font-size:0.85rem;max-width:110px">${opts}</select>`;
+  }
+
   let html = '';
   for (let mi = 0; mi < r.matches.length; mi++) {
     const m = r.matches[mi];
@@ -915,13 +939,19 @@ function renderRoundBody(r, ri, players, target, isSubmitted, isChamp) {
     const [p2a, p2b] = m.p2;
     const scoreA = r.scores?.[mi]?.[0] ?? '';
     const scoreB = r.scores?.[mi]?.[1] ?? '';
-    // For team formats show "Name / Name" as a unit label
-    const label1 = isTeam
-      ? `<strong>${players[p1a]}</strong><br><span style="color:var(--muted);font-size:0.8rem">/ ${players[p1b]}</span>`
-      : `${players[p1a]}<br><span style="color:var(--muted)">${players[p1b]}</span>`;
-    const label2 = isTeam
-      ? `<strong>${players[p2a]}</strong><br><span style="color:var(--muted);font-size:0.8rem">/ ${players[p2b]}</span>`
-      : `${players[p2a]}<br><span style="color:var(--muted)">${players[p2b]}</span>`;
+
+    let label1, label2;
+    if (isTeam) {
+      label1 = `<strong>${players[p1a]}</strong><br><span style="color:var(--muted);font-size:0.8rem">/ ${players[p1b]}</span>`;
+      label2 = `<strong>${players[p2a]}</strong><br><span style="color:var(--muted);font-size:0.8rem">/ ${players[p2b]}</span>`;
+    } else if (editPairings) {
+      label1 = `${playerSelect(p1a, mi, 'p1a')}<br>${playerSelect(p1b, mi, 'p1b')}`;
+      label2 = `${playerSelect(p2a, mi, 'p2a')}<br>${playerSelect(p2b, mi, 'p2b')}`;
+    } else {
+      label1 = `${players[p1a]}<br><span style="color:var(--muted)">${players[p1b]}</span>`;
+      label2 = `${players[p2a]}<br><span style="color:var(--muted)">${players[p2b]}</span>`;
+    }
+
     const courtTitle = m.label ? `${m.label}` : `Court ${m.c + 1}`;
     html += `<div class="court-block">
       <div class="court-title">${courtTitle}</div>
@@ -937,15 +967,97 @@ function renderRoundBody(r, ri, players, target, isSubmitted, isChamp) {
     </div>`;
   }
   if (r.byes?.length) {
-    html += `<div class="byes-row">Sitting out: ${r.byes.map(i=>players[i]).join(', ')}</div>`;
+    const byeLabels = editPairings
+      ? r.byes.map((bi, byePos) => playerSelect(bi, -1, `bye-${byePos}`)).join(' ')
+      : r.byes.map(i => players[i]).join(', ');
+    html += `<div class="byes-row">Sitting out: ${byeLabels}</div>`;
   }
   if (!isSubmitted) {
-    html += `<div class="submit-row"><button class="btn btn-primary btn-sm" onclick="submitRound(${ri})">Submit Round ${ri+1} Scores</button></div>`;
+    const editBtn = !isTeam
+      ? `<button class="btn btn-secondary btn-sm" onclick="togglePairingEdit(${ri})" style="margin-right:8px">
+          ${editPairings ? '✓ Done Editing' : '✏️ Edit Pairings'}
+         </button>`
+      : '';
+    html += `<div class="submit-row">${editBtn}<button class="btn btn-primary btn-sm" onclick="submitRound(${ri})">Submit Round ${ri+1} Scores</button></div>`;
   } else {
     html += `<div class="submit-row"><button class="btn btn-secondary btn-sm" onclick="editRound(${ri})">✏️ Edit Scores</button></div>`;
   }
   return html;
 }
+
+window.togglePairingEdit = (ri) => {
+  if (pairingEditModes.has(ri)) pairingEditModes.delete(ri);
+  else pairingEditModes.add(ri);
+  renderRounds(); // re-render to show/hide dropdowns
+};
+
+// Swap a player in an unsubmitted round and persist to Firebase
+window.swapRoundPlayer = async (ri, mi, slot, newIdx) => {
+  if (!activeTournament) return;
+  const t = activeTournament;
+  const r = t.state.rounds[ri];
+  if (!r) return;
+
+  // Deep-clone matches + byes for mutation
+  const matches = r.matches.map(m => ({ ...m, p1: [...m.p1], p2: [...m.p2] }));
+  const byes = [...(r.byes || [])];
+
+  // Find where newIdx currently lives (could be in another match slot or in byes)
+  let prevMi = -1, prevSlot = null, prevByePos = -1;
+  for (let i = 0; i < matches.length; i++) {
+    if (matches[i].p1[0] === newIdx) { prevMi = i; prevSlot = 'p1a'; break; }
+    if (matches[i].p1[1] === newIdx) { prevMi = i; prevSlot = 'p1b'; break; }
+    if (matches[i].p2[0] === newIdx) { prevMi = i; prevSlot = 'p2a'; break; }
+    if (matches[i].p2[1] === newIdx) { prevMi = i; prevSlot = 'p2b'; break; }
+  }
+  if (prevMi === -1) {
+    prevByePos = byes.indexOf(newIdx);
+  }
+
+  // Find current occupant of target slot
+  let oldIdx;
+  if (slot === 'p1a') oldIdx = matches[mi].p1[0];
+  else if (slot === 'p1b') oldIdx = matches[mi].p1[1];
+  else if (slot === 'p2a') oldIdx = matches[mi].p2[0];
+  else if (slot === 'p2b') oldIdx = matches[mi].p2[1];
+  else if (slot.startsWith('bye-')) {
+    const byePos = parseInt(slot.split('-')[1]);
+    oldIdx = byes[byePos];
+    // Swap in byes array
+    if (prevByePos >= 0) byes[prevByePos] = oldIdx;
+    else if (prevMi >= 0) {
+      if (prevSlot === 'p1a') matches[prevMi].p1[0] = oldIdx;
+      else if (prevSlot === 'p1b') matches[prevMi].p1[1] = oldIdx;
+      else if (prevSlot === 'p2a') matches[prevMi].p2[0] = oldIdx;
+      else if (prevSlot === 'p2b') matches[prevMi].p2[1] = oldIdx;
+    }
+    byes[byePos] = newIdx;
+    await update(ref(db, `tournaments/${t.id}/state/rounds/${ri}`), { matches, byes });
+    t.state.rounds[ri] = { ...r, matches, byes };
+    renderRounds();
+    return;
+  }
+
+  // Place newIdx into target slot
+  if (slot === 'p1a') matches[mi].p1[0] = newIdx;
+  else if (slot === 'p1b') matches[mi].p1[1] = newIdx;
+  else if (slot === 'p2a') matches[mi].p2[0] = newIdx;
+  else if (slot === 'p2b') matches[mi].p2[1] = newIdx;
+
+  // Place old occupant where newIdx came from
+  if (prevByePos >= 0) {
+    byes[prevByePos] = oldIdx;
+  } else if (prevMi >= 0) {
+    if (prevSlot === 'p1a') matches[prevMi].p1[0] = oldIdx;
+    else if (prevSlot === 'p1b') matches[prevMi].p1[1] = oldIdx;
+    else if (prevSlot === 'p2a') matches[prevMi].p2[0] = oldIdx;
+    else if (prevSlot === 'p2b') matches[prevMi].p2[1] = oldIdx;
+  }
+
+  await update(ref(db, `tournaments/${t.id}/state/rounds/${ri}`), { matches, byes });
+  t.state.rounds[ri] = { ...r, matches, byes };
+  renderRounds();
+};
 
 window.toggleRound = (ri) => {
   const b = document.getElementById(`round-body-${ri}`);
