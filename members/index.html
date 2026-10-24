@@ -174,10 +174,10 @@
   .assess-q { font-size: 1rem; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
   .assess-hint { font-size: 0.78rem; color: var(--muted); margin-bottom: 20px; }
   .assess-options { display: flex; flex-direction: column; gap: 10px; }
-  .assess-opt { background: var(--card); border: 2px solid var(--border); border-radius: 10px; padding: 13px 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; text-align: left; }
+  .assess-opt { background: var(--card); border: 2px solid var(--border); border-radius: 10px; padding: 13px 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; text-align: left; color: var(--text); width: 100%; }
   .assess-opt:hover { border-color: var(--accent2); background: rgba(59,255,232,0.05); }
   .assess-opt.selected { border-color: var(--accent); background: rgba(232,255,59,0.08); }
-  .assess-opt-label { font-size: 0.92rem; font-weight: 600; }
+  .assess-opt-label { font-size: 0.92rem; font-weight: 600; color: var(--text); }
   .assess-opt-desc { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
   .assess-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: space-between; align-items: center; }
   .assess-result { padding: 24px; text-align: center; }
@@ -453,13 +453,28 @@ const DSR = {
   W:{league:1,openplay:1,competitive:1,americano:0.25},
   PROVISIONAL:{sets:8,partners:4,opponents:6},
   BREAK:{faster:90,provisional:180,hidden:365},
-  BANDS:[["Beginner",0],["Beginner+",1],["Intermediate",2],["Intermediate+",3],["Advanced",4],["Advanced High",5],["Elite",6]],
+  BANDS:[["Beginner",0],["Beginner+",1],["Intermediate",2],["Intermediate+",3],["Intermediate High",4],["Advanced",5],["Elite",6]],
   TAG_SEED:{"Beginner":0.75,"Beginner / Beginner+":1.0,"Beginner+":1.5,"Beginner+ / Inter":2.0,"Inter":2.5,"Inter / Inter+":3.0,"Strong Inter":3.5,"Inter+":3.5},
   TAG_ORDER:["Beginner","Beginner / Beginner+","Beginner+","Beginner+ / Inter","Inter","Inter / Inter+","Strong Inter","Inter+"],
   SEED_FLOOR:0.5,SEED_CAP:4.0,DEFAULT_SEED:0.5,
 };
 DSR.band=r=>{let b=DSR.BANDS[0][0];for(const[n,lo]of DSR.BANDS)if(r>=lo-1e-9)b=n;return b;};
 DSR.zone=r=>DSR.ZONES.find(z=>r>=z.lo-1e-9&&r<z.hi)||DSR.ZONES[0];
+// Band colour — consistent across all views (matches guide table tier colours)
+const BAND_STYLE = {
+  'Beginner':          { color: '#aaa',    bg: 'rgba(150,150,150,0.15)', cls: 'badge-init' },
+  'Beginner+':         { color: '#ccc',    bg: 'rgba(200,200,200,0.12)', cls: 'badge-init-i' },
+  'Intermediate':      { color: '#3bffe8', bg: 'rgba(59,255,232,0.12)',  cls: 'badge-inter' },
+  'Intermediate+':     { color: '#3bffe8', bg: 'rgba(59,255,232,0.12)',  cls: 'badge-inter' },
+  'Intermediate High': { color: '#3bd9ff', bg: 'rgba(59,217,255,0.12)',  cls: 'badge-inter-h' },
+  'Advanced':          { color: '#b47dff', bg: 'rgba(180,125,255,0.15)', cls: 'badge-adv' },
+  'Elite':             { color: '#e8ff3b', bg: 'rgba(232,255,59,0.15)',  cls: 'badge-elite' },
+};
+function bandColor(band) { return BAND_STYLE[band] || { color: '#888', bg: 'rgba(136,136,136,0.1)', cls: '' }; }
+function bandChip(band) {
+  const s = bandColor(band);
+  return `<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:0.72rem;font-weight:700;background:${s.bg};color:${s.color}">${band}</span>`;
+}
 DSR.expected=(ra,rb)=>1/(1+Math.pow(10,-((ra-rb)/DSR.SCALE)/DSR.DIVISOR));
 const dayNum=d=>Math.round(new Date(d+"T00:00:00Z").getTime()/864e5);
 DSR.setsIn=m=>m.sets||String(m.score||"").split(",").filter(s=>s.trim()).length||1;
@@ -622,6 +637,7 @@ window.renderMembers = () => {
     const r = ratings[m.name];
     const rval = r ? r.r.toFixed(2) : '—';
     const band = r ? r.band : (m.levelOverride || '—');
+    const bc = bandColor(band);
     const badge = r ? `<span class="badge-${r.badge.toLowerCase().slice(0,4)}">${r.badge}</span>` : '';
     const pinned = m.ratingOverride != null && m.ratingOverride !== '';
     const games = r ? r.matches : 0;
@@ -633,8 +649,8 @@ window.renderMembers = () => {
           <div class="member-meta">${m.fullName || ''} ${m.phone ? '· ' + m.phone : ''}</div>
         </div>
         <div class="rating-badge">
-          <div class="rating-num">${rval}${pinned ? ' 📌' : ''}</div>
-          <div class="rating-band">${band}</div>
+          <div class="rating-num" style="color:${bc.color}">${rval}${pinned ? ' 📌' : ''}</div>
+          <div class="rating-band" style="color:${bc.color};opacity:0.85">${band}</div>
           ${badge}
         </div>
       </div>
@@ -675,10 +691,22 @@ function renderDrawerView(m, r, playerSessions) {
       ? `Seeded from level: ${m.levelOverride}`
       : (r?.hist?.length ? `Calculated from ${r.matches} matches` : 'Default seed — no history');
   const sessHtml = playerSessions.length
-    ? `<ul class="history-list">${playerSessions.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,8).map(s =>
-        `<li class="history-item"><span>${s.date}</span><span>${s.level}</span><span style="color:var(--muted)">${s.time}</span></li>`
-      ).join('')}</ul>`
-    : '<p style="color:var(--muted);font-size:0.85rem">No sessions recorded</p>';
+    ? `<ul class="history-list">${playerSessions.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10).map(s => {
+        const partners = (s.teamA?.includes(m.name) ? s.teamA : s.teamB)?.filter(n=>n!==m.name).join(' & ') || '—';
+        const opponents = (s.teamA?.includes(m.name) ? s.teamB : s.teamA)?.join(' & ') || '—';
+        const myScore = s.teamA?.includes(m.name) ? s.a : s.b;
+        const oppScore = s.teamA?.includes(m.name) ? s.b : s.a;
+        const result = myScore > oppScore ? 'W' : myScore < oppScore ? 'L' : 'D';
+        const rc = result==='W'?'var(--success)':result==='L'?'var(--danger)':'var(--muted)';
+        return `<li class="history-item" style="flex-direction:column;align-items:flex-start;gap:4px">
+          <div style="display:flex;justify-content:space-between;width:100%">
+            <span style="font-size:0.8rem;color:var(--muted)">${s.date||'—'}</span>
+            <span style="font-weight:800;color:${rc}">${result} ${myScore}–${oppScore}</span>
+          </div>
+          <div style="font-size:0.78rem">w/ <strong>${partners}</strong> vs ${opponents}</div>
+        </li>`;
+      }).join('')}</ul>`
+    : '<p style="color:var(--muted);font-size:0.85rem">No open play matches recorded</p>';
 
   const val = (v, fallback='—') => v || `<span style="color:var(--muted)">${fallback}</span>`;
 
@@ -686,9 +714,9 @@ function renderDrawerView(m, r, playerSessions) {
     <div class="drawer-section">
       <h4>Smash Rating</h4>
       ${r ? `<div style="display:flex;gap:16px;align-items:center;margin-bottom:8px">
-        <div style="font-size:2.5rem;font-weight:800;color:var(--accent)">${r.r.toFixed(2)}</div>
+        <div style="font-size:2.5rem;font-weight:800;color:${bandColor(r.band).color}">${r.r.toFixed(2)}</div>
         <div>
-          <div style="font-size:1rem;font-weight:600">${r.band}</div>
+          <div style="margin-bottom:4px">${bandChip(r.band)}</div>
           <div style="font-size:0.75rem;color:var(--muted)">${r.badge} · ${r.zone} zone</div>
           <div style="font-size:0.75rem;color:var(--muted)">${r.matches} matches · ${r.sets.toFixed(1)} sets equiv.</div>
         </div>
@@ -777,7 +805,9 @@ window.openDrawer = (id) => {
   const m = members[id];
   if (!m) return;
   const r = ratings[m.name];
-  const playerSessions = Object.values(sessions).filter(s => Array.isArray(s.players) && s.players.includes(m.name) && s.status === 'Played');
+  const playerSessions = Object.values(opMatches).filter(match =>
+    match.teamA?.includes(m.name) || match.teamB?.includes(m.name)
+  );
 
   document.getElementById('drawer-name').textContent = m.name || id;
   document.getElementById('drawer-meta').textContent = drawerMeta(m);
@@ -799,7 +829,9 @@ window.enterEditMode = () => {
 window.cancelEdit = () => {
   const m = members[drawerMemberId];
   const r = ratings[m?.name];
-  const playerSessions = Object.values(sessions).filter(s => Array.isArray(s.players) && s.players.includes(m?.name) && s.status === 'Played');
+  const playerSessions = Object.values(opMatches).filter(match =>
+    match.teamA?.includes(m?.name) || match.teamB?.includes(m?.name)
+  );
   drawerEdits = {};
   document.getElementById('drawer-name').textContent = m.name || drawerMemberId;
   document.getElementById('drawer-meta').textContent = drawerMeta(m);
@@ -842,7 +874,10 @@ window.saveMember = async () => {
   renderRatings();
   // Return to view mode with updated data
   const r = ratings[updates.name || m.name];
-  const playerSessions = Object.values(sessions).filter(s => Array.isArray(s.players) && s.players.includes(updates.name || m.name) && s.status === 'Played');
+  const pName = updates.name || m.name;
+  const playerSessions = Object.values(opMatches).filter(match =>
+    match.teamA?.includes(pName) || match.teamB?.includes(pName)
+  );
   document.getElementById('drawer-name').textContent = updates.name || m.name;
   document.getElementById('drawer-meta').textContent = drawerMeta(members[drawerMemberId]);
   document.getElementById('drawer-edit-btn').style.display = '';
@@ -863,11 +898,12 @@ window.renderRatings = () => {
     const t = p.trend;
     const tCls = t > 0.01 ? 'trend-up' : t < -0.01 ? 'trend-dn' : 'trend-flat';
     const tTxt = t > 0.01 ? `▲ ${t.toFixed(2)}` : t < -0.01 ? `▼ ${Math.abs(t).toFixed(2)}` : '—';
+    const bc = bandColor(p.band);
     return `<tr>
       <td class="rank">${i+1}</td>
       <td class="name-cell">${p.name}</td>
-      <td style="color:var(--accent);font-weight:700">${p.r.toFixed(2)}</td>
-      <td>${p.band}</td>
+      <td style="color:${bc.color};font-weight:800">${p.r.toFixed(2)}</td>
+      <td>${bandChip(p.band)}</td>
       <td><span class="badge-${p.badge.toLowerCase().slice(0,4)}">${p.badge}</span></td>
       <td>${p.matches}</td>
       <td class="${tCls}">${tTxt}</td>
@@ -1019,77 +1055,53 @@ window.showTab = (name) => {
 };
 
 // ===== Rating Guide Table =====
+// Guide table — band names match DSR.BANDS exactly
 const RATING_GUIDE = [
   {
-    tier: 'tier-init', badge: 'badge-init', badgeLabel: 'Initiation',
-    range: '0.0 – 0.5', band: 'Initiation',
-    levelLabel: 'Beginner',
-    desc: 'Never picked up a racquet, or first session ever. No technique, no rally ability. Just learning how to hold the paddle and make contact.'
+    tier: 'tier-init',    cls: 'badge-init',    range: '0.0 – 0.9',   band: 'Beginner',
+    desc: 'Never played or very first sessions. No technique, can barely make contact. Still learning grip, stance and the basics of the game.'
   },
   {
-    tier: 'tier-init', badge: 'badge-init', badgeLabel: 'Initiation',
-    range: '0.75 – 1.0', band: 'Initiation',
-    levelLabel: 'Beginner',
-    desc: 'Has played a handful of times. Can make contact and get a few shots back but lacks consistency. No structured technique yet, many missed shots.'
+    tier: 'tier-init-i',  cls: 'badge-init-i',  range: '1.0 – 1.9',   band: 'Beginner+',
+    desc: 'A few months of play. Developing basic forehand; backhand inconsistent. Short rallies possible. Plays 1–2× a month socially. Lots of unforced errors.'
   },
   {
-    tier: 'tier-init-i', badge: 'badge-init-i', badgeLabel: 'Initiation–Inter',
-    range: '1.5 – 2.0', band: 'Initiation–Intermediate',
-    levelLabel: 'Beginner+',
-    desc: 'A few months of play or lessons. Starts to rally short distances. Basic forehand developing; backhand inconsistent. Plays 1–2× per month socially.'
+    tier: 'tier-inter',   cls: 'badge-inter',   range: '2.0 – 2.9',   band: 'Intermediate',
+    desc: 'Can sustain a rally. Solid forehand, developing backhand. Understands basic court positioning. Some unforced errors. Regular casual/social player.'
   },
   {
-    tier: 'tier-inter', badge: 'badge-inter', badgeLabel: 'Intermediate',
-    range: '2.5 – 3.0', band: 'Intermediate',
-    levelLabel: 'Intermediate',
-    desc: 'Can sustain a rally. Solid forehand and developing backhand. Understands basic positioning. Some unforced errors. Plays regularly at club / social level.'
+    tier: 'tier-inter',   cls: 'badge-inter',   range: '3.0 – 3.9',   band: 'Intermediate+',
+    desc: 'Consistent on both wings. Controls direction and pace. Starting to use angles, varied shots and tactics. Fewer errors, beginning to construct points.'
   },
   {
-    tier: 'tier-inter', badge: 'badge-inter', badgeLabel: 'Intermediate',
-    range: '3.0 – 3.5', band: 'Intermediate',
-    levelLabel: 'Intermediate+',
-    desc: 'Consistent on both wings. Controls direction reasonably well. Starting to use angles and varied pace. Fewer errors, starting to construct points.'
+    tier: 'tier-inter-h', cls: 'badge-inter-h', range: '4.0 – 4.9',   band: 'Intermediate High',
+    desc: 'Masters forehand and backhand with control. Very few unforced errors. Confident net play and volleys. Understands shot selection. Competes at local club tournaments.'
   },
   {
-    tier: 'tier-inter-h', badge: 'badge-inter-h', badgeLabel: 'Inter High',
-    range: '4.0 – 4.5', band: 'Intermediate High',
-    levelLabel: 'Intermediate+',
-    desc: 'Masters forehand and backhand with control. Few unforced errors. Plays volleys confidently. Understands shot selection and court positioning. Competes at local club tournaments.'
+    tier: 'tier-adv',     cls: 'badge-adv',     range: '5.0 – 5.9',   band: 'Advanced',
+    desc: 'Good to strong tactical mindset — reads opponents, varies play, exploits weaknesses. Full shot toolkit (topspin, slice, lob, smash). Competitive at open club and ranked events.'
   },
   {
-    tier: 'tier-inter-a', badge: 'badge-inter-a', badgeLabel: 'Inter Advanced',
-    range: '5.0', band: 'Intermediate Advanced',
-    levelLabel: 'Strong Inter',
-    desc: 'Good tactical mindset — reads opponents, varies play, exploits weaknesses. Uses topspin, slice, and net play effectively. Competitive at open club events.'
-  },
-  {
-    tier: 'tier-adv', badge: 'badge-adv', badgeLabel: 'Advanced',
-    range: '5.5 – 6.0', band: 'Advanced',
-    levelLabel: 'Advanced',
-    desc: 'Dominates technically and tactically. Full shot repertoire with high control and pace. Constructs winning patterns, dictates rallies. Plays and wins in open tournaments.'
-  },
-  {
-    tier: 'tier-elite', badge: 'badge-elite', badgeLabel: 'Elite',
-    range: '6.5 – 7.0', band: 'Elite / Professional',
-    levelLabel: 'Elite',
-    desc: 'Top-tier competitive level. Near-flawless technique, elite tactical decision-making, exceptional consistency under pressure. Regional or national ranking level / WPT equivalent.'
+    tier: 'tier-elite',   cls: 'badge-elite',   range: '6.0 – 7.0',   band: 'Elite',
+    desc: 'Top-tier competitive level. Near-flawless technique, elite tactical decision-making, exceptional consistency under pressure. Regional/national ranking or WPT equivalent.'
   },
 ];
 
 function buildGuideTableHTML() {
-  const rows = RATING_GUIDE.map(r => `
+  const rows = RATING_GUIDE.map(r => {
+    const bc = bandColor(r.band);
+    return `
     <tr class="${r.tier}">
       <td><span class="gr-range">${r.range}</span></td>
-      <td><span class="gr-badge ${r.badge}">${r.badgeLabel}</span></td>
-      <td class="gr-band">${r.levelLabel}</td>
+      <td><span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:0.72rem;font-weight:700;background:${bc.bg};color:${bc.color}">${r.band}</span></td>
       <td class="gr-desc">${r.desc}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
   return `<div class="guide-table-wrap">
     <table class="guide-table">
       <thead><tr>
         <th>DSR Range</th>
         <th>Band</th>
-        <th>Level</th>
         <th>What it means</th>
       </tr></thead>
       <tbody>${rows}</tbody>
