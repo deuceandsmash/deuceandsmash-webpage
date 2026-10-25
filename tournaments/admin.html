@@ -438,8 +438,6 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, get, set, update, push, onValue, off } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDu7A0agFAT1jwfrjCRkQe6tHg2Qu_LnDc",
   authDomain: "deuceandsmash-club.firebaseapp.com",
@@ -449,13 +447,10 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "953747553630",
   appId: "1:953747553630:web:316645b323ae12019fa3cf"
 };
-// Admin credentials — PIN gates the UI; Firebase auth gates the database writes
 const ADMIN_PIN = "062026";
-const ADMIN_EMAIL = "admin@deuceandsmash.club";
 
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getDatabase(app);
-const auth = getAuth(app);
 
 // ===== State =====
 let members = {};
@@ -464,64 +459,21 @@ let selectedPlayers = [];     // names
 let teamPairings = [];        // [[p1name, p2name], ...] — built from team-setup UI
 let activeListener = null;
 
-// ===== PIN + Firebase Auth =====
-window.checkPin = async () => {
+// ===== PIN =====
+window.checkPin = () => {
   const v = document.getElementById('pin-input').value;
-  if (v !== ADMIN_PIN) {
+  if (v === ADMIN_PIN) {
+    document.getElementById('pin-overlay').style.display = 'none';
+    document.getElementById('main-header').style.display = 'flex';
+    document.getElementById('main-tabs').style.display = 'flex';
+    loadInit();
+  } else {
     document.getElementById('pin-error').textContent = 'Incorrect PIN';
     document.getElementById('pin-input').value = '';
     document.getElementById('pin-input').focus();
-    return;
   }
-  // PIN correct — now sign in to Firebase with stored admin password
-  const storedPw = localStorage.getItem('ds_admin_pw');
-  if (storedPw) {
-    try {
-      await signInWithEmailAndPassword(auth, ADMIN_EMAIL, storedPw);
-      unlockAdmin();
-      return;
-    } catch(e) { localStorage.removeItem('ds_admin_pw'); }
-  }
-  // First time or stored pw invalid — ask for Firebase password
-  showFirebasePasswordPrompt();
 };
 document.getElementById('pin-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
-
-function showFirebasePasswordPrompt() {
-  document.getElementById('pin-error').innerHTML =
-    `<div style="margin-top:12px">
-      <div style="font-size:0.8rem;color:#888;margin-bottom:6px">Enter admin database password:</div>
-      <input type="password" id="fb-pw-input" style="width:100%;padding:10px;background:#111;border:1px solid #333;border-radius:6px;color:#fff;font-size:1rem;outline:none;margin-bottom:6px" placeholder="Password">
-      <button onclick="submitFirebasePw()" style="width:100%;padding:10px;background:#e8ff3b;color:#000;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:0.9rem">Sign In</button>
-      <div id="fb-pw-error" style="color:#ff4d4d;font-size:0.8rem;margin-top:6px;min-height:16px"></div>
-    </div>`;
-  setTimeout(() => document.getElementById('fb-pw-input')?.focus(), 50);
-}
-
-window.submitFirebasePw = async () => {
-  const pw = document.getElementById('fb-pw-input')?.value;
-  if (!pw) return;
-  try {
-    await signInWithEmailAndPassword(auth, ADMIN_EMAIL, pw);
-    localStorage.setItem('ds_admin_pw', pw);
-    unlockAdmin();
-  } catch(e) {
-    const errEl = document.getElementById('fb-pw-error');
-    if (errEl) errEl.textContent = 'Incorrect password. Try again.';
-  }
-};
-
-function unlockAdmin() {
-  document.getElementById('pin-overlay').style.display = 'none';
-  document.getElementById('main-header').style.display = 'flex';
-  document.getElementById('main-tabs').style.display = 'flex';
-  loadInit();
-}
-
-// If already signed in from a previous session, skip PIN entirely
-onAuthStateChanged(auth, user => {
-  if (user && !user.isAnonymous) unlockAdmin();
-});
 
 // Set today's date
 document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
