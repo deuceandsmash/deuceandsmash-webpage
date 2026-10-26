@@ -965,7 +965,7 @@ function buildPlayerSpotlight(playerName) {
     const trnDate = meta?.date || '';
     const isFirebaseKey = key.startsWith('-');
     const href = isFirebaseKey
-      ? `../tournaments/scoreboard.html?id=${encodeURIComponent(key)}`
+      ? `../tournaments/scoreboard.html?v=3&id=${encodeURIComponent(key)}`
       : `../tournaments/${key}.html`;
 
     const rank = meta?.standings?.findIndex(s => s.name === playerName);
@@ -1649,7 +1649,7 @@ function renderTournaments(list) {
     const progress = rounds ? Math.round((roundsDone/rounds)*100) : 0;
     // All Firebase-key entries go to scoreboard; static legacy pages use key.html
     const href = t.key && t.key.startsWith('-')
-      ? `../tournaments/scoreboard.html?id=${encodeURIComponent(t.key)}`
+      ? `../tournaments/scoreboard.html?v=3&id=${encodeURIComponent(t.key)}`
       : `../tournaments/${t.key}.html`;
     // Winner chip — shown prominently for completed events
     const winnerHtml = t.winner
