@@ -386,20 +386,26 @@ function renderOpenPlayStandings() {
 
   html += '<div class="section-title">Final Standings</div>';
   html += `<div class="lb-card">
-    <div class="lb-row hdr"><span>#</span><span>Player</span><span style="text-align:right">Pts</span><span style="text-align:right">W</span><span style="text-align:right">GP</span></div>
+    <div class="lb-row hdr"><span>#</span><span>Player</span><span style="text-align:right">Pts</span><span style="text-align:right">W-T-L</span><span style="text-align:right">GP</span></div>
     ${standings.map((s, pos) => {
       const topCls = pos===0?' top1':pos===1?' top2':pos===2?' top3':'';
       const posCls = pos===0?' p1':pos===1?' p2':pos===2?' p3':'';
       const medal = pos===0?'🥇 ':pos===1?'🥈 ':pos===2?'🥉 ':'';
+      const wins = s.wins||0;
+      const losses = s.losses != null ? s.losses : Math.max(0,(s.gp||0)-wins-(s.ties||0));
+      const ties = s.ties != null ? s.ties : Math.max(0,(s.gp||0)-wins-losses);
       return `<div class="lb-row${topCls}">
         <span class="pos${posCls}">${pos+1}</span>
         <span style="font-weight:600">${medal}${s.name}</span>
         <span class="pts-val">${s.pts}</span>
-        <span class="stat">${s.wins||0}</span>
+        <span class="stat" style="font-size:0.78rem">${wins}-${ties}-${losses}</span>
         <span class="stat">${s.gp||0}</span>
       </div>`;
     }).join('')}
   </div>`;
+
+  // Combined all-players performance chart
+  html += buildAllPlayersPerfChart();
 
   document.getElementById('main-content').innerHTML = html;
 }
@@ -535,6 +541,131 @@ function buildPlayerDeepStats(playerName) {
 }
 
 // ── SVG performance chart ───────────────────────────────────
+function buildAllPlayersPerfChart() {
+  try {
+    // Support both openPlay (byRound/standings) and admin (players/state/ranked/state.rounds) formats
+    let byRound = _tournData.byRound;
+    let standings = _tournData.standings;
+
+    // Build byRound + standings from admin format if not present
+    if (!byRound && _tournData.type === 'admin') {
+      const { players, state, ranked } = _tournData;
+      byRound = {};
+      (state.rounds||[]).forEach((round, ri) => {
+        const rNum = ri + 1;
+        byRound[rNum] = [];
+        (round.matches||[]).forEach((m, mi) => {
+          const teamA = (m.p1||[]).map(i => players[i]).filter(Boolean);
+          const teamB = (m.p2||[]).map(i => players[i]).filter(Boolean);
+          const scores = (round.scores||[])[mi]||[0,0];
+          byRound[rNum].push({ teamA, teamB, a: scores[0], b: scores[1], round: rNum });
+        });
+      });
+      standings = ranked.map(pi => ({
+        name: players[pi], pts: state.pts[pi]||0,
+        wins: state.wins[pi]||0, gp: state.played[pi]||0,
+      }));
+    }
+
+    if (!byRound || !standings || standings.length < 2) return '';
+    const rounds = Object.keys(byRound).map(Number).sort((a,b)=>a-b);
+    if (rounds.length < 2) return '';
+
+    // Temporarily patch _tournData so buildPlayerDeepStats works for admin format
+    const savedTournData = _tournData;
+    if (_tournData.type === 'admin' && !_tournData.byRound) {
+      _tournData = { ..._tournData, byRound, standings };
+    }
+
+    // Build cumulative pts per player per round
+    const playerData = standings.map(s => {
+      try {
+        const stats = buildPlayerDeepStats(s.name);
+        return { name: s.name, cumByRound: stats.cumByRound, rounds: stats.rounds };
+      } catch(e2) { return { name: s.name, cumByRound: [], rounds: [] }; }
+    });
+
+    _tournData = savedTournData;
+
+    // Chart dimensions
+    const W = 340, H = 180, PAD = { t:16, r:16, b:32, l:38 };
+    const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
+
+    // Unified round axis
+    const allRounds = rounds;
+    const maxPts = Math.max(...playerData.map(p =>
+      Math.max(...p.cumByRound.map(c => c.cumPts))
+    ));
+    const minPts = 0;
+    const xScale = i => PAD.l + (i / (allRounds.length - 1)) * cW;
+    const yScale = v => PAD.t + cH - ((v - minPts) / (maxPts - minPts || 1)) * cH;
+
+    const PALETTE = ['#E8FF3B','#4FC3F7','#FF7043','#A5D6A7','#CE93D8','#FFB74D','#80DEEA','#EF9A9A','#FFF59D','#80CBC4'];
+
+    let paths = '';
+    let dots = '';
+    playerData.forEach((p, pi) => {
+      const color = PALETTE[pi % PALETTE.length];
+      const pts = allRounds.map(r => {
+        const found = p.cumByRound.find(c => c.round === r);
+        return found ? found.cumPts : null;
+      });
+      // Line
+      let d = '';
+      pts.forEach((v, i) => {
+        if (v == null) return;
+        const x = xScale(i), y = yScale(v);
+        d += d ? ` L${x},${y}` : `M${x},${y}`;
+      });
+      paths += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2" opacity="0.85"/>`;
+      // End dot + name label
+      const lastIdx = pts.map((v,i)=>v!=null?i:-1).filter(i=>i>=0).pop();
+      if (lastIdx != null && pts[lastIdx] != null) {
+        const x = xScale(lastIdx), y = yScale(pts[lastIdx]);
+        dots += `<circle cx="${x}" cy="${y}" r="3.5" fill="${color}"/>`;
+      }
+    });
+
+    // Grid lines & y-axis labels
+    let grid = '';
+    const yTicks = 4;
+    for (let i = 0; i <= yTicks; i++) {
+      const v = minPts + (maxPts - minPts) * i / yTicks;
+      const y = yScale(v);
+      grid += `<line x1="${PAD.l}" x2="${PAD.l+cW}" y1="${y}" y2="${y}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`;
+      grid += `<text x="${PAD.l-5}" y="${y+4}" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="end">${Math.round(v)}</text>`;
+    }
+
+    // X-axis labels
+    let xLabels = '';
+    allRounds.forEach((r, i) => {
+      xLabels += `<text x="${xScale(i)}" y="${PAD.t+cH+14}" fill="rgba(255,255,255,0.45)" font-size="9" text-anchor="middle">R${r}</text>`;
+    });
+
+    // Legend
+    let legend = '';
+    const cols = Math.min(4, playerData.length);
+    playerData.forEach((p, pi) => {
+      const col = pi % cols;
+      const row = Math.floor(pi / cols);
+      const lx = 4 + col * 82, ly = H + 16 + row * 16;
+      legend += `<rect x="${lx}" y="${ly-7}" width="12" height="4" rx="2" fill="${PALETTE[pi%PALETTE.length]}"/>`;
+      legend += `<text x="${lx+15}" y="${ly}" fill="rgba(255,255,255,0.75)" font-size="9.5">${p.name}</text>`;
+    });
+    const legendRows = Math.ceil(playerData.length / cols);
+    const svgH = H + 12 + legendRows * 16 + 4;
+
+    return `<div class="section-title" style="margin-top:28px">Points Progression</div>
+    <div style="background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:16px 12px 12px;overflow:hidden">
+      <svg width="100%" viewBox="0 0 ${W} ${svgH}" xmlns="http://www.w3.org/2000/svg" style="display:block">
+        ${grid}${paths}${dots}${xLabels}${legend}
+      </svg>
+    </div>`;
+  } catch(e) {
+    return '';
+  }
+}
+
 function buildPerfChart(playerName, mode /* 'pts' | 'rank' */) {
   const d = buildPlayerDeepStats(playerName);
   const { cumByRound, rankByRound, rounds } = d;
@@ -765,19 +896,39 @@ function renderAdminStandings() {
 
   html += '<div class="section-title">Leaderboard</div>';
   html += `<div class="lb-card">
-    <div class="lb-row hdr"><span>#</span><span>Player</span><span style="text-align:right">Pts</span><span style="text-align:right">W</span><span style="text-align:right">GP</span></div>
+    <div class="lb-row hdr"><span>#</span><span>Player</span><span style="text-align:right">Pts</span><span style="text-align:right">W-T-L</span><span style="text-align:right">GP</span></div>
     ${ranked.map((pi, pos) => {
       const topCls = pos===0?' top1':pos===1?' top2':pos===2?' top3':'';
       const posCls = pos===0?' p1':pos===1?' p2':pos===2?' p3':'';
+      const wins = state.wins[pi]||0;
+      const gp = state.played[pi]||0;
+      // Compute ties and losses from round data
+      let ties = 0, losses = 0;
+      (state.rounds||[]).forEach(round => {
+        (round.matches||[]).forEach((m, mi) => {
+          const isA = (m.p1||[]).includes(pi);
+          const isB = (m.p2||[]).includes(pi);
+          if (!isA && !isB) return;
+          const scores = (round.scores||[])[mi]||[0,0];
+          const [sa, sb] = scores;
+          if (sa === sb) ties++;
+          else if ((isA && sb > sa) || (isB && sa > sb)) losses++;
+        });
+      });
+      const wtl = `${wins}-${ties}-${losses}`;
       return `<div class="lb-row${topCls}">
         <span class="pos${posCls}">${pos+1}</span>
         <span style="font-weight:600">${players[pi]}</span>
         <span class="pts-val">${state.pts[pi]}</span>
-        <span class="stat">${state.wins[pi]}</span>
-        <span class="stat">${state.played[pi]}</span>
+        <span class="stat" style="font-size:0.78rem">${wtl}</span>
+        <span class="stat">${gp}</span>
       </div>`;
     }).join('')}
   </div>`;
+
+  // Combined all-players performance chart
+  html += buildAllPlayersPerfChart();
+
   document.getElementById('main-content').innerHTML = html;
 }
 
