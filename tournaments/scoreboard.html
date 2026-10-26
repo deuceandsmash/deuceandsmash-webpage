@@ -578,27 +578,33 @@ function buildAllPlayersPerfChart() {
     }
 
     // Build cumulative pts per player per round
+    // cumByRound from buildPlayerDeepStats is a plain number array:
+    // index 0 = baseline (0), index 1 = after round rounds[0], etc.
     const playerData = standings.map(s => {
       try {
         const stats = buildPlayerDeepStats(s.name);
-        return { name: s.name, cumByRound: stats.cumByRound, rounds: stats.rounds };
-      } catch(e2) { return { name: s.name, cumByRound: [], rounds: [] }; }
-    });
+        // stats.cumByRound = [0, ptsAfterR1, ptsAfterR2, ...]
+        // stats.rounds = [1, 2, 3, ...] (sorted round numbers)
+        return { name: s.name, cumArr: stats.cumByRound, statRounds: stats.rounds };
+      } catch(e2) { return { name: s.name, cumArr: null, statRounds: [] }; }
+    }).filter(p => p.cumArr && p.cumArr.length > 1);
 
     _tournData = savedTournData;
+
+    if (playerData.length < 2) return '';
 
     // Chart dimensions
     const W = 340, H = 180, PAD = { t:16, r:16, b:32, l:38 };
     const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
 
-    // Unified round axis
-    const allRounds = rounds;
-    const maxPts = Math.max(...playerData.map(p =>
-      Math.max(...p.cumByRound.map(c => c.cumPts))
-    ));
+    // Use rounds array as x-axis (each position i → rounds[i-1], index 0 = start)
+    // cumArr[0]=0 (start), cumArr[i]=pts after rounds[i-1]
+    const numPoints = playerData[0].cumArr.length; // e.g. 8 for 7 rounds (0..7)
+    const allMaxPts = playerData.map(p => Math.max(...p.cumArr));
+    const maxPts = Math.max(...allMaxPts, 1);
     const minPts = 0;
-    const xScale = i => PAD.l + (i / (allRounds.length - 1)) * cW;
-    const yScale = v => PAD.t + cH - ((v - minPts) / (maxPts - minPts || 1)) * cH;
+    const xScale = i => PAD.l + (i / (numPoints - 1)) * cW;
+    const yScale = v => PAD.t + cH - ((v - minPts) / (maxPts - minPts)) * cH;
 
     const PALETTE = ['#E8FF3B','#4FC3F7','#FF7043','#A5D6A7','#CE93D8','#FFB74D','#80DEEA','#EF9A9A','#FFF59D','#80CBC4'];
 
@@ -606,24 +612,16 @@ function buildAllPlayersPerfChart() {
     let dots = '';
     playerData.forEach((p, pi) => {
       const color = PALETTE[pi % PALETTE.length];
-      const pts = allRounds.map(r => {
-        const found = p.cumByRound.find(c => c.round === r);
-        return found ? found.cumPts : null;
-      });
-      // Line
+      // Line through all points
       let d = '';
-      pts.forEach((v, i) => {
-        if (v == null) return;
+      p.cumArr.forEach((v, i) => {
         const x = xScale(i), y = yScale(v);
         d += d ? ` L${x},${y}` : `M${x},${y}`;
       });
       paths += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2" opacity="0.85"/>`;
-      // End dot + name label
-      const lastIdx = pts.map((v,i)=>v!=null?i:-1).filter(i=>i>=0).pop();
-      if (lastIdx != null && pts[lastIdx] != null) {
-        const x = xScale(lastIdx), y = yScale(pts[lastIdx]);
-        dots += `<circle cx="${x}" cy="${y}" r="3.5" fill="${color}"/>`;
-      }
+      // End dot
+      const lastX = xScale(p.cumArr.length - 1), lastY = yScale(p.cumArr[p.cumArr.length - 1]);
+      dots += `<circle cx="${lastX}" cy="${lastY}" r="3.5" fill="${color}"/>`;
     });
 
     // Grid lines & y-axis labels
@@ -636,10 +634,11 @@ function buildAllPlayersPerfChart() {
       grid += `<text x="${PAD.l-5}" y="${y+4}" fill="rgba(255,255,255,0.4)" font-size="9" text-anchor="end">${Math.round(v)}</text>`;
     }
 
-    // X-axis labels
+    // X-axis labels: index 0 = start, indices 1..n = R1..Rn
     let xLabels = '';
-    allRounds.forEach((r, i) => {
-      xLabels += `<text x="${xScale(i)}" y="${PAD.t+cH+14}" fill="rgba(255,255,255,0.45)" font-size="9" text-anchor="middle">R${r}</text>`;
+    xLabels += `<text x="${xScale(0)}" y="${PAD.t+cH+14}" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">Start</text>`;
+    rounds.forEach((r, i) => {
+      xLabels += `<text x="${xScale(i+1)}" y="${PAD.t+cH+14}" fill="rgba(255,255,255,0.45)" font-size="9" text-anchor="middle">R${r}</text>`;
     });
 
     // Legend
