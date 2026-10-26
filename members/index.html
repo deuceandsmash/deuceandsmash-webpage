@@ -580,6 +580,10 @@ DSR.compute=(seeds,matches,today)=>{
   const list=matches.filter(m=>m.status==="confirmed"&&DSR.W[m.format]).slice().sort((x,y)=>x.date.localeCompare(y.date)||String(x.enteredAt||"").localeCompare(String(y.enteredAt||"")));
   for(const m of list){
     const A=m.teamA.map(get),B=m.teamB.map(get);
+    // Skip this match for any player whose assessment date is after the match date
+    const allPlayers=[...A,...B];
+    const skip=allPlayers.some(p=>{const s=seeds[p.name];return s?.assessedAt&&m.date<s.assessedAt;});
+    if(skip)continue;
     const ra=(A[0].r+A[1].r)/2,rb=(B[0].r+B[1].r)/2;
     const E=DSR.expected(ra,rb);const Sa=m.a/(m.a+m.b);const W=DSR.W[m.format];const d=dayNum(m.date);
     const apply=(p,team,opp,oppAvg,surprise)=>{
@@ -667,9 +671,9 @@ function computeAllRatings() {
       }
     }
     if (m.ratingOverride != null && m.ratingOverride !== '') {
-      // Direct rating pin — strongest override
+      // Assessment seed — starting point for DSR from the assessment date onward
       const pinned = parseFloat(m.ratingOverride);
-      if (!isNaN(pinned)) seeds[name] = { seed: pinned, source: `Staff pinned rating: ${pinned}` };
+      if (!isNaN(pinned)) seeds[name] = { seed: pinned, source: `Staff assessment: ${pinned}${m.ratingAssessedAt ? ` (set ${m.ratingAssessedAt})` : ''}`, assessedAt: m.ratingAssessedAt || null };
     } else if (m.levelOverride) {
       // Level → seed override takes priority over history
       const LEVEL_MAP = { 'Beginner': 0.75, 'Beginner+': 1.5, 'Inter': 2.5, 'Intermediate': 2.5, 'Intermediate+': 3.5, 'Strong Inter': 3.5, 'Advanced': 4.5, 'Advanced High': 5.5, 'Elite': 6.5 };
@@ -684,19 +688,7 @@ function computeAllRatings() {
   const allMatches = Object.entries(opMatches).map(([id, m]) => ({ id, ...m }));
   const result = DSR.compute(seeds, allMatches, today);
   ratings = result.players;
-  // Apply hard rating pins post-compute (override any drift from matches)
-  for (const [id, m] of Object.entries(members)) {
-    if (m.ratingOverride != null && m.ratingOverride !== '') {
-      const pinned = parseFloat(m.ratingOverride);
-      if (!isNaN(pinned) && ratings[m.name]) {
-        ratings[m.name].r = pinned;
-        ratings[m.name].band = DSR.band(pinned);
-        ratings[m.name].badge = 'Staff Set';
-        ratings[m.name].zone = DSR.zone(pinned).name;
-        ratings[m.name].pinned = true;
-      }
-    }
-  }
+  // No post-compute pin — ratingOverride is a DSR seed only (point-in-time assessment)
 }
 
 // ===== Members tab =====
@@ -956,7 +948,7 @@ function buildPlayerSpotlight(playerName) {
 
 function renderDrawerView(m, r, playerSessions) {
   const ratingSource = m.ratingOverride != null && m.ratingOverride !== ''
-    ? '📌 Staff pinned'
+    ? `🎯 Staff assessment${m.ratingAssessedAt ? ` (${m.ratingAssessedAt})` : ''}`
     : m.levelOverride
       ? `Seeded from level: ${m.levelOverride}`
       : (r?.hist?.length ? `Calculated from ${r.matches} matches` : 'Default seed — no history');
@@ -1001,7 +993,7 @@ function renderDrawerView(m, r, playerSessions) {
       <div class="field-row"><span class="field-label">Phone</span><span class="field-val">${val(m.phone)}</span></div>
       <div class="field-row"><span class="field-label">Email</span><span class="field-val">${val(m.email)}</span></div>
       <div class="field-row"><span class="field-label">Skill Level</span><span class="field-val">${val(m.levelOverride, 'Not set')}</span></div>
-      <div class="field-row"><span class="field-label">Rating Pin</span><span class="field-val">${m.ratingOverride != null && m.ratingOverride !== '' ? `📌 ${parseFloat(m.ratingOverride).toFixed(2)}` : '<span style="color:var(--muted)">Auto (DSR)</span>'}</span></div>
+      <div class="field-row"><span class="field-label">Assessment</span><span class="field-val">${m.ratingOverride != null && m.ratingOverride !== '' ? `🎯 ${parseFloat(m.ratingOverride).toFixed(2)}${m.ratingAssessedAt ? ` <span style="color:var(--muted);font-size:0.8em">(set ${m.ratingAssessedAt})</span>` : ''}` : '<span style="color:var(--muted)">Auto (DSR)</span>'}</span></div>
       <div class="field-row"><span class="field-label">Membership</span><span class="field-val">${val(m.membership, 'None')}</span></div>
       <div class="field-row"><span class="field-label">Notes</span><span class="field-val">${val(m.notes)}</span></div>
     </div>
@@ -1055,9 +1047,9 @@ function renderDrawerEdit(m) {
       </div>
     </div>
     <div class="drawer-section">
-      <h4>Smash Rating Override</h4>
+      <h4>Smash Rating Assessment</h4>
       <div class="field-row">
-        <span class="field-label">Pin Rating</span>
+        <span class="field-label">Assessment Rating</span>
         <div style="display:flex;gap:8px;align-items:center;flex:1">
           <input class="field-edit" id="edit-rating" type="number" min="0" max="7" step="0.01"
             style="max-width:120px"
@@ -1066,7 +1058,7 @@ function renderDrawerEdit(m) {
           <button class="btn btn-secondary" type="button" onclick="openAssess('edit')" title="Run skill assessment" style="padding:6px 12px;font-size:0.82rem;white-space:nowrap">🎯 Assess</button>
         </div>
       </div>
-      <p class="pin-note" style="margin-left:118px">Enter 0–7 to fix this player's rating. Clear the field to let DSR calculate it automatically from match history.</p>
+      <p class="pin-note" style="margin-left:118px">Enter 0–7 to set a point-in-time assessment. DSR will evolve from this starting point based on match results from that date onward. Clear the field to let DSR calculate automatically from full match history.</p>
     </div>`;
 }
 
@@ -1136,6 +1128,18 @@ window.saveMember = async () => {
       if (v === '' || v == null) return '';
       const n = parseFloat(v);
       return isNaN(n) ? '' : n;
+    })(),
+    ratingAssessedAt: (() => {
+      const v = document.getElementById('edit-rating')?.value;
+      if (v === '' || v == null) return (editingMember?.ratingAssessedAt || '');
+      const n = parseFloat(v);
+      if (isNaN(n)) return (editingMember?.ratingAssessedAt || '');
+      // If value changed from stored, stamp today; otherwise keep existing date
+      const existing = editingMember?.ratingOverride;
+      if (existing == null || existing === '' || parseFloat(existing) !== n) {
+        return new Date().toISOString().slice(0, 10);
+      }
+      return editingMember?.ratingAssessedAt || new Date().toISOString().slice(0, 10);
     })(),
     updatedAt: new Date().toISOString(),
   };
