@@ -1637,15 +1637,18 @@ function renderTournaments(list) {
     countEl.textContent = `${list.length} event${list.length!==1?'s':''}${live?' · '+live+' live':''}`;
   }
   grid.innerHTML = list.map(t => {
-    const isLive = t.status === 'live';
-    const isCompleted = t.status === 'completed' || t.status === 'archived';
+    const rounds = t.totalRounds || t.rounds;
+    const roundsDone = t.roundsDone || 0;
+    // Auto-detect: if all rounds submitted and status still 'live', treat as effectively completed
+    const effectivelyDone = rounds && roundsDone >= rounds;
+    const storedLive = t.status === 'live';
+    const isLive = storedLive && !effectivelyDone;
+    const isCompleted = t.status === 'completed' || t.status === 'archived' || effectivelyDone;
     const statusColor = isLive ? '#FF6B35' : isCompleted ? '#7DC515' : '#8C8B85';
     const statusLabel = isLive
       ? `<span style="display:inline-flex;align-items:center;gap:5px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#FF6B35;animation:pulse 1.5s infinite"></span>Live</span>`
       : isCompleted ? '✓ Completed' : '◦ Upcoming';
     const sport = (t.sport||'padel').charAt(0).toUpperCase()+(t.sport||'padel').slice(1);
-    const rounds = t.totalRounds || t.rounds;
-    const roundsDone = t.roundsDone || 0;
     const progress = rounds ? Math.round((roundsDone/rounds)*100) : 0;
     // All Firebase-key entries go to scoreboard; static legacy pages use key.html
     const href = t.key && t.key.startsWith('-')
@@ -1659,7 +1662,7 @@ function renderTournaments(list) {
            ${t.winnerPts ? `<span style="font-size:0.78rem;color:var(--text-muted);margin-left:2px">${t.winnerPts} pts</span>` : ''}
          </div>`
       : '';
-    // Live progress bar for ongoing tournaments
+    // Live progress bar — only shown when genuinely in progress (not all rounds done)
     const progressHtml = isLive && rounds
       ? `<div style="margin-top:10px">
            <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted);margin-bottom:4px">
@@ -1670,8 +1673,15 @@ function renderTournaments(list) {
            </div>
          </div>`
       : '';
+    // Admin controls — visible to anyone past the PIN
+    const isFirebaseKey = t.key && t.key.startsWith('-');
+    const adminHtml = isFirebaseKey ? `
+      <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06)" onclick="event.preventDefault();event.stopPropagation()">
+        ${(storedLive && effectivelyDone) || storedLive ? `<button onclick="trnMarkComplete('${t.key}')" style="font-size:0.68rem;font-weight:600;padding:3px 10px;border-radius:10px;border:1px solid rgba(125,197,21,0.35);background:rgba(125,197,21,0.08);color:#7DC515;cursor:pointer">✓ Mark complete</button>` : ''}
+        <button onclick="trnDelete('${t.key}','${(t.name||t.key).replace(/'/g,"\\'")}') " style="font-size:0.68rem;font-weight:600;padding:3px 10px;border-radius:10px;border:1px solid rgba(255,80,80,0.3);background:rgba(255,80,80,0.07);color:#ff6b6b;cursor:pointer">🗑 Delete</button>
+      </div>` : '';
     // "Tap for details" affordance
-    const detailsCue = `<div style="margin-top:12px;font-size:0.73rem;color:var(--text-muted);display:flex;align-items:center;gap:4px">
+    const detailsCue = `<div style="margin-top:10px;font-size:0.73rem;color:var(--text-muted);display:flex;align-items:center;gap:4px">
       <span>View details</span><span style="opacity:0.5">→</span>
     </div>`;
     return `
@@ -1692,11 +1702,49 @@ function renderTournaments(list) {
         </div>
         ${winnerHtml}
         ${progressHtml}
+        ${adminHtml}
         ${detailsCue}
       </div>
     </a>`;
   }).join('');
 }
+
+// ===== Tournament Admin Actions =====
+function trnToast(msg, ok) {
+  let el = document.getElementById('trn-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'trn-toast';
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:9px 18px;border-radius:10px;font-size:0.8rem;font-weight:600;z-index:9999;transition:opacity .3s;pointer-events:none';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.background = ok === false ? 'rgba(255,80,80,0.9)' : 'rgba(125,197,21,0.9)';
+  el.style.color = '#000';
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, 2800);
+}
+
+window.trnMarkComplete = async function(key) {
+  try {
+    await update(ref(db, `tournaments/_meta/${key}`), { status: 'completed' });
+    trnToast('✓ Tournament marked as completed');
+  } catch(e) {
+    trnToast('Error: ' + e.message, false);
+  }
+};
+
+window.trnDelete = async function(key, name) {
+  if (!confirm(`Delete "${name}"?\n\nThis removes the tournament card only — match records in openPlayMatches are kept. This cannot be undone.`)) return;
+  try {
+    const { remove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+    await remove(ref(db, `tournaments/_meta/${key}`));
+    trnToast('🗑 Tournament deleted');
+  } catch(e) {
+    trnToast('Error: ' + e.message, false);
+  }
+};
 
 // ===== Rating Guide Table =====
 // Guide table — band names match DSR.BANDS exactly
