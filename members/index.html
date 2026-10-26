@@ -82,7 +82,7 @@
 
   /* Detail drawer */
   #drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; }
-  #drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(480px, 100vw); background: var(--surface); border-left: 1px solid var(--border); z-index: 201; display: none; flex-direction: column; overflow: hidden; }
+  #drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(560px, 100vw); background: var(--surface); border-left: 1px solid var(--border); z-index: 201; display: none; flex-direction: column; overflow: hidden; }
   #drawer.open, #drawer-overlay.open { display: flex; }
   .drawer-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
   .drawer-close { background: var(--pill-bg); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; }
@@ -853,18 +853,10 @@ window.toggleConnPop = (id) => {
   if (!isOpen) el.style.display = 'block';
 };
 
-function buildPlayerSpotlight(playerName) {
-  // Aggregate tournament stats for this player from trnMeta + openPlayMatches (tournament source)
-  const tournamentMatches = Object.values(opMatches).filter(
-    m => m.source === 'tournament' && (m.teamA?.includes(playerName) || m.teamB?.includes(playerName))
-  );
-
-  if (!tournamentMatches.length) return '';
-
+function _trnStats(matches, playerName) {
   let wins = 0, ties = 0, losses = 0, ptsFor = 0, ptsAgainst = 0;
-  const oppRecord = {}; // oppName -> { w, l, t }
-
-  tournamentMatches.forEach(m => {
+  const oppRecord = {};
+  matches.forEach(m => {
     const inA = m.teamA?.includes(playerName);
     const myScore = inA ? (m.a||0) : (m.b||0);
     const oppScore = inA ? (m.b||0) : (m.a||0);
@@ -880,72 +872,139 @@ function buildPlayerSpotlight(playerName) {
       else oppRecord[opp].t++;
     });
   });
+  return { wins, ties, losses, ptsFor, ptsAgainst, oppRecord };
+}
 
+function _trnStatCards(stats) {
+  const { wins, ties, losses, ptsFor, ptsAgainst, oppRecord } = stats;
   const total = wins + ties + losses;
   const ptsDiff = ptsFor - ptsAgainst;
   const ptsDiffStr = ptsDiff >= 0 ? `+${ptsDiff}` : `${ptsDiff}`;
   const avgScored = total > 0 ? (ptsFor / total).toFixed(1) : '—';
-  const totalPts = ptsFor;
-
   let toughestOpp = null, toughestL = 0;
   Object.entries(oppRecord).forEach(([opp, rec]) => {
     if (rec.l > toughestL) { toughestL = rec.l; toughestOpp = opp; }
   });
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="background:var(--card,#1a1a2e);border-radius:8px;padding:10px;border:1px solid rgba(255,255,255,0.06);text-align:center">
+        <div style="font-size:1.05rem;font-weight:800;color:var(--text)">${wins}-${ties}-${losses}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:2px">W–T–L</div>
+      </div>
+      <div style="background:var(--card,#1a1a2e);border-radius:8px;padding:10px;border:1px solid rgba(255,255,255,0.06);text-align:center">
+        <div style="font-size:1.05rem;font-weight:800;color:${ptsDiff>=0?'#7DC515':'#FF4D6D'}">${ptsDiffStr}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:2px">Pt diff</div>
+      </div>
+      <div style="background:var(--card,#1a1a2e);border-radius:8px;padding:10px;border:1px solid rgba(255,255,255,0.06);text-align:center">
+        <div style="font-size:1.05rem;font-weight:800;color:var(--text)">${avgScored}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:2px">Avg/match</div>
+      </div>
+    </div>
+    ${toughestOpp ? `
+    <div style="background:var(--card,#1a1a2e);border-radius:8px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.06)">
+      <div>
+        <div style="font-weight:700;font-size:0.82rem;color:var(--text)">${toughestOpp}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:2px">Toughest opponent</div>
+      </div>
+      <div style="font-size:0.75rem;color:var(--muted)">${toughestL} loss${toughestL!==1?'es':''}</div>
+    </div>` : ''}`;
+}
 
-  // Tournaments participated in
-  const trnKeys = new Set(tournamentMatches.map(m => m.tournamentId).filter(Boolean));
-  const trnList = [...trnKeys].map(k => trnMeta[k]).filter(Boolean)
-    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+function buildPlayerSpotlight(playerName) {
+  const allTrnMatches = Object.values(opMatches).filter(
+    m => m.source === 'tournament' && (m.teamA?.includes(playerName) || m.teamB?.includes(playerName))
+  );
+  if (!allTrnMatches.length) return '';
+
+  // Group by tournamentId
+  const byTrn = {};
+  allTrnMatches.forEach(m => {
+    const key = m.tournamentId || '__unknown__';
+    if (!byTrn[key]) byTrn[key] = [];
+    byTrn[key].push(m);
+  });
+
+  const trnKeys = Object.keys(byTrn);
+  trnKeys.sort((a, b) => {
+    const ma = trnMeta[a], mb = trnMeta[b];
+    return (mb?.date||'').localeCompare(ma?.date||'');
+  });
+
+  const rankEmoji = ['\U0001f947','\U0001f948','\U0001f949'];
+
+  const trnCardsHtml = trnKeys.map(key => {
+    const matches = byTrn[key];
+    const meta = trnMeta[key];
+    const trnName = meta?.name || key;
+    const trnDate = meta?.date || '';
+    const isFirebaseKey = key.startsWith('-');
+    const href = isFirebaseKey
+      ? `../tournaments/scoreboard.html?id=${encodeURIComponent(key)}`
+      : `../tournaments/${key}.html`;
+
+    const rank = meta?.standings?.findIndex(s => s.name === playerName);
+    const rankStr = rank != null && rank >= 0
+      ? (rankEmoji[rank] || `${rank+1}th`)
+      : '';
+
+    const stats = _trnStats(matches, playerName);
+    const statCards = _trnStatCards(stats);
+
+    const matchRows = matches.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map((m, i) => {
+      const inA = m.teamA?.includes(playerName);
+      const myScore = inA ? (m.a||0) : (m.b||0);
+      const oppScore = inA ? (m.b||0) : (m.a||0);
+      const partner = (inA ? m.teamA : m.teamB)?.filter(n => n !== playerName).join(' & ') || '—';
+      const opp = (inA ? m.teamB : m.teamA)?.join(' & ') || '—';
+      const result = myScore > oppScore ? 'W' : myScore < oppScore ? 'L' : 'T';
+      const col = result==='W'?'#7DC515':result==='L'?'#FF4D6D':'#aaa';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.75rem">
+        <span style="font-weight:700;color:${col};width:14px;flex-shrink:0">${result}</span>
+        <span style="font-size:0.95rem;font-weight:800;color:${col};width:38px;flex-shrink:0">${myScore}–${oppScore}</span>
+        <div style="flex:1;min-width:0">
+          <div style="color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">R${i+1} w/ ${partner}</div>
+          <div style="color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">vs ${opp}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <a href="${href}" target="_blank" style="color:var(--accent,#7DC515);text-decoration:none;font-weight:700;font-size:0.88rem">${trnName}</a>
+          ${trnDate ? `<div style="font-size:0.68rem;color:var(--muted);margin-top:2px">${trnDate}</div>` : ''}
+        </div>
+        ${rankStr ? `<span style="font-size:1.2rem">${rankStr}</span>` : ''}
+      </div>
+      ${statCards}
+      <details style="margin-top:4px">
+        <summary style="font-size:0.72rem;color:var(--muted);cursor:pointer;user-select:none;padding:2px 0">
+          Match breakdown (${matches.length})
+        </summary>
+        <div style="margin-top:8px">${matchRows}</div>
+      </details>
+    </div>`;
+  }).join('');
+
+  // Overall combined summary — only shown when player has been in more than one tournament
+  let summaryHtml = '';
+  if (trnKeys.length > 1) {
+    const overall = _trnStats(allTrnMatches, playerName);
+    summaryHtml = `
+    <div style="background:rgba(125,197,21,0.07);border:1px solid rgba(125,197,21,0.22);border-radius:10px;padding:12px;margin-bottom:14px">
+      <div style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">All tournaments combined (${trnKeys.length})</div>
+      ${_trnStatCards(overall)}
+    </div>`;
+  }
 
   return `
     <div class="drawer-section">
-      <h4>🏆 Tournament Spotlight</h4>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div style="background:var(--card,#1a1a2e);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.06)">
-          <div style="font-size:1.3rem;font-weight:800;color:var(--text)">${wins}-${ties}-${losses}</div>
-          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">W–T–L</div>
-        </div>
-        <div style="background:var(--card,#1a1a2e);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.06)">
-          <div style="font-size:1.3rem;font-weight:800;color:${ptsDiff>=0?'#7DC515':'#FF4D6D'}">${ptsDiffStr}</div>
-          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Point difference</div>
-        </div>
-        <div style="background:var(--card,#1a1a2e);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.06)">
-          <div style="font-size:1.3rem;font-weight:800;color:var(--text)">${avgScored}</div>
-          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Avg scored/match</div>
-        </div>
-        <div style="background:var(--card,#1a1a2e);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.06)">
-          <div style="font-size:1.3rem;font-weight:800;color:#7DC515">${totalPts}</div>
-          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Total pts scored</div>
-        </div>
-      </div>
-      ${toughestOpp ? `
-      <div style="background:var(--card,#1a1a2e);border-radius:10px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.06)">
-        <div>
-          <div style="font-weight:700;color:var(--text)">${toughestOpp}</div>
-          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">Toughest opponent</div>
-        </div>
-        <div style="font-size:0.78rem;color:var(--text-muted)">${toughestL} loss${toughestL!==1?'es':''}</div>
-      </div>` : ''}
-      ${trnList.length ? `
-      <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Tournaments (${trnList.length})</div>
-      ${trnList.map(t => {
-        const isFirebaseKey = t.key && t.key.startsWith('-');
-        const href = isFirebaseKey
-          ? `../tournaments/scoreboard.html?id=${encodeURIComponent(t.key)}`
-          : `../tournaments/${t.key}.html`;
-        // Find this player's rank in standings
-        const rank = t.standings?.findIndex(s => s.name === playerName);
-        const rankStr = rank != null && rank >= 0
-          ? ['🥇','🥈','🥉','4th','5th','6th','7th','8th'][rank] || `${rank+1}th`
-          : '';
-        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.8rem">
-          <a href="${href}" target="_blank" style="color:var(--accent2,#3A8FFF);text-decoration:none;font-weight:600">${t.name||t.key}</a>
-          <span style="color:var(--text-muted)">${rankStr}${t.date?' · '+t.date:''}</span>
-        </div>`;
-      }).join('')}` : ''}
+      <h4>\U0001f3c6 Tournament Performance</h4>
+      ${summaryHtml}
+      ${trnCardsHtml}
     </div>`;
 }
-
 function renderDrawerView(m, r, playerSessions) {
   const ratingSource = m.ratingOverride != null && m.ratingOverride !== ''
     ? `🎯 Staff assessment${m.ratingAssessedAt ? ` (${m.ratingAssessedAt})` : ''}`
@@ -1070,7 +1129,7 @@ window.openDrawer = (id) => {
   if (!m) return;
   const r = ratings[m.name];
   const playerSessions = Object.values(opMatches).filter(match =>
-    match.teamA?.includes(m.name) || match.teamB?.includes(m.name)
+    match.source !== 'tournament' && (match.teamA?.includes(m.name) || match.teamB?.includes(m.name))
   );
 
   document.getElementById('drawer-name').textContent = m.name || id;
@@ -1094,7 +1153,7 @@ window.cancelEdit = () => {
   const m = members[drawerMemberId];
   const r = ratings[m?.name];
   const playerSessions = Object.values(opMatches).filter(match =>
-    match.teamA?.includes(m?.name) || match.teamB?.includes(m?.name)
+    match.source !== 'tournament' && (match.teamA?.includes(m?.name) || match.teamB?.includes(m?.name))
   );
   drawerEdits = {};
   document.getElementById('drawer-name').textContent = m.name || drawerMemberId;
@@ -1152,7 +1211,7 @@ window.saveMember = async () => {
   const r = ratings[updates.name || m.name];
   const pName = updates.name || m.name;
   const playerSessions = Object.values(opMatches).filter(match =>
-    match.teamA?.includes(pName) || match.teamB?.includes(pName)
+    match.source !== 'tournament' && (match.teamA?.includes(pName) || match.teamB?.includes(pName))
   );
   document.getElementById('drawer-name').textContent = updates.name || m.name;
   document.getElementById('drawer-meta').textContent = drawerMeta(members[drawerMemberId]);
