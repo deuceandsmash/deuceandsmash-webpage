@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Scoreboard — Deuce & Smash</title>
+<title>Tournament Scoreboard — Deuce &amp; Smash</title>
 <style>
   :root {
     --bg:#0d0d0d;--surface:#161616;--card:#1c1c1c;--border:#2a2a2a;
@@ -13,92 +13,116 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
-  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;gap:12px;}
-  .logo{font-size:1.4rem;font-weight:800;letter-spacing:-0.5px;}
+
+  /* ── Header ── */
+  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;}
+  .logo{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;white-space:nowrap;}
   .logo span{color:var(--accent);}
-  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 1.5s ease-in-out infinite;}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:#FF6B35;box-shadow:0 0 8px #FF6B35;animation:pulse 1.5s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
-  .live-label{font-size:0.75rem;color:var(--accent);font-weight:700;letter-spacing:1px;}
-  .header-right{margin-left:auto;text-align:right;}
-  .t-name{font-size:0.9rem;font-weight:700;}
-  .t-sub{font-size:0.75rem;color:var(--muted);}
+  .status-badge{font-size:0.72rem;font-weight:700;letter-spacing:.08em;padding:3px 9px;border-radius:20px;}
+  .badge-live{background:rgba(255,107,53,.15);color:#FF6B35;border:1px solid rgba(255,107,53,.3);}
+  .badge-done{background:rgba(125,197,21,.12);color:#7DC515;border:1px solid rgba(125,197,21,.25);}
+  .header-center{flex:1;min-width:0;padding:0 10px;}
+  .t-name{font-size:0.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .t-sub{font-size:0.72rem;color:var(--muted);}
+  .back-btn{font-size:0.78rem;color:var(--muted);text-decoration:none;white-space:nowrap;padding:5px 10px;border-radius:8px;border:1px solid var(--border);}
+  .back-btn:hover{color:var(--text);border-color:var(--muted);}
 
+  /* ── Tabs ── */
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--surface);padding:0 16px;overflow-x:auto;}
+  .tab{padding:12px 18px;font-size:0.82rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s;}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .tab:hover:not(.active){color:var(--text);}
+
+  /* ── Main content ── */
   .main{padding:16px;max-width:900px;margin:0 auto;}
+  .section-title{font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;padding:0 2px;}
 
-  /* Leaderboard */
-  .section-title{font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;padding:0 4px;}
-  .lb-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px;}
-  .lb-row{display:grid;grid-template-columns:36px 1fr 60px 44px 44px;gap:4px;padding:11px 14px;border-bottom:1px solid var(--border);align-items:center;font-size:0.88rem;}
+  /* ── Leaderboard ── */
+  .lb-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;}
+  .lb-row{display:grid;grid-template-columns:34px 1fr 58px 42px 42px;gap:4px;padding:11px 14px;border-bottom:1px solid var(--border);align-items:center;font-size:0.88rem;}
   .lb-row:last-child{border-bottom:none;}
-  .lb-row.header-row{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);background:var(--surface);padding:8px 14px;}
-  .lb-row.top1{background:rgba(232,255,59,0.07);}
-  .lb-row.top2{background:rgba(232,255,59,0.04);}
-  .lb-row.top3{background:rgba(232,255,59,0.02);}
-  .pos{font-weight:800;color:var(--muted);font-size:0.85rem;}
+  .lb-row.hdr{font-size:0.68rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);background:var(--surface);padding:8px 14px;}
+  .lb-row.top1{background:rgba(232,255,59,.07);}
+  .lb-row.top2{background:rgba(232,255,59,.04);}
+  .lb-row.top3{background:rgba(232,255,59,.02);}
+  .pos{font-weight:800;color:var(--muted);font-size:.85rem;}
   .pos.p1{color:var(--accent);}
   .pos.p2{color:var(--accent2);}
   .pos.p3{color:var(--warn);}
-  .player-name{font-weight:600;}
-  .pts{color:var(--accent);font-weight:800;font-size:1rem;text-align:right;}
-  .stat{text-align:right;color:var(--muted);font-size:0.8rem;}
+  .pts-val{color:var(--accent);font-weight:800;font-size:1rem;text-align:right;}
+  .stat{text-align:right;color:var(--muted);font-size:.8rem;}
 
-  /* Current round */
-  .court-card{background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;}
-  .court-header{padding:10px 14px;background:var(--surface);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;}
-  .court-label{font-weight:700;color:var(--accent2);}
-  .match-display{padding:14px;}
-  .team-block{display:flex;align-items:center;gap:10px;padding:6px 0;}
-  .team-players{flex:1;}
-  .team-player{font-size:0.9rem;font-weight:600;}
-  .team-player.sub{font-size:0.8rem;color:var(--muted);font-weight:400;}
-  .team-score{font-size:2rem;font-weight:800;color:var(--accent);min-width:44px;text-align:right;}
-  .vs-divider{text-align:center;font-size:0.75rem;color:var(--muted);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:4px;margin:2px 0;}
-  .byes-block{padding:10px 14px;font-size:0.8rem;color:var(--muted);background:rgba(0,0,0,0.2);}
+  /* ── Round card ── */
+  .round-section{margin-bottom:24px;}
+  .round-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .round-pill{font-size:0.75rem;font-weight:700;padding:4px 12px;border-radius:20px;background:rgba(232,255,59,.1);color:var(--accent);border:1px solid rgba(232,255,59,.25);}
+  .match-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px;}
+  .match-header{padding:7px 14px;background:var(--surface);font-size:0.7rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:flex;justify-content:space-between;}
+  .court-label{color:var(--accent2);font-weight:700;}
+  .match-body{padding:12px 14px;}
+  .team-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;}
+  .team-names{font-size:0.88rem;font-weight:600;}
+  .team-names .p2n{font-size:0.8rem;color:var(--muted);font-weight:400;}
+  .team-score{font-size:1.8rem;font-weight:800;color:var(--accent);min-width:36px;text-align:right;}
+  .team-score.winner{color:var(--success);}
+  .team-score.loser{color:var(--muted);font-size:1.3rem;}
+  .vs-line{height:1px;background:var(--border);margin:4px 0;}
 
-  /* Round history pills */
-  .rounds-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
-  .round-pill{padding:6px 14px;border-radius:20px;font-size:0.78rem;font-weight:600;background:var(--surface);border:1px solid var(--border);color:var(--muted);}
-  .round-pill.done{background:rgba(232,255,59,0.1);border-color:rgba(232,255,59,0.3);color:var(--accent);}
-  .round-pill.champ{background:rgba(232,255,59,0.2);border-color:var(--accent);color:#000;}
-  .round-pill.current{border-color:var(--accent2);color:var(--accent2);}
+  /* ── Player stats ── */
+  .player-stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px;}
+  .player-stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+  .ps-name{font-size:0.88rem;font-weight:700;margin-bottom:6px;}
+  .ps-row{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);padding:2px 0;}
+  .ps-val{color:var(--text);font-weight:600;}
 
-  /* Championship banner */
-  .champ-banner{background:linear-gradient(135deg,rgba(232,255,59,0.15),rgba(59,255,232,0.1));border:1px solid var(--accent);border-radius:10px;padding:16px;text-align:center;margin-bottom:16px;}
-  .champ-banner h2{font-size:1.2rem;color:var(--accent);margin-bottom:4px;}
-  .champ-banner p{font-size:0.85rem;color:var(--muted);}
+  /* ── Championship banner ── */
+  .champ-banner{background:linear-gradient(135deg,rgba(232,255,59,.15),rgba(59,255,232,.1));border:1px solid var(--accent);border-radius:12px;padding:18px;text-align:center;margin-bottom:20px;}
+  .champ-banner h2{font-size:1.3rem;color:var(--accent);margin-bottom:4px;}
+  .champ-banner .champ-sub{font-size:0.85rem;color:var(--muted);}
+  .champ-winner{font-size:1rem;font-weight:700;color:#fff;margin-top:8px;}
 
-  /* No tournament */
+  /* ── Idle ── */
   .idle{text-align:center;padding:60px 20px;color:var(--muted);}
   .idle .big{font-size:3rem;margin-bottom:12px;}
 
+  /* ── Responsive ── */
   @media(max-width:480px){
-    .lb-row{grid-template-columns:28px 1fr 50px 36px;}
+    .lb-row{grid-template-columns:26px 1fr 50px 36px;}
     .lb-row .stat:last-child{display:none;}
-    .team-score{font-size:1.5rem;}
+    .team-score{font-size:1.4rem;}
+    .player-stats-grid{grid-template-columns:1fr 1fr;}
   }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="logo">Deuce &amp; <span>Smash</span></div>
-  <div style="display:flex;align-items:center;gap:6px;margin-left:10px">
-    <div class="live-dot" id="live-dot" style="display:none"></div>
-    <span class="live-label" id="live-label" style="display:none">LIVE</span>
+  <a href="../members/index.html" class="back-btn">← Back</a>
+  <div class="header-center">
+    <div class="t-name" id="t-name">Loading…</div>
+    <div class="t-sub" id="t-sub"></div>
   </div>
-  <div class="header-right">
-    <div class="t-name" id="t-name">—</div>
-    <div class="t-sub" id="t-sub">Loading…</div>
+  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+    <div class="live-dot" id="live-dot" style="display:none"></div>
+    <span class="status-badge" id="status-badge" style="display:none"></span>
   </div>
 </div>
 
+<div class="tabs" id="tabs" style="display:none">
+  <div class="tab active" data-tab="standings" onclick="switchTab('standings')">Standings</div>
+  <div class="tab" data-tab="rounds" onclick="switchTab('rounds')">Rounds</div>
+  <div class="tab" data-tab="players" onclick="switchTab('players')">Player Stats</div>
+</div>
+
 <div class="main" id="main-content">
-  <div class="idle"><div class="big">🏓</div>No active tournament</div>
+  <div class="idle"><div class="big">🏓</div>Loading…</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const FIREBASE_CONFIG = {
@@ -112,156 +136,215 @@ const FIREBASE_CONFIG = {
 };
 
 const app = initializeApp(FIREBASE_CONFIG);
-const db = getDatabase(app);
+const db  = getDatabase(app);
 const auth = getAuth(app);
+signInAnonymously(auth).catch(e => console.warn('Anon auth:', e));
 
-// Sign in anonymously so Firebase security rules allow reads
-signInAnonymously(auth).catch(e => console.warn('Anon auth failed:', e));
-
-let tournament = null;
-
-// If ?id= param is present, load that specific tournament (completed or active)
 const urlId = new URLSearchParams(location.search).get('id');
+let _activeTab = 'standings';
+let _tournData = null; // normalised data shared by all render paths
 
+// ────────────────────────────────────────────────────────────
+// Entry point
+// ────────────────────────────────────────────────────────────
 if (urlId) {
-  // Load a specific tournament by ID (e.g. from members page card link)
-  onValue(ref(db, `tournaments/${urlId}`), snap => {
-    const data = snap.val();
-    if (!data) {
-      document.getElementById('main-content').innerHTML = '<div class="idle"><div class="big">🏓</div>Tournament not found</div>';
-      document.getElementById('t-name').textContent = 'Not found';
-      document.getElementById('t-sub').textContent = '';
-      return;
-    }
-    tournament = { id: urlId, ...data };
-    render();
-    // Self-healing: if this is a completed/archived tournament with no standings in _meta, backfill it
-    if ((data.status === 'archived' || data.status === 'completed') && data.players && data.state) {
-      backfillMetaStandingsIfMissing(urlId, data);
-    }
-    // Show LIVE badge only if still active
-    const isLive = data.status === 'active';
-    document.getElementById('live-dot').style.display = isLive ? 'block' : 'none';
-    document.getElementById('live-label').style.display = isLive ? 'block' : 'none';
-    if (!isLive) {
-      // Show a "Completed" badge instead
-      document.getElementById('live-label').textContent = data.status === 'archived' ? 'Completed' : (data.status || '');
-      document.getElementById('live-label').style.display = 'block';
-      document.getElementById('live-label').style.color = '#7DC515';
-    }
-  });
+  loadTournament(urlId);
 } else {
-  // Default: listen for the currently active tournament
+  // Default: watch for a currently-active tournament in the admin format
   onValue(ref(db, 'tournaments'), snap => {
     const all = snap.val() || {};
-    const active = Object.entries(all).find(([id,t]) => t.status === 'active');
+    const active = Object.entries(all).find(([id,t]) => t.status === 'active' && id !== '_meta');
     if (active) {
-      tournament = { id: active[0], ...active[1] };
-      render();
-      document.getElementById('live-dot').style.display = 'block';
-      document.getElementById('live-label').style.display = 'block';
+      renderAdminFormat(active[0], active[1]);
     } else {
-      tournament = null;
-      document.getElementById('main-content').innerHTML = '<div class="idle"><div class="big">🏓</div>No active tournament</div>';
-      document.getElementById('t-name').textContent = '—';
-      document.getElementById('t-sub').textContent = 'No tournament running';
-      document.getElementById('live-dot').style.display = 'none';
-      document.getElementById('live-label').style.display = 'none';
+      showIdle('No active tournament running');
     }
   });
 }
 
-function render() {
-  if (!tournament) return;
-  const { players, state, config, name } = tournament;
-  const { totalRounds, randomRounds, target, times } = config;
+async function loadTournament(id) {
+  // 1. Try the admin-created tournaments/${id} node
+  const tsnap = await get(ref(db, `tournaments/${id}`));
+  const tdata = tsnap.val();
+  if (tdata && tdata.players && tdata.state) {
+    // Full admin format — use live listener
+    onValue(ref(db, `tournaments/${id}`), snap => {
+      const d = snap.val();
+      if (d) renderAdminFormat(id, d);
+    });
+    return;
+  }
+
+  // 2. No admin node — try openPlayMatches for tournamentId = id
+  const msnap = await get(ref(db, 'openPlayMatches'));
+  const allMatches = msnap.val() || {};
+  const tournMatches = Object.values(allMatches).filter(m => m.tournamentId === id);
+  if (tournMatches.length) {
+    // Also fetch _meta for this tournament
+    const metaSnap = await get(ref(db, `tournaments/_meta/${id}`));
+    const meta = metaSnap.val() || {};
+    renderOpenPlayFormat(id, tournMatches, meta);
+    return;
+  }
+
+  // 3. Nothing found
+  showIdle('Tournament not found');
+}
+
+// ────────────────────────────────────────────────────────────
+// Admin-format render (players array + state.pts/wins/rounds)
+// ────────────────────────────────────────────────────────────
+function renderAdminFormat(id, data) {
+  const { players, state, config, name, status } = data;
+  if (!players || !state) return;
+  const { totalRounds, times, championshipRound } = config || {};
   const N = players.length;
   const roundsDone = (state.submitted || []).filter(Boolean).length;
 
-  document.getElementById('t-name').textContent = name;
-  const timePart = (config.startTime || config.endTime)
-    ? ` · ${config.startTime || ''}${config.startTime && config.endTime ? '–' : ''}${config.endTime || ''}`
+  document.getElementById('t-name').textContent = name || id;
+  const timePart = (config?.startTime || config?.endTime)
+    ? ` · ${config.startTime||''}${config.startTime&&config.endTime?'–':''}${config.endTime||''}`
     : '';
-  const closedEarly = tournament.closedEarlyAfterRound;
-  const roundInfo = closedEarly
-    ? `Closed after Round ${closedEarly} of ${totalRounds}`
-    : `Round ${roundsDone}/${totalRounds}`;
-  document.getElementById('t-sub').textContent = `${config.date || ''}${timePart} · ${roundInfo}`;
+  const closedEarly = data.closedEarlyAfterRound;
+  document.getElementById('t-sub').textContent =
+    `${config?.date||''}${timePart} · Round ${roundsDone}/${totalRounds||'?'}`;
 
+  const isLive = status === 'active';
+  setBadge(isLive ? 'live' : 'done', isLive ? 'LIVE' : 'Completed');
+
+  // Build normalised _tournData so tabs work
+  const ranked = [...Array(N).keys()].sort((a,b) =>
+    (state.pts[b]||0)-(state.pts[a]||0) || (state.wins[b]||0)-(state.wins[a]||0));
+  _tournData = {
+    type: 'admin',
+    name, players, state, config, ranked, roundsDone,
+    id, closedEarly, championshipRound, times
+  };
+
+  showTabs();
+  renderTab(_activeTab);
+
+  if ((status === 'archived' || status === 'completed') && players && state) {
+    backfillMetaStandingsIfMissing(id, data);
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// openPlayMatches format render (matches with tournamentId)
+// ────────────────────────────────────────────────────────────
+function renderOpenPlayFormat(id, matches, meta) {
+  const name = meta.name || 'Tournament';
+  const date = meta.date || '';
+  const status = meta.status || 'completed';
+  const isLive = status === 'live';
+
+  document.getElementById('t-name').textContent = name;
+  const totalRounds = meta.totalRounds || meta.rounds || Math.max(...matches.map(m => m.round||0));
+  const roundsDone  = meta.roundsDone || Math.max(...matches.map(m => m.round||0));
+  document.getElementById('t-sub').textContent =
+    `${date} · ${roundsDone} round${roundsDone!==1?'s':''} completed · ${meta.players||'?'} players`;
+
+  setBadge(isLive ? 'live' : 'done', isLive ? 'LIVE' : 'Completed');
+
+  // Group matches by round
+  const byRound = {};
+  for (const m of matches) {
+    const r = m.round || 1;
+    if (!byRound[r]) byRound[r] = [];
+    byRound[r].push(m);
+  }
+
+  // Compute per-player totals
+  const playerMap = {}; // name -> { pts, wins, losses, pf, pa, gp }
+  for (const m of matches) {
+    const teamA = m.teamA || [];
+    const teamB = m.teamB || [];
+    const a = m.a ?? 0, b = m.b ?? 0;
+    const awon = a > b, bwon = b > a;
+    const allPlayers = [...teamA.map(n => ({n,pts:a,pa:b,won:awon})), ...teamB.map(n => ({n,pts:b,pa:a,won:bwon}))];
+    for (const {n, pts, pa, won} of allPlayers) {
+      if (!playerMap[n]) playerMap[n] = {pts:0, wins:0, losses:0, pf:0, pa:0, gp:0};
+      playerMap[n].pts += pts;
+      playerMap[n].pf  += pts;
+      playerMap[n].pa  += pa;
+      playerMap[n].gp  += 1;
+      if (won) playerMap[n].wins += 1;
+      else if (!won && pts !== pa) playerMap[n].losses += 1;
+    }
+  }
+
+  // Use meta standings if available for consistent ordering, else compute
+  let standings;
+  if (meta.standings && meta.standings.length) {
+    standings = meta.standings.map(s => ({
+      name: s.name,
+      pts: s.pts,
+      wins: s.wins || playerMap[s.name]?.wins || 0,
+      ...(playerMap[s.name] || {})
+    }));
+  } else {
+    standings = Object.entries(playerMap)
+      .map(([name, d]) => ({ name, ...d }))
+      .sort((a,b) => b.pts - a.pts || b.wins - a.wins);
+  }
+
+  _tournData = { type: 'openplay', name, date, status, standings, byRound, playerMap, meta };
+
+  showTabs();
+  renderTab(_activeTab);
+}
+
+// ────────────────────────────────────────────────────────────
+// Tab switching
+// ────────────────────────────────────────────────────────────
+window.switchTab = function(tab) {
+  _activeTab = tab;
+  document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+  renderTab(tab);
+};
+
+function renderTab(tab) {
+  if (!_tournData) return;
+  if (_tournData.type === 'admin') {
+    if (tab === 'standings') renderAdminStandings();
+    else if (tab === 'rounds') renderAdminRounds();
+    else renderAdminPlayerStats();
+  } else {
+    if (tab === 'standings') renderOpenPlayStandings();
+    else if (tab === 'rounds') renderOpenPlayRounds();
+    else renderOpenPlayPlayerStats();
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// openPlay renders
+// ────────────────────────────────────────────────────────────
+function renderOpenPlayStandings() {
+  const { standings, meta } = _tournData;
   let html = '';
 
-  // Championship banner if in championship round
-  const latestRoundIdx = (state.rounds||[]).length - 1;
-  const isChampRound = latestRoundIdx === config.championshipRound;
-  if (isChampRound) {
-    html += `<div class="champ-banner"><h2>🏆 Championship Round</h2><p>Finals underway — Grand Final &amp; Consolation Final</p></div>`;
+  // Champion banner if completed
+  if ((meta.status === 'completed' || meta.status === 'archived') && standings[0]) {
+    html += `<div class="champ-banner">
+      <h2>🏆 ${meta.name||'Tournament'}</h2>
+      <div class="champ-winner">${standings[0].name} · ${standings[0].pts} pts</div>
+      <div class="champ-sub">${meta.date||''} · ${meta.players||standings.length} players · ${meta.totalRounds||meta.rounds||'?'} rounds</div>
+    </div>`;
   }
 
-  // Round status pills — only show rounds that were actually played for early-closed tournaments
-  const pillCount = closedEarly ? closedEarly : totalRounds;
-  html += '<div class="section-title">Rounds</div><div class="rounds-row">';
-  for (let ri = 0; ri < pillCount; ri++) {
-    const done = state.submitted?.[ri];
-    const isChamp = ri === config.championshipRound;
-    const isCurrent = ri === roundsDone && (state.rounds||[])[ri];
-    const label = isChamp ? '🏆 Final' : `R${ri+1}`;
-    const mode = isChamp ? 'champ' : done ? 'done' : isCurrent ? 'current' : '';
-    html += `<div class="round-pill ${mode}">${label}</div>`;
-  }
-  html += '</div>';
-
-  // Current active round (generated but not yet submitted)
-  const currentRound = (state.rounds||[]).find((r,ri) => r && !state.submitted?.[ri]);
-  if (currentRound) {
-    const ri = state.rounds.indexOf(currentRound);
-    const timeLabel = times?.[ri] || '';
-    const isChamp = currentRound.isChamp;
-    html += `<div class="section-title">Now Playing${timeLabel ? ' — ' + timeLabel : ''}</div>`;
-    for (let mi = 0; mi < (currentRound.matches||[]).length; mi++) {
-      const m = currentRound.matches[mi];
-      const label = m.label || `Court ${m.c + 1}`;
-      const sa = currentRound.scores?.[mi]?.[0];
-      const sb = currentRound.scores?.[mi]?.[1];
-      html += `<div class="court-card">
-        <div class="court-header"><span class="court-label">${label}</span><span>${isChamp?'🏆 Championship':''}</span></div>
-        <div class="match-display">
-          <div class="team-block">
-            <div class="team-players">
-              <div class="team-player">${players[m.p1[0]]}</div>
-              <div class="team-player sub">${players[m.p1[1]]}</div>
-            </div>
-            <div class="team-score">${sa ?? '—'}</div>
-          </div>
-          <div class="vs-divider">VS</div>
-          <div class="team-block">
-            <div class="team-players">
-              <div class="team-player">${players[m.p2[0]]}</div>
-              <div class="team-player sub">${players[m.p2[1]]}</div>
-            </div>
-            <div class="team-score">${sb ?? '—'}</div>
-          </div>
-        </div>
-      </div>`;
-    }
-    if (currentRound.byes?.length) {
-      html += `<div class="byes-block">Sitting out this round: ${currentRound.byes.map(i=>players[i]).join(', ')}</div>`;
-    }
-  }
-
-  // Leaderboard
-  const ranked = [...Array(N).keys()].sort((a,b) => state.pts[b]-state.pts[a] || state.wins[b]-state.wins[a]);
-  html += '<div class="section-title" style="margin-top:20px">Leaderboard</div>';
+  html += '<div class="section-title">Final Standings</div>';
   html += `<div class="lb-card">
-    <div class="lb-row header-row"><span>#</span><span>Player</span><span style="text-align:right">Pts</span><span style="text-align:right">W</span><span style="text-align:right">GP</span></div>
-    ${ranked.map((pi, pos) => {
+    <div class="lb-row hdr"><span>#</span><span>Player</span><span style="text-align:right">Pts</span><span style="text-align:right">W</span><span style="text-align:right">GP</span></div>
+    ${standings.map((s, pos) => {
       const topCls = pos===0?' top1':pos===1?' top2':pos===2?' top3':'';
       const posCls = pos===0?' p1':pos===1?' p2':pos===2?' p3':'';
+      const medal = pos===0?'🥇 ':pos===1?'🥈 ':pos===2?'🥉 ':'';
       return `<div class="lb-row${topCls}">
         <span class="pos${posCls}">${pos+1}</span>
-        <span class="player-name">${players[pi]}</span>
-        <span class="pts">${state.pts[pi]}</span>
-        <span class="stat">${state.wins[pi]}</span>
-        <span class="stat">${state.played[pi]}</span>
+        <span style="font-weight:600">${medal}${s.name}</span>
+        <span class="pts-val">${s.pts}</span>
+        <span class="stat">${s.wins||0}</span>
+        <span class="stat">${s.gp||0}</span>
       </div>`;
     }).join('')}
   </div>`;
@@ -269,24 +352,210 @@ function render() {
   document.getElementById('main-content').innerHTML = html;
 }
 
-// Backfill _meta standings for archived tournaments that were closed before the fix was deployed
+function renderOpenPlayRounds() {
+  const { byRound } = _tournData;
+  const rounds = Object.keys(byRound).map(Number).sort((a,b) => a-b);
+  let html = '';
+  for (const rNum of rounds) {
+    const matches = byRound[rNum];
+    html += `<div class="round-section">
+      <div class="round-header"><span class="round-pill">Round ${rNum}</span>
+        <span style="font-size:0.75rem;color:var(--muted)">${matches.length} match${matches.length!==1?'es':''}</span>
+      </div>`;
+    matches.forEach((m, mi) => {
+      const a = m.a ?? 0, b = m.b ?? 0;
+      const aWon = a > b, bWon = b > a;
+      const teamA = (m.teamA||[]).join(' & ');
+      const teamB = (m.teamB||[]).join(' & ');
+      html += `<div class="match-card">
+        <div class="match-header">
+          <span class="court-label">Court ${mi+1}</span>
+          <span>${m.date||''}</span>
+        </div>
+        <div class="match-body">
+          <div class="team-row">
+            <div class="team-names">${teamA}</div>
+            <div class="team-score ${aWon?'winner':bWon?'loser':''}">${a}</div>
+          </div>
+          <div class="vs-line"></div>
+          <div class="team-row">
+            <div class="team-names">${teamB}</div>
+            <div class="team-score ${bWon?'winner':aWon?'loser':''}">${b}</div>
+          </div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  document.getElementById('main-content').innerHTML = html || '<div class="idle"><div class="big">🎾</div>No round data</div>';
+}
+
+function renderOpenPlayPlayerStats() {
+  const { playerMap, standings } = _tournData;
+  // Order by standings
+  const ordered = standings.map(s => s.name).filter(n => playerMap[n]);
+  let html = '<div class="section-title">Player Statistics</div>';
+  html += '<div class="player-stats-grid">';
+  for (const name of ordered) {
+    const d = playerMap[name];
+    const diff = d.pf - d.pa;
+    html += `<div class="player-stat-card">
+      <div class="ps-name">${name}</div>
+      <div class="ps-row"><span>Points scored</span><span class="ps-val">${d.pts}</span></div>
+      <div class="ps-row"><span>Wins / Losses</span><span class="ps-val">${d.wins} / ${d.losses}</span></div>
+      <div class="ps-row"><span>Games played</span><span class="ps-val">${d.gp}</span></div>
+      <div class="ps-row"><span>Points for / against</span><span class="ps-val">${d.pf} / ${d.pa}</span></div>
+      <div class="ps-row"><span>Point diff</span><span class="ps-val" style="color:${diff>0?'#4dff91':diff<0?'#ff4d4d':''}">${diff>0?'+':''}${diff}</span></div>
+    </div>`;
+  }
+  html += '</div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// ────────────────────────────────────────────────────────────
+// Admin-format renders
+// ────────────────────────────────────────────────────────────
+function renderAdminStandings() {
+  const { players, state, ranked, name, closedEarly, config } = _tournData;
+  let html = '';
+
+  // Completed banner
+  const roundsDone = _tournData.roundsDone;
+  if (config?.status === 'archived' || config?.status === 'completed') {
+    html += `<div class="champ-banner">
+      <h2>🏆 ${name}</h2>
+      <div class="champ-winner">${players[ranked[0]]} · ${state.pts[ranked[0]]} pts</div>
+      <div class="champ-sub">${config?.date||''}</div>
+    </div>`;
+  }
+
+  html += '<div class="section-title">Leaderboard</div>';
+  html += `<div class="lb-card">
+    <div class="lb-row hdr"><span>#</span><span>Player</span><span style="text-align:right">Pts</span><span style="text-align:right">W</span><span style="text-align:right">GP</span></div>
+    ${ranked.map((pi, pos) => {
+      const topCls = pos===0?' top1':pos===1?' top2':pos===2?' top3':'';
+      const posCls = pos===0?' p1':pos===1?' p2':pos===2?' p3':'';
+      return `<div class="lb-row${topCls}">
+        <span class="pos${posCls}">${pos+1}</span>
+        <span style="font-weight:600">${players[pi]}</span>
+        <span class="pts-val">${state.pts[pi]}</span>
+        <span class="stat">${state.wins[pi]}</span>
+        <span class="stat">${state.played[pi]}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+  document.getElementById('main-content').innerHTML = html;
+}
+
+function renderAdminRounds() {
+  const { players, state, config, closedEarly, times, championshipRound } = _tournData;
+  const totalRounds = config?.totalRounds || (state.rounds||[]).length;
+  const pillCount = closedEarly || totalRounds;
+  const roundsDone = (state.submitted||[]).filter(Boolean).length;
+
+  let html = '<div class="section-title">Round History</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">';
+  for (let ri = 0; ri < pillCount; ri++) {
+    const done = state.submitted?.[ri];
+    const isChamp = ri === championshipRound;
+    const label = isChamp ? '🏆 Final' : `R${ri+1}`;
+    const style = done ? 'background:rgba(232,255,59,.1);color:var(--accent);border-color:rgba(232,255,59,.3)'
+      : 'background:var(--surface);color:var(--muted);border-color:var(--border)';
+    html += `<span style="font-size:.75rem;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid;${style}">${label}</span>`;
+  }
+  html += '</div>';
+
+  // Show completed rounds' matches
+  for (let ri = 0; ri < (state.rounds||[]).length; ri++) {
+    const round = state.rounds[ri];
+    if (!round || !round.matches) continue;
+    const isChamp = ri === championshipRound;
+    const label = isChamp ? '🏆 Championship Round' : `Round ${ri+1}`;
+    const timeLabel = times?.[ri] || '';
+    html += `<div class="round-section"><div class="round-header"><span class="round-pill">${label}</span>${timeLabel?`<span style="font-size:.73rem;color:var(--muted)">${timeLabel}</span>`:''}</div>`;
+    round.matches.forEach((m, mi) => {
+      const scores = round.scores?.[mi];
+      const sa = scores?.[0] ?? '—', sb = scores?.[1] ?? '—';
+      const courtLabel = m.label || `Court ${(m.c||mi)+1}`;
+      html += `<div class="match-card">
+        <div class="match-header"><span class="court-label">${courtLabel}</span>${isChamp?'<span>🏆</span>':''}</div>
+        <div class="match-body">
+          <div class="team-row">
+            <div class="team-names">${players[m.p1[0]]} <span class="p2n">& ${players[m.p1[1]]||''}</span></div>
+            <div class="team-score">${sa}</div>
+          </div>
+          <div class="vs-line"></div>
+          <div class="team-row">
+            <div class="team-names">${players[m.p2[0]]} <span class="p2n">& ${players[m.p2[1]]||''}</span></div>
+            <div class="team-score">${sb}</div>
+          </div>
+        </div>
+      </div>`;
+    });
+    if (round.byes?.length) {
+      html += `<div style="padding:8px 12px;font-size:.8rem;color:var(--muted);background:rgba(0,0,0,.2);border-radius:8px;margin-bottom:8px">Sitting out: ${round.byes.map(i=>players[i]).join(', ')}</div>`;
+    }
+    html += '</div>';
+  }
+  document.getElementById('main-content').innerHTML = html || '<div class="idle"><div class="big">🎾</div>No round data yet</div>';
+}
+
+function renderAdminPlayerStats() {
+  const { players, state, ranked } = _tournData;
+  let html = '<div class="section-title">Player Statistics</div><div class="player-stats-grid">';
+  for (const pi of ranked) {
+    const name = players[pi];
+    const pf = (state.pf||[])[pi] ?? '—';
+    const pa = (state.pa||[])[pi] ?? '—';
+    const diff = (typeof pf === 'number' && typeof pa === 'number') ? pf - pa : null;
+    html += `<div class="player-stat-card">
+      <div class="ps-name">${name}</div>
+      <div class="ps-row"><span>Points</span><span class="ps-val">${state.pts[pi]}</span></div>
+      <div class="ps-row"><span>Wins / Played</span><span class="ps-val">${state.wins[pi]} / ${state.played[pi]}</span></div>
+      ${diff !== null ? `<div class="ps-row"><span>Point diff</span><span class="ps-val" style="color:${diff>0?'#4dff91':diff<0?'#ff4d4d':''}">${diff>0?'+':''}${diff}</span></div>` : ''}
+    </div>`;
+  }
+  html += '</div>';
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// ────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────
+function showTabs() {
+  document.getElementById('tabs').style.display = 'flex';
+}
+
+function setBadge(type, label) {
+  const dot = document.getElementById('live-dot');
+  const badge = document.getElementById('status-badge');
+  dot.style.display = type === 'live' ? 'block' : 'none';
+  badge.style.display = 'block';
+  badge.textContent = label;
+  badge.className = `status-badge badge-${type}`;
+}
+
+function showIdle(msg) {
+  document.getElementById('t-name').textContent = msg;
+  document.getElementById('t-sub').textContent = '';
+  document.getElementById('main-content').innerHTML = `<div class="idle"><div class="big">🏓</div>${msg}</div>`;
+}
+
+// Backfill _meta standings for archived admin-format tournaments
 async function backfillMetaStandingsIfMissing(id, data) {
   try {
     const metaRef = ref(db, `tournaments/_meta/${id}`);
-    // Read current _meta once to check if standings already exist
     onValue(metaRef, async metaSnap => {
       const meta = metaSnap.val();
-      if (!meta || (meta.standings && meta.standings.length)) return; // already has standings
-      // Compute standings from state.pts
+      if (!meta || (meta.standings && meta.standings.length)) return;
       const { players, state, config } = data;
       if (!players || !state?.pts) return;
       const N = players.length;
-      const ranked = [...Array(N).keys()].sort((a,b) => state.pts[b]-state.pts[a] || (state.wins[b]||0)-(state.wins[a]||0));
+      const ranked = [...Array(N).keys()].sort((a,b) =>
+        state.pts[b]-state.pts[a] || (state.wins[b]||0)-(state.wins[a]||0));
       const standings = ranked.slice(0,4).map((pi, i) => ({ pos: i+1, name: players[pi], pts: state.pts[pi] }));
-      const winner = players[ranked[0]];
       const roundsDone = (state.submitted||[]).filter(Boolean).length;
       await update(metaRef, {
-        winner,
+        winner: players[ranked[0]],
         standings,
         roundsDone,
         rounds: config?.totalRounds || roundsDone,
@@ -295,7 +564,7 @@ async function backfillMetaStandingsIfMissing(id, data) {
         sport: config?.sport || meta?.sport || 'padel'
       });
     }, { onlyOnce: true });
-  } catch(e) { /* silent — backfill is best-effort */ }
+  } catch(e) { /* silent */ }
 }
 </script>
 </body>
