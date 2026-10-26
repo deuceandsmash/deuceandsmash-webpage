@@ -1729,21 +1729,70 @@ function trnToast(msg, ok) {
 window.trnMarkComplete = async function(key) {
   try {
     await update(ref(db, `tournaments/_meta/${key}`), { status: 'completed' });
-    trnToast('✓ Tournament marked as completed');
+    // Update local cache and re-render immediately — don't wait for onValue
+    if (trnMeta[key]) trnMeta[key].status = 'completed';
+    const _toList = (data) => Object.entries(data)
+      .map(([k, v]) => ({ key: k, ...v }))
+      .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    renderTournaments(_toList(trnMeta));
+    trnToast('✓ Marked as completed');
   } catch(e) {
     trnToast('Error: ' + e.message, false);
   }
 };
 
-window.trnDelete = async function(key, name) {
-  if (!confirm(`Delete "${name}"?\n\nThis removes the tournament card only — match records in openPlayMatches are kept. This cannot be undone.`)) return;
-  try {
-    const { remove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
-    await remove(ref(db, `tournaments/_meta/${key}`));
-    trnToast('🗑 Tournament deleted');
-  } catch(e) {
-    trnToast('Error: ' + e.message, false);
+function trnConfirmDelete(key, name) {
+  // Custom confirm modal — avoids plain browser dialog
+  let overlay = document.getElementById('trn-confirm-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'trn-confirm-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px';
+    overlay.innerHTML = `
+      <div style="background:#1a1a2e;border:1px solid rgba(255,80,80,0.3);border-radius:16px;padding:24px 22px;max-width:340px;width:100%">
+        <div style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:8px">Delete tournament?</div>
+        <div id="trn-confirm-name" style="font-size:0.85rem;font-weight:600;color:#ff6b6b;margin-bottom:12px"></div>
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.55);line-height:1.5;margin-bottom:20px">
+          This will permanently delete the entire tournament record including all match data. This cannot be undone.
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button onclick="document.getElementById('trn-confirm-overlay').style.display='none'"
+            style="font-size:0.8rem;font-weight:600;padding:7px 18px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.6);cursor:pointer">
+            Cancel
+          </button>
+          <button id="trn-confirm-ok"
+            style="font-size:0.8rem;font-weight:600;padding:7px 18px;border-radius:10px;border:none;background:rgba(255,80,80,0.85);color:#fff;cursor:pointer">
+            Yes, delete
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
   }
+  document.getElementById('trn-confirm-name').textContent = name;
+  overlay.style.display = 'flex';
+  const okBtn = document.getElementById('trn-confirm-ok');
+  const fresh = okBtn.cloneNode(true); // remove old listeners
+  okBtn.parentNode.replaceChild(fresh, okBtn);
+  fresh.addEventListener('click', async () => {
+    overlay.style.display = 'none';
+    try {
+      const { remove } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+      await remove(ref(db, `tournaments/_meta/${key}`));
+      // Update local cache and re-render immediately
+      delete trnMeta[key];
+      const _toList = (data) => Object.entries(data)
+        .map(([k, v]) => ({ key: k, ...v }))
+        .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+      renderTournaments(_toList(trnMeta));
+      trnToast('🗑 Tournament deleted');
+    } catch(e) {
+      trnToast('Error: ' + e.message, false);
+    }
+  });
+}
+
+window.trnDelete = function(key, name) {
+  trnConfirmDelete(key, name);
 };
 
 // ===== Rating Guide Table =====
