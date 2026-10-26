@@ -71,11 +71,60 @@
   .vs-line{height:1px;background:var(--border);margin:4px 0;}
 
   /* ── Player stats ── */
-  .player-stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px;}
-  .player-stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
-  .ps-name{font-size:0.88rem;font-weight:700;margin-bottom:6px;}
-  .ps-row{display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);padding:2px 0;}
-  .ps-val{color:var(--text);font-weight:600;}
+  .ps-player-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+  .ps-chip{padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;background:var(--surface);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .15s;}
+  .ps-chip:hover{color:var(--text);border-color:var(--muted);}
+  .ps-chip.active{background:rgba(232,255,59,.12);border-color:rgba(232,255,59,.4);color:var(--accent);}
+
+  /* Spotlight card */
+  .spotlight-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;}
+  .spotlight-header{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
+  .spotlight-name{font-size:1.1rem;font-weight:800;}
+  .spotlight-pos{font-size:1rem;font-weight:700;color:#3A8FFF;}
+  .spotlight-grid{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);}
+  .spotlight-cell{padding:14px 16px;border-right:1px solid var(--border);}
+  .spotlight-cell:nth-child(even){border-right:none;}
+  .spotlight-cell:last-child:nth-child(odd){border-right:none;grid-column:span 2;}
+  .spotlight-val{font-size:1.6rem;font-weight:800;line-height:1;margin-bottom:4px;}
+  .spotlight-lbl{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+  .spotlight-wtl{display:flex;gap:6px;font-size:1.4rem;font-weight:800;line-height:1;margin-bottom:4px;}
+  .wtl-w{color:var(--success);}
+  .wtl-t{color:var(--muted);}
+  .wtl-l{color:var(--danger);}
+  .spotlight-footer{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background .15s;}
+  .spotlight-footer:hover{background:rgba(255,255,255,.04);}
+  .spotlight-footer-lbl{font-size:0.8rem;color:var(--muted);}
+  .spotlight-footer-val{font-size:0.9rem;font-weight:700;color:var(--text);}
+  .spotlight-footer-cue{font-size:0.78rem;color:#3A8FFF;}
+
+  /* Performance chart */
+  .chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;}
+  .chart-header{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
+  .chart-title{font-size:0.82rem;font-weight:700;}
+  .chart-toggle{display:flex;background:var(--surface);border-radius:20px;overflow:hidden;border:1px solid var(--border);}
+  .chart-toggle-btn{padding:5px 14px;font-size:0.75rem;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s;border:none;background:transparent;}
+  .chart-toggle-btn.active{background:rgba(232,255,59,.15);color:var(--accent);}
+  .chart-wrap{padding:12px 8px 8px;}
+  svg.perf-chart{width:100%;overflow:visible;}
+
+  /* Match history */
+  .match-hist{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;}
+  .match-hist-header{padding:13px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background .15s;}
+  .match-hist-header:hover{background:rgba(255,255,255,.04);}
+  .match-hist-title{font-size:0.85rem;font-weight:700;}
+  .match-hist-cue{font-size:0.78rem;color:#3A8FFF;}
+  .match-hist-body{display:none;}
+  .match-hist-body.open{display:block;}
+  .mh-row{display:grid;grid-template-columns:48px 1fr auto;gap:6px;padding:10px 16px;border-top:1px solid var(--border);align-items:center;font-size:0.83rem;}
+  .mh-round{font-size:0.72rem;font-weight:700;color:var(--muted);}
+  .mh-players{line-height:1.4;}
+  .mh-partner{font-weight:600;}
+  .mh-opp{font-size:0.78rem;color:var(--muted);}
+  .mh-score{font-size:1.1rem;font-weight:800;text-align:right;white-space:nowrap;}
+  .mh-score.won{color:var(--success);}
+  .mh-score.lost{color:var(--danger);}
+  .mh-score.tied{color:var(--muted);}
+  .mh-result{font-size:0.68rem;font-weight:700;letter-spacing:.05em;text-align:right;}
 
   /* ── Championship banner ── */
   .champ-banner{background:linear-gradient(135deg,rgba(232,255,59,.15),rgba(59,255,232,.1));border:1px solid var(--accent);border-radius:12px;padding:18px;text-align:center;margin-bottom:20px;}
@@ -390,27 +439,304 @@ function renderOpenPlayRounds() {
   document.getElementById('main-content').innerHTML = html || '<div class="idle"><div class="big">🎾</div>No round data</div>';
 }
 
-function renderOpenPlayPlayerStats() {
-  const { playerMap, standings } = _tournData;
-  // Order by standings
-  const ordered = standings.map(s => s.name).filter(n => playerMap[n]);
-  let html = '<div class="section-title">Player Statistics</div>';
-  html += '<div class="player-stats-grid">';
-  for (const name of ordered) {
-    const d = playerMap[name];
-    const diff = d.pf - d.pa;
-    html += `<div class="player-stat-card">
-      <div class="ps-name">${name}</div>
-      <div class="ps-row"><span>Points scored</span><span class="ps-val">${d.pts}</span></div>
-      <div class="ps-row"><span>Wins / Losses</span><span class="ps-val">${d.wins} / ${d.losses}</span></div>
-      <div class="ps-row"><span>Games played</span><span class="ps-val">${d.gp}</span></div>
-      <div class="ps-row"><span>Points for / against</span><span class="ps-val">${d.pf} / ${d.pa}</span></div>
-      <div class="ps-row"><span>Point diff</span><span class="ps-val" style="color:${diff>0?'#4dff91':diff<0?'#ff4d4d':''}">${diff>0?'+':''}${diff}</span></div>
-    </div>`;
+// ── Deep per-player stats builder ──────────────────────────
+function buildPlayerDeepStats(playerName) {
+  const { byRound, standings } = _tournData;
+  const rounds = Object.keys(byRound).map(Number).sort((a,b)=>a-b);
+  const pos = standings.findIndex(s => s.name === playerName);
+
+  // Per-match data for this player
+  const myMatches = [];
+  for (const rNum of rounds) {
+    for (const m of byRound[rNum]) {
+      const inA = (m.teamA||[]).includes(playerName);
+      const inB = (m.teamB||[]).includes(playerName);
+      if (!inA && !inB) continue;
+      const myScore = inA ? (m.a??0) : (m.b??0);
+      const oppScore = inA ? (m.b??0) : (m.a??0);
+      const partner = inA ? (m.teamA||[]).find(n=>n!==playerName) : (m.teamB||[]).find(n=>n!==playerName);
+      const opponents = inA ? (m.teamB||[]) : (m.teamA||[]);
+      const result = myScore > oppScore ? 'W' : myScore < oppScore ? 'L' : 'T';
+      const margin = myScore - oppScore;
+      myMatches.push({ round: rNum, myScore, oppScore, partner, opponents, result, margin });
+    }
   }
-  html += '</div>';
-  document.getElementById('main-content').innerHTML = html;
+
+  const wins = myMatches.filter(m=>m.result==='W').length;
+  const losses = myMatches.filter(m=>m.result==='L').length;
+  const ties = myMatches.filter(m=>m.result==='T').length;
+  const gp = myMatches.length;
+  const totalPts = myMatches.reduce((s,m)=>s+m.myScore, 0);
+  const totalAgainst = myMatches.reduce((s,m)=>s+m.oppScore, 0);
+  const diff = totalPts - totalAgainst;
+  const avg = gp ? (totalPts/gp).toFixed(1) : 0;
+
+  // Cumulative pts per round
+  let cumPts = 0;
+  const cumByRound = [0]; // R0 baseline
+  for (const rNum of rounds) {
+    const rm = myMatches.filter(m=>m.round===rNum);
+    cumPts += rm.reduce((s,m)=>s+m.myScore, 0);
+    cumByRound.push(cumPts);
+  }
+
+  // Rank after each round (cumulative pts vs others)
+  const rankByRound = [standings.length]; // start at bottom
+  let runningPts = {};
+  standings.forEach(s => runningPts[s.name] = 0);
+  for (const rNum of rounds) {
+    for (const m of byRound[rNum]) {
+      [...(m.teamA||[]),...(m.teamB||[])].forEach(n => {
+        if (runningPts[n]===undefined) return;
+        const inA = (m.teamA||[]).includes(n);
+        runningPts[n] += inA ? (m.a??0) : (m.b??0);
+      });
+    }
+    const myRunning = runningPts[playerName]||0;
+    const rank = standings.map(s=>runningPts[s.name]||0).filter(p=>p>myRunning).length + 1;
+    rankByRound.push(rank);
+  }
+
+  // Best partner (highest win rate when paired with)
+  const partnerStats = {};
+  for (const m of myMatches) {
+    if (!m.partner) continue;
+    if (!partnerStats[m.partner]) partnerStats[m.partner]={w:0,gp:0};
+    partnerStats[m.partner].gp++;
+    if (m.result==='W') partnerStats[m.partner].w++;
+  }
+  const bestPartner = Object.entries(partnerStats)
+    .sort((a,b)=>(b[1].w/b[1].gp)-(a[1].w/a[1].gp) || b[1].gp-a[1].gp)[0];
+
+  // Toughest opponent (most losses against, then fewest wins against, then smallest avg margin)
+  const oppStats = {};
+  for (const m of myMatches) {
+    for (const opp of m.opponents) {
+      if (!oppStats[opp]) oppStats[opp]={losses:0,wins:0,gp:0,marginSum:0};
+      oppStats[opp].gp++;
+      oppStats[opp].marginSum += m.margin;
+      if (m.result==='L') oppStats[opp].losses++;
+      else if (m.result==='W') oppStats[opp].wins++;
+    }
+  }
+  const toughest = Object.entries(oppStats)
+    .sort((a,b)=>b[1].losses-a[1].losses || a[1].wins-b[1].wins || (a[1].marginSum/a[1].gp)-(b[1].marginSum/b[1].gp))[0];
+
+  // Biggest win / biggest loss
+  const biggestWin = myMatches.filter(m=>m.result==='W').sort((a,b)=>b.margin-a.margin)[0];
+  const biggestLoss = myMatches.filter(m=>m.result==='L').sort((a,b)=>a.margin-b.margin)[0];
+
+  return { wins, losses, ties, gp, totalPts, totalAgainst, diff, avg, pos,
+           cumByRound, rankByRound, rounds, myMatches,
+           bestPartner, toughest, biggestWin, biggestLoss };
 }
+
+// ── SVG performance chart ───────────────────────────────────
+function buildPerfChart(playerName, mode /* 'pts' | 'rank' */) {
+  const d = buildPlayerDeepStats(playerName);
+  const { cumByRound, rankByRound, rounds } = d;
+  const data = mode === 'pts' ? cumByRound : rankByRound;
+  const totalRounds = rounds.length;
+  const labels = ['R0', ...rounds.map(r=>`R${r}`)];
+
+  const W = 320, H = 120, padL=28, padR=12, padT=14, padB=24;
+  const chartW = W-padL-padR, chartH = H-padT-padB;
+
+  const minVal = mode === 'rank' ? 1 : 0;
+  const maxVal = mode === 'rank' ? (d.pos >= 0 ? d.gp > 0 ? 8 : 8 : 8) : Math.max(...data, 1);
+  const yFlip = mode === 'rank'; // lower rank # = better = top of chart
+
+  const xScale = i => padL + (i/(labels.length-1))*chartW;
+  const yScale = v => {
+    const norm = (v - minVal)/(maxVal - minVal || 1);
+    return padT + (yFlip ? norm : 1-norm)*chartH;
+  };
+
+  const pts = data.map((v,i) => `${xScale(i).toFixed(1)},${yScale(v).toFixed(1)}`).join(' ');
+
+  // Y axis grid lines
+  const gridCount = 4;
+  let gridLines = '';
+  for (let i=0;i<=gridCount;i++) {
+    const v = minVal + (maxVal-minVal)*(i/gridCount);
+    const y = yScale(v).toFixed(1);
+    const lbl = mode==='rank' ? Math.round(v) : Math.round(v);
+    gridLines += `<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" stroke="#2a2a2a" stroke-width="1"/>`;
+    gridLines += `<text x="${padL-4}" y="${parseFloat(y)+4}" text-anchor="end" font-size="9" fill="#666">${lbl}</text>`;
+  }
+
+  // X axis labels
+  let xLabels = '';
+  labels.forEach((lbl,i) => {
+    xLabels += `<text x="${xScale(i).toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="9" fill="#666">${lbl}</text>`;
+  });
+
+  // Accent colour for this player based on standing position
+  const COLOURS = ['#e8ff3b','#3bffe8','#ff6b35','#ff4d4d','#a78bfa','#f472b6','#4dff91','#60a5fa'];
+  const colour = COLOURS[d.pos % COLOURS.length] || '#e8ff3b';
+
+  // Area fill
+  const firstX = xScale(0).toFixed(1), lastX = xScale(labels.length-1).toFixed(1);
+  const bottomY = (padT+chartH).toFixed(1);
+  const areaPath = `M${firstX},${yScale(data[0]).toFixed(1)} ${data.map((_,i)=>i>0?`L${xScale(i).toFixed(1)},${yScale(data[i]).toFixed(1)}`:'').filter(Boolean).join(' ')} L${lastX},${bottomY} L${firstX},${bottomY} Z`;
+
+  return `<svg class="perf-chart" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="ag${playerName.replace(/\W/g,'')}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${colour}" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="${colour}" stop-opacity="0.01"/>
+      </linearGradient>
+    </defs>
+    ${gridLines}
+    ${xLabels}
+    <path d="${areaPath}" fill="url(#ag${playerName.replace(/\W/g,'')})" />
+    <polyline points="${pts}" fill="none" stroke="${colour}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${data.map((v,i)=>`<circle cx="${xScale(i).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="3.5" fill="${colour}" stroke="var(--bg)" stroke-width="1.5"/>`).join('')}
+  </svg>`;
+}
+
+let _activePlayerChart = 'pts'; // 'pts' | 'rank'
+let _activePlayerName = null;
+
+function renderOpenPlayPlayerStats(forcePlayer) {
+  const { standings, byRound } = _tournData;
+  const ordered = standings.map(s => s.name);
+  if (!_activePlayerName || !ordered.includes(_activePlayerName)) _activePlayerName = ordered[0];
+  if (forcePlayer) _activePlayerName = forcePlayer;
+
+  const playerName = _activePlayerName;
+  const d = buildPlayerDeepStats(playerName);
+  const rank = d.pos + 1;
+  const diff = d.diff;
+
+  // Toughest opponent label
+  const toughLbl = d.toughest
+    ? `${d.toughest[0]}`
+    : '—';
+  const toughSub = d.toughest
+    ? `${d.toughest[1].losses}L / ${d.toughest[1].wins}W vs them`
+    : '';
+
+  // Best partner label
+  const partnerLbl = d.bestPartner ? d.bestPartner[0] : '—';
+  const partnerSub = d.bestPartner
+    ? `${d.bestPartner[1].w}W in ${d.bestPartner[1].gp} game${d.bestPartner[1].gp!==1?'s':''} together`
+    : '';
+
+  // Player selector chips
+  const chipsHtml = `<div class="ps-player-chips">
+    ${ordered.map(n => `<div class="ps-chip${n===playerName?' active':''}" onclick="switchPlayer('${n.replace(/'/g,"\\'")}')">
+      ${n}
+    </div>`).join('')}
+  </div>`;
+
+  // Spotlight card
+  const spotlightHtml = `<div class="spotlight-card">
+    <div class="spotlight-header">
+      <span class="spotlight-name">${playerName}</span>
+      <span class="spotlight-pos">#${rank}</span>
+    </div>
+    <div class="spotlight-grid">
+      <div class="spotlight-cell">
+        <div class="spotlight-wtl">
+          <span class="wtl-w">${d.wins}</span><span class="wtl-t" style="font-size:1rem;align-self:center">-</span>
+          <span class="wtl-t">${d.ties}</span><span class="wtl-t" style="font-size:1rem;align-self:center">-</span>
+          <span class="wtl-l">${d.losses}</span>
+        </div>
+        <div class="spotlight-lbl">W – T – L</div>
+      </div>
+      <div class="spotlight-cell">
+        <div class="spotlight-val" style="color:${diff>=0?'var(--success)':'var(--danger)'}">${diff>=0?'+':''}${diff}</div>
+        <div class="spotlight-lbl">Point difference</div>
+      </div>
+      <div class="spotlight-cell">
+        <div class="spotlight-val">${d.avg}</div>
+        <div class="spotlight-lbl">Average scored</div>
+      </div>
+      <div class="spotlight-cell">
+        <div class="spotlight-val" style="color:var(--accent)">${d.totalPts}</div>
+        <div class="spotlight-lbl">Total points</div>
+      </div>
+    </div>
+    ${d.toughest ? `<div class="spotlight-footer" style="border-top:1px solid var(--border);cursor:default">
+      <div><div class="spotlight-footer-val">${toughLbl}</div><div class="spotlight-lbl">Toughest opponent · ${toughSub}</div></div>
+    </div>` : ''}
+    ${d.bestPartner ? `<div class="spotlight-footer" style="cursor:default">
+      <div><div class="spotlight-footer-val">${partnerLbl}</div><div class="spotlight-lbl">Best partner · ${partnerSub}</div></div>
+    </div>` : ''}
+    ${d.biggestWin ? `<div class="spotlight-footer" style="cursor:default">
+      <div><div class="spotlight-footer-val">${d.biggestWin.myScore}–${d.biggestWin.oppScore} vs ${d.biggestWin.opponents.join(' & ')} (R${d.biggestWin.round})</div>
+      <div class="spotlight-lbl">Biggest win · +${d.biggestWin.margin} margin</div></div>
+    </div>` : ''}
+    ${d.biggestLoss ? `<div class="spotlight-footer" style="cursor:default">
+      <div><div class="spotlight-footer-val">${d.biggestLoss.myScore}–${d.biggestLoss.oppScore} vs ${d.biggestLoss.opponents.join(' & ')} (R${d.biggestLoss.round})</div>
+      <div class="spotlight-lbl">Biggest loss · ${d.biggestLoss.margin} margin</div></div>
+    </div>` : ''}
+  </div>`;
+
+  // Performance chart card
+  const chartHtml = `<div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">📈 Performance</span>
+      <div class="chart-toggle">
+        <button class="chart-toggle-btn${_activePlayerChart==='pts'?' active':''}" onclick="switchChart('pts')">Points</button>
+        <button class="chart-toggle-btn${_activePlayerChart==='rank'?' active':''}" onclick="switchChart('rank')">Rank</button>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      ${buildPerfChart(playerName, _activePlayerChart)}
+    </div>
+  </div>`;
+
+  // Match history accordion
+  const matchRows = d.myMatches.map(m => {
+    const resCls = m.result==='W'?'won':m.result==='L'?'lost':'tied';
+    const resLbl = m.result==='W'?'WIN':m.result==='L'?'LOSS':'DRAW';
+    return `<div class="mh-row">
+      <div class="mh-round">R${m.round}</div>
+      <div class="mh-players">
+        <div class="mh-partner">w/ ${m.partner||'—'}</div>
+        <div class="mh-opp">vs ${m.opponents.join(' & ')}</div>
+      </div>
+      <div>
+        <div class="mh-score ${resCls}">${m.myScore}–${m.oppScore}</div>
+        <div class="mh-result" style="color:${m.result==='W'?'var(--success)':m.result==='L'?'var(--danger)':'var(--muted)'}">${resLbl}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const matchHistHtml = `<div class="match-hist">
+    <div class="match-hist-header" onclick="toggleMatchHist(this)">
+      <span class="match-hist-title">Match History <span style="color:var(--muted);font-weight:400">(${d.gp} games)</span></span>
+      <span class="match-hist-cue" id="mh-cue">View Matches ›</span>
+    </div>
+    <div class="match-hist-body" id="match-hist-body">${matchRows}</div>
+  </div>`;
+
+  document.getElementById('main-content').innerHTML = chipsHtml + spotlightHtml + chartHtml + matchHistHtml;
+}
+
+window.switchPlayer = function(name) {
+  _activePlayerName = name;
+  renderOpenPlayPlayerStats();
+};
+
+window.switchChart = function(mode) {
+  _activePlayerChart = mode;
+  // Re-render just the chart card content without a full re-render
+  const chartWrap = document.querySelector('.chart-wrap');
+  const btns = document.querySelectorAll('.chart-toggle-btn');
+  if (chartWrap) chartWrap.innerHTML = buildPerfChart(_activePlayerName, mode);
+  btns.forEach(b => b.classList.toggle('active', b.textContent.trim().toLowerCase() === mode));
+};
+
+window.toggleMatchHist = function(headerEl) {
+  const body = document.getElementById('match-hist-body');
+  const cue = document.getElementById('mh-cue');
+  if (!body) return;
+  const open = body.classList.toggle('open');
+  if (cue) cue.textContent = open ? 'Collapse ›' : 'View Matches ›';
+};
 
 // ────────────────────────────────────────────────────────────
 // Admin-format renders
