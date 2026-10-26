@@ -314,7 +314,7 @@
 <!-- Members tab -->
 <div class="section active" id="tab-members">
   <div class="search-row">
-    <input type="search" class="search-input" id="search-input" placeholder="Search by name or phone…" oninput="renderMembers()">
+    <input type="search" class="search-input" id="search-input" placeholder="Search by name or phone…" oninput="clearTimeout(_renderDebounce);_renderDebounce=setTimeout(renderMembers,120)">
     <select class="filter-select" id="filter-level" onchange="renderMembers()">
       <option value="">All levels</option>
       <option>Beginner</option>
@@ -615,12 +615,15 @@ DSR.compute=(seeds,matches,today)=>{
 
 // ===== State =====
 let members = {};       // id -> member object
-let sessions = {};      // id -> session
+let sessions = {};      // id -> session (open-play sessions, kept for DSR seed history)
 let opMatches = {};     // id -> match
 let ratings = {};       // name -> player rating object
+// Per-player match cache — rebuilt after each data load/save
+let _playerMatchCache = {}; // name -> { open: [...], tournament: [...] }
 let drawerMemberId = null;
 let drawerEdits = {};
 let currentTab = 'members';
+let _renderDebounce = null;
 
 // ===== PIN =====
 window.checkPin = () => {
@@ -642,22 +645,44 @@ document.getElementById('pin-input').addEventListener('keydown', e => { if (e.ke
 // ===== Data loading =====
 async function loadAll() {
   showToast('Loading member database…', 'ok', 2000);
-  const [mSnap, sSnap, matchSnap, trnMetaSnap] = await Promise.all([
+  // Fetch members, matches and tournament meta in parallel.
+  // openPlaySessions is only needed when a member has neither ratingOverride nor levelOverride;
+  // we fetch it lazily after the main data is ready to avoid blocking first render.
+  const [mSnap, matchSnap, trnMetaSnap] = await Promise.all([
     get(ref(db, 'members')),
-    get(ref(db, 'openPlaySessions')),
     get(ref(db, 'openPlayMatches')),
     get(ref(db, 'tournaments/_meta')),
   ]);
   members = mSnap.val() || {};
-  sessions = sSnap.val() || {};
   opMatches = matchSnap.val() || {};
   trnMeta = trnMetaSnap.val() || {};
   trnLoaded = true; // prevent double-subscribe when Tournaments tab is opened
+  _buildMatchCache();
   computeAllRatings();
   renderMembers();
   renderRatings();
   populateOpMemberFilter();
   document.getElementById('header-count').textContent = `${Object.keys(members).length} members`;
+  // Lazily fetch sessions for DSR seed history; recalculate ratings when ready
+  get(ref(db, 'openPlaySessions')).then(sSnap => {
+    sessions = sSnap.val() || {};
+    computeAllRatings();
+    renderMembers();
+    renderRatings();
+  }).catch(() => {}); // non-critical
+}
+
+// Build per-player match index so drawer/spotlight don't scan all matches on every open
+function _buildMatchCache() {
+  _playerMatchCache = {};
+  for (const m of Object.values(opMatches)) {
+    const players = [...(m.teamA || []), ...(m.teamB || [])];
+    for (const name of players) {
+      if (!_playerMatchCache[name]) _playerMatchCache[name] = { open: [], tournament: [] };
+      if (m.source === 'tournament') _playerMatchCache[name].tournament.push(m);
+      else _playerMatchCache[name].open.push(m);
+    }
+  }
 }
 
 function computeAllRatings() {
@@ -914,9 +939,7 @@ function _trnStatCards(stats) {
 }
 
 function buildPlayerSpotlight(playerName) {
-  const allTrnMatches = Object.values(opMatches).filter(
-    m => m.source === 'tournament' && (m.teamA?.includes(playerName) || m.teamB?.includes(playerName))
-  );
+  const allTrnMatches = _playerMatchCache[playerName]?.tournament || [];
   if (!allTrnMatches.length) return '';
 
   // Group by tournamentId
@@ -1131,9 +1154,7 @@ window.openDrawer = (id) => {
   const m = members[id];
   if (!m) return;
   const r = ratings[m.name];
-  const playerSessions = Object.values(opMatches).filter(match =>
-    match.source !== 'tournament' && (match.teamA?.includes(m.name) || match.teamB?.includes(m.name))
-  );
+  const playerSessions = _playerMatchCache[m.name]?.open || [];
 
   document.getElementById('drawer-name').textContent = m.name || id;
   document.getElementById('drawer-meta').textContent = drawerMeta(m);
@@ -1155,9 +1176,7 @@ window.enterEditMode = () => {
 window.cancelEdit = () => {
   const m = members[drawerMemberId];
   const r = ratings[m?.name];
-  const playerSessions = Object.values(opMatches).filter(match =>
-    match.source !== 'tournament' && (match.teamA?.includes(m?.name) || match.teamB?.includes(m?.name))
-  );
+  const playerSessions = _playerMatchCache[m?.name]?.open || [];
   drawerEdits = {};
   document.getElementById('drawer-name').textContent = m.name || drawerMemberId;
   document.getElementById('drawer-meta').textContent = drawerMeta(m);
@@ -1207,15 +1226,15 @@ window.saveMember = async () => {
   };
   await update(ref(db, `members/${drawerMemberId}`), updates);
   Object.assign(members[drawerMemberId], updates);
+  // If name changed, rebuild match cache so the new name is indexed correctly
+  if (updates.name !== m.name) _buildMatchCache();
   computeAllRatings();
   renderMembers();
   renderRatings();
   // Return to view mode with updated data
-  const r = ratings[updates.name || m.name];
   const pName = updates.name || m.name;
-  const playerSessions = Object.values(opMatches).filter(match =>
-    match.source !== 'tournament' && (match.teamA?.includes(pName) || match.teamB?.includes(pName))
-  );
+  const r = ratings[pName];
+  const playerSessions = _playerMatchCache[pName]?.open || [];
   document.getElementById('drawer-name').textContent = updates.name || m.name;
   document.getElementById('drawer-meta').textContent = drawerMeta(members[drawerMemberId]);
   document.getElementById('drawer-edit-btn').style.display = '';
@@ -1318,6 +1337,7 @@ window.submitMatch = async () => {
   };
   await set(ref(db, `openPlayMatches/${matchId}`), matchData);
   opMatches[matchId] = matchData;
+  _buildMatchCache();
   computeAllRatings();
   renderMembers();
   renderRatings();
@@ -1586,15 +1606,19 @@ window.showTab = (name) => {
 
 // ===== Tournaments Tab =====
 let trnLoaded = false;
-let trnMeta = {}; // key -> _meta entry, kept in sync
+let trnMeta = {}; // key -> _meta entry, pre-loaded in loadAll()
 function loadTournaments() {
-  if (trnLoaded) return; // already listening
+  // trnMeta is already populated by loadAll() via the initial Promise.all fetch.
+  // Render immediately from cache, then subscribe once for live updates.
+  const list = Object.values(trnMeta).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  renderTournaments(list);
+  if (trnLoaded) return; // listener already attached
   trnLoaded = true;
   onValue(ref(db, 'tournaments/_meta'), snap => {
     const data = snap.val() || {};
     trnMeta = data;
-    const list = Object.values(data).sort((a,b) => (b.date||'').localeCompare(a.date||''));
-    renderTournaments(list);
+    const updated = Object.values(data).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    renderTournaments(updated);
   });
 }
 
