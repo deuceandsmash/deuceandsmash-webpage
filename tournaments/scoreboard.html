@@ -834,22 +834,39 @@ function renderAdminRounds() {
 }
 
 function renderAdminPlayerStats() {
+  // Convert admin index-based data into name-based match records,
+  // then reuse the same interactive renderOpenPlayPlayerStats UI.
   const { players, state, ranked } = _tournData;
-  let html = '<div class="section-title">Player Statistics</div><div class="player-stats-grid">';
-  for (const pi of ranked) {
-    const name = players[pi];
-    const pf = (state.pf||[])[pi] ?? '—';
-    const pa = (state.pa||[])[pi] ?? '—';
-    const diff = (typeof pf === 'number' && typeof pa === 'number') ? pf - pa : null;
-    html += `<div class="player-stat-card">
-      <div class="ps-name">${name}</div>
-      <div class="ps-row"><span>Points</span><span class="ps-val">${state.pts[pi]}</span></div>
-      <div class="ps-row"><span>Wins / Played</span><span class="ps-val">${state.wins[pi]} / ${state.played[pi]}</span></div>
-      ${diff !== null ? `<div class="ps-row"><span>Point diff</span><span class="ps-val" style="color:${diff>0?'#4dff91':diff<0?'#ff4d4d':''}">${diff>0?'+':''}${diff}</span></div>` : ''}
-    </div>`;
-  }
-  html += '</div>';
-  document.getElementById('main-content').innerHTML = html;
+  const rounds = state.rounds || [];
+
+  // Build byRound in openPlay format
+  const byRound = {};
+  rounds.forEach((round, ri) => {
+    const rNum = ri + 1;
+    byRound[rNum] = [];
+    (round.matches || []).forEach((m, mi) => {
+      const teamA = (m.p1 || []).map(i => players[i]).filter(Boolean);
+      const teamB = (m.p2 || []).map(i => players[i]).filter(Boolean);
+      const scores = (round.scores || [])[mi] || [0, 0];
+      byRound[rNum].push({ teamA, teamB, a: scores[0], b: scores[1], round: rNum });
+    });
+  });
+
+  // Build standings from ranked + state
+  const standings = ranked.map(pi => ({
+    name: players[pi],
+    pts: state.pts[pi] || 0,
+    wins: state.wins[pi] || 0,
+    gp: state.played[pi] || 0,
+  }));
+
+  // Temporarily swap _tournData so buildPlayerDeepStats works
+  const saved = _tournData;
+  _tournData = { ..._tournData, byRound, standings };
+  renderOpenPlayPlayerStats();
+  _tournData = saved;
+  // Restore the full byRound for future calls
+  _tournData = { ..._tournData, byRound, standings };
 }
 
 // ────────────────────────────────────────────────────────────
