@@ -642,14 +642,17 @@ document.getElementById('pin-input').addEventListener('keydown', e => { if (e.ke
 // ===== Data loading =====
 async function loadAll() {
   showToast('Loading member database…', 'ok', 2000);
-  const [mSnap, sSnap, matchSnap] = await Promise.all([
+  const [mSnap, sSnap, matchSnap, trnMetaSnap] = await Promise.all([
     get(ref(db, 'members')),
     get(ref(db, 'openPlaySessions')),
     get(ref(db, 'openPlayMatches')),
+    get(ref(db, 'tournaments/_meta')),
   ]);
   members = mSnap.val() || {};
   sessions = sSnap.val() || {};
   opMatches = matchSnap.val() || {};
+  trnMeta = trnMetaSnap.val() || {};
+  trnLoaded = true; // prevent double-subscribe when Tournaments tab is opened
   computeAllRatings();
   renderMembers();
   renderRatings();
