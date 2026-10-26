@@ -1193,15 +1193,15 @@ window.saveMember = async () => {
     })(),
     ratingAssessedAt: (() => {
       const v = document.getElementById('edit-rating')?.value;
-      if (v === '' || v == null) return (editingMember?.ratingAssessedAt || '');
+      if (v === '' || v == null) return (m?.ratingAssessedAt || '');
       const n = parseFloat(v);
-      if (isNaN(n)) return (editingMember?.ratingAssessedAt || '');
+      if (isNaN(n)) return (m?.ratingAssessedAt || '');
       // If value changed from stored, stamp today; otherwise keep existing date
-      const existing = editingMember?.ratingOverride;
+      const existing = m?.ratingOverride;
       if (existing == null || existing === '' || parseFloat(existing) !== n) {
         return new Date().toISOString().slice(0, 10);
       }
-      return editingMember?.ratingAssessedAt || new Date().toISOString().slice(0, 10);
+      return m?.ratingAssessedAt || new Date().toISOString().slice(0, 10);
     })(),
     updatedAt: new Date().toISOString(),
   };
