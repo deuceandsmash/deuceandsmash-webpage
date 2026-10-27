@@ -314,7 +314,7 @@
 <!-- Members tab -->
 <div class="section active" id="tab-members">
   <div class="search-row">
-    <input type="search" class="search-input" id="search-input" placeholder="Search by name or phone…" oninput="clearTimeout(_renderDebounce);_renderDebounce=setTimeout(renderMembers,120)">
+    <input type="search" class="search-input" id="search-input" placeholder="Search by name or phone…" oninput="renderMembers()">
     <select class="filter-select" id="filter-level" onchange="renderMembers()">
       <option value="">All levels</option>
       <option>Beginner</option>
