@@ -189,6 +189,10 @@
   .name-cell { font-weight: 600; }
   .trend-up { color: var(--success); }
   .trend-dn { color: var(--danger); }
+  /* Worm chart tooltip */
+  #worm-tooltip { position:fixed;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.78rem;pointer-events:none;z-index:200;display:none;max-width:200px;line-height:1.5 }
+  #worm-legend .worm-chip { display:inline-flex;align-items:center;gap:5px;font-size:0.72rem;padding:3px 8px;border-radius:20px;background:var(--pill-bg);cursor:pointer;border:1px solid transparent;transition:border-color .15s }
+  #worm-legend .worm-chip.hidden { opacity:.35 }
   .trend-flat { color: var(--muted); }
 
   /* Toast */
@@ -285,6 +289,7 @@
 <body>
 
 <!-- PIN overlay -->
+<div id="worm-tooltip"></div>
 <div id="pin-overlay">
   <div class="pin-box">
     <h2>🏓 D&S Members</h2>
@@ -365,6 +370,18 @@
       </thead>
       <tbody id="rating-tbody"></tbody>
     </table>
+  </div>
+
+  <!-- Ratings Worm Chart -->
+  <div id="worm-chart-container" style="margin-top:28px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:0.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Rating Evolution</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="worm-legend"></div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;overflow-x:auto">
+      <canvas id="worm-canvas" style="display:block;width:100%;min-width:360px"></canvas>
+    </div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:6px;text-align:center">Each point = one match. Hover to see details.</div>
   </div>
 </div>
 
@@ -1266,9 +1283,175 @@ window.renderRatings = () => {
       <td class="${tCls}">${tTxt}</td>
     </tr>`;
   }).join('');
+  // Re-render worm chart after table update
+  requestAnimationFrame(renderWormChart);
 };
 
 window.recalcRatings = () => { computeAllRatings(); renderRatings(); showToast('Ratings recalculated', 'ok'); };
+
+// ===== Ratings Worm Chart =====
+const WORM_PALETTE = [
+  '#e8ff3b','#3bffe8','#ff6b6b','#60d394','#a78bfa','#fb923c',
+  '#38bdf8','#f472b6','#fbbf24','#4ade80','#c084fc','#f87171',
+  '#34d399','#818cf8','#facc15','#2dd4bf',
+];
+let _wormHidden = new Set();
+
+function renderWormChart() {
+  const canvas = document.getElementById('worm-canvas');
+  if (!canvas) return;
+  const legend = document.getElementById('worm-legend');
+
+  // Gather all players with history, sorted by current rating
+  const q = document.getElementById('rating-search')?.value.toLowerCase() || '';
+  const players = Object.values(ratings)
+    .filter(p => !p.hidden && p.hist && p.hist.length >= 2)
+    .filter(p => !q || p.name.toLowerCase().includes(q))
+    .sort((a, b) => b.r - a.r);
+
+  if (!players.length) {
+    canvas.style.display = 'none';
+    document.getElementById('worm-chart-container').style.display = 'none';
+    return;
+  }
+  document.getElementById('worm-chart-container').style.display = '';
+  canvas.style.display = 'block';
+
+  // Build a unified timeline: all unique match indices across all players
+  // Each player's hist is already sorted chronologically
+  // We use per-player match index as X axis (0=first match, n=latest)
+  const maxMatches = Math.max(...players.map(p => p.hist.length));
+  const allRatings = players.flatMap(p => p.hist.map(h => h.r));
+  const minR = Math.max(0, Math.min(...allRatings) - 0.2);
+  const maxR = Math.min(7, Math.max(...allRatings) + 0.2);
+
+  // Canvas sizing
+  const DPR = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth - 32;
+  const H = Math.max(200, Math.min(320, W * 0.38));
+  canvas.width = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+
+  const PAD = { top: 16, right: 16, bottom: 32, left: 42 };
+  const cw = W - PAD.left - PAD.right;
+  const ch = H - PAD.top - PAD.bottom;
+
+  const xOf = (idx, total) => PAD.left + (total <= 1 ? cw / 2 : (idx / (maxMatches - 1)) * cw);
+  const yOf = r => PAD.top + ch - ((r - minR) / (maxR - minR)) * ch;
+
+  // Clear
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  const gridCount = 5;
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  for (let i = 0; i <= gridCount; i++) {
+    const r = minR + (maxR - minR) * (i / gridCount);
+    const y = yOf(r);
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W - PAD.right, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = `${10 * DPR / DPR}px system-ui`;
+    ctx.textAlign = 'right';
+    ctx.fillText(r.toFixed(1), PAD.left - 6, y + 4);
+  }
+  ctx.setLineDash([]);
+
+  // X-axis label
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.font = '10px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('Match #', PAD.left + cw / 2, H - 6);
+
+  // Draw lines per player
+  // Store hit regions for tooltip
+  canvas._wormPoints = [];
+
+  players.forEach((p, pi) => {
+    if (_wormHidden.has(p.name)) return;
+    const color = WORM_PALETTE[pi % WORM_PALETTE.length];
+    const n = p.hist.length;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.globalAlpha = 0.85;
+
+    ctx.beginPath();
+    p.hist.forEach((h, i) => {
+      const x = xOf(i, n);
+      const y = yOf(h.r);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // Dots
+    p.hist.forEach((h, i) => {
+      const x = xOf(i, n);
+      const y = yOf(h.r);
+      ctx.beginPath();
+      ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 1;
+      ctx.fill();
+      canvas._wormPoints.push({ x, y, name: p.name, r: h.r, delta: h.delta, date: h.date, color, matchNum: i + 1 });
+    });
+
+    // Name label at last point
+    const last = p.hist[p.hist.length - 1];
+    const lx = xOf(n - 1, n);
+    const ly = yOf(last.r);
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.9;
+    ctx.font = 'bold 10px system-ui';
+    ctx.textAlign = lx > W * 0.75 ? 'right' : 'left';
+    ctx.fillText(p.name.split(' ')[0], lx + (lx > W * 0.75 ? -7 : 7), ly + 4);
+  });
+  ctx.globalAlpha = 1;
+
+  // Legend
+  legend.innerHTML = players.map((p, pi) => {
+    const color = WORM_PALETTE[pi % WORM_PALETTE.length];
+    const hidden = _wormHidden.has(p.name);
+    return `<span class="worm-chip ${hidden ? 'hidden' : ''}" onclick="toggleWormPlayer('${p.name.replace(/'/g,"\\'")}',this)" style="border-color:${hidden?'transparent':color}">
+      <span style="display:inline-block;width:10px;height:3px;background:${color};border-radius:2px"></span>
+      ${p.name}
+    </span>`;
+  }).join('');
+
+  // Tooltip events
+  canvas.onmousemove = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (W / rect.width);
+    const my = (e.clientY - rect.top) * (H / rect.height);
+    const tip = document.getElementById('worm-tooltip');
+    let best = null, bestDist = 18;
+    for (const pt of (canvas._wormPoints || [])) {
+      const d = Math.sqrt((pt.x - mx) ** 2 + (pt.y - my) ** 2);
+      if (d < bestDist) { bestDist = d; best = pt; }
+    }
+    if (best) {
+      const sign = best.delta >= 0 ? '+' : '';
+      tip.innerHTML = `<strong style="color:${best.color}">${best.name}</strong><br>Rating: <strong>${best.r.toFixed(3)}</strong><br>Change: ${sign}${best.delta.toFixed(3)}<br>Match ${best.matchNum} · ${best.date}`;
+      tip.style.display = 'block';
+      tip.style.left = (e.clientX + 14) + 'px';
+      tip.style.top = (e.clientY - 10) + 'px';
+    } else {
+      tip.style.display = 'none';
+    }
+  };
+  canvas.onmouseleave = () => { document.getElementById('worm-tooltip').style.display = 'none'; };
+}
+
+window.toggleWormPlayer = (name, el) => {
+  if (_wormHidden.has(name)) _wormHidden.delete(name);
+  else _wormHidden.add(name);
+  renderWormChart();
+};
 
 // ===== Open Play tab =====
 window.showOpForm = () => {
@@ -1715,7 +1898,9 @@ window.showTab = (name) => {
   currentTab = name;
   if (name === 'openplay') showOpHistory();
   if (name === 'tournaments') loadTournaments();
+  if (name === 'ratings') requestAnimationFrame(renderWormChart);
 };
+window.addEventListener('resize', () => { if (currentTab === 'ratings') renderWormChart(); });
 
 // ===== Tournaments Tab =====
 let trnLoaded = false;
