@@ -173,7 +173,7 @@ function renderGrid(filter = 'all') {
     <a class="t-card" href="${t.slug}.html" data-status="${t.status}" data-sport="${t.sport}">
       <div class="t-card-header">
         <div class="t-card-top">
-          <span class="t-format-badge">${t.format}</span>
+          <span class="t-format-badge">${t.format || 'Mexicano'}</span>
           <span class="t-status ${t.status}">${
             t.status === 'live' ? 'Live Now' :
             t.status === 'completed' ? 'Completed' : 'Upcoming'
@@ -184,7 +184,7 @@ function renderGrid(filter = 'all') {
       </div>
       <div class="t-card-body">
         <div class="t-meta">
-          <div class="t-meta-item">${sportIcon(t.sport)} ${t.sport.charAt(0).toUpperCase()+t.sport.slice(1)}</div>
+          <div class="t-meta-item">${sportIcon(t.sport)} ${t.sport ? t.sport.charAt(0).toUpperCase()+t.sport.slice(1) : 'Padel'}</div>
           <div class="t-meta-item">
             <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="7" cy="5" r="2.5"/><path d="M2.5 12c0-2.485 2.015-4.5 4.5-4.5s4.5 2.015 4.5 4.5"/></svg>
             ${t.players} Players
