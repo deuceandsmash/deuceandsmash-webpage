@@ -499,7 +499,7 @@
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, get, set, update, push, onValue, off } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, get, set, update, push, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ============================================================
@@ -1419,6 +1419,7 @@ window.showOpHistory = () => {
           <span style="color:var(--muted);font-size:0.8rem">–</span>
           <span style="color:${bColor}">${sb}</span>
         </div>
+        <button onclick="editOpMatch('${m.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:0.7rem;color:var(--muted);cursor:pointer;white-space:nowrap" title="Edit match">✏️</button>
       </div>`;
     }).join('');
     // Format date label
@@ -1447,6 +1448,118 @@ window.showOpHistory = () => {
 window.toggleOpDay = (idx) => {
   const card = document.getElementById(`op-day-${idx}`);
   if (card) card.classList.toggle('open');
+};
+
+window.editOpMatch = (matchId) => {
+  const m = opMatches[matchId];
+  if (!m) return;
+  const memberNames = Object.values(members).map(m => m.name).sort();
+  const opts = memberNames.map(n => `<option${(m.teamA||[])[0]===n||((m.teamB||[])[0]===n&&false)?'':''} value="${n}">${n}</option>`).join('');
+  const selOpts = (val) => memberNames.map(n => `<option value="${n}"${n===val?' selected':''}>${n}</option>`).join('');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'edit-match-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:440px">
+      <h3 style="margin:0 0 18px;font-size:1rem">✏️ Edit Match</h3>
+      <div style="margin-bottom:12px">
+        <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:4px">Date</label>
+        <input type="date" id="em-date" class="form-input" value="${m.date||''}">
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:4px">Format</label>
+        <select id="em-format" class="form-input">
+          <option value="openplay"${(m.format||'openplay')==='openplay'?' selected':''}>Open Play</option>
+          <option value="competitive"${m.format==='competitive'?' selected':''}>Competitive Match</option>
+        </select>
+      </div>
+      <div style="margin-bottom:4px;font-size:0.78rem;color:var(--muted)">Team A</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <select id="em-a1" class="form-input"><option value="">—</option>${selOpts((m.teamA||[])[0])}</select>
+        <select id="em-a2" class="form-input"><option value="">—</option>${selOpts((m.teamA||[])[1])}</select>
+      </div>
+      <div style="margin-bottom:4px;font-size:0.78rem;color:var(--muted)">Team B</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <select id="em-b1" class="form-input"><option value="">—</option>${selOpts((m.teamB||[])[0])}</select>
+        <select id="em-b2" class="form-input"><option value="">—</option>${selOpts((m.teamB||[])[1])}</select>
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:4px">Score (e.g. 6-4 or 6-3, 7-5)</label>
+        <input id="em-score" class="form-input" value="${m.score||((m.a??'')+(m.b!=null?'-'+m.b:''))}">
+      </div>
+      <div id="em-err" style="font-size:0.8rem;color:var(--danger);min-height:18px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="saveOpMatch('${matchId}')">Save changes</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('edit-match-overlay').remove()">Cancel</button>
+        <button onclick="deleteOpMatch('${matchId}')" style="margin-left:auto;background:none;border:1px solid var(--danger);color:var(--danger);border-radius:8px;padding:8px 14px;font-size:0.82rem;cursor:pointer">🗑 Delete</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+};
+
+window.saveOpMatch = async (matchId) => {
+  const date = document.getElementById('em-date').value;
+  const format = document.getElementById('em-format').value;
+  const a1 = document.getElementById('em-a1').value;
+  const a2 = document.getElementById('em-a2').value;
+  const b1 = document.getElementById('em-b1').value;
+  const b2 = document.getElementById('em-b2').value;
+  const scoreText = document.getElementById('em-score').value.trim();
+  const err = document.getElementById('em-err');
+  if (!date || !a1 || !a2 || !b1 || !b2) { err.textContent = 'Fill in all 4 players'; return; }
+  if (new Set([a1,a2,b1,b2]).size < 4) { err.textContent = 'All 4 players must be different'; return; }
+  const pairs = scoreText.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+  if (!scoreText || !pairs.every(p=>/^\d{1,2}-\d{1,2}$/.test(p))) { err.textContent = 'Score like 6-4 or 6-3, 7-5'; return; }
+  const totals = pairs.map(p=>p.split('-').map(Number));
+  const ta = totals.reduce((s,p)=>s+p[0],0), tb = totals.reduce((s,p)=>s+p[1],0);
+  const updated = { ...opMatches[matchId], date, format, teamA:[a1,a2], teamB:[b1,b2], a:ta, b:tb, score:scoreText, sets:pairs.length, note:`Open play — ${a1} & ${a2} vs ${b1} & ${b2}`, editedAt:new Date().toISOString() };
+  await set(ref(db, `openPlayMatches/${matchId}`), updated);
+  opMatches[matchId] = updated;
+  document.getElementById('edit-match-overlay').remove();
+  _buildMatchCache();
+  computeAllRatings();
+  renderMembers();
+  renderRatings();
+  populateOpMemberFilter();
+  showToast('✓ Match updated & ratings recalculated', 'ok');
+  showOpHistory();
+};
+
+window.deleteOpMatch = (matchId) => {
+  const m = opMatches[matchId];
+  const label = m ? `${(m.teamA||[]).join(' & ')} vs ${(m.teamB||[]).join(' & ')} (${m.score||''})` : matchId;
+  const existing = document.getElementById('edit-match-overlay');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'delete-match-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = `
+    <div style="background:var(--surface);border:2px solid var(--danger);border-radius:16px;padding:24px;width:100%;max-width:400px;text-align:center">
+      <div style="font-size:2rem;margin-bottom:10px">🗑</div>
+      <h3 style="margin:0 0 10px;color:var(--danger)">Delete match?</h3>
+      <p style="color:var(--muted);font-size:0.85rem;margin:0 0 6px">${label}</p>
+      <p style="color:var(--text);font-size:0.82rem;margin:0 0 20px">This will permanently remove the match and recalculate all Smash Ratings. This cannot be undone.</p>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button class="btn btn-secondary" onclick="document.getElementById('delete-match-overlay').remove()">Cancel</button>
+        <button style="background:var(--danger);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer" onclick="confirmDeleteOpMatch('${matchId}')">Yes, delete</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+};
+
+window.confirmDeleteOpMatch = async (matchId) => {
+  await remove(ref(db, `openPlayMatches/${matchId}`));
+  delete opMatches[matchId];
+  document.getElementById('delete-match-overlay')?.remove();
+  document.getElementById('edit-match-overlay')?.remove();
+  _buildMatchCache();
+  computeAllRatings();
+  renderMembers();
+  renderRatings();
+  populateOpMemberFilter();
+  showToast('Match deleted & ratings recalculated', 'ok');
+  showOpHistory();
 };
 
 window.showOpMemberHistory = () => {
