@@ -191,8 +191,12 @@
   .trend-dn { color: var(--danger); }
   /* Worm chart tooltip */
   #worm-tooltip { position:fixed;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:0.78rem;pointer-events:none;z-index:200;display:none;max-width:200px;line-height:1.5 }
-  #worm-legend .worm-chip { display:inline-flex;align-items:center;gap:5px;font-size:0.72rem;padding:3px 8px;border-radius:20px;background:var(--pill-bg);cursor:pointer;border:1px solid transparent;transition:border-color .15s }
-  #worm-legend .worm-chip.hidden { opacity:.35 }
+  #worm-legend .worm-chip { display:inline-flex;align-items:center;gap:5px;font-size:0.72rem;padding:3px 8px;border-radius:20px;background:var(--pill-bg);cursor:pointer;border:1px solid transparent;transition:all .15s;opacity:.4 }
+  #worm-legend .worm-chip.active { opacity:1 }
+  #worm-legend .worm-chip.all-mode { opacity:1 }
+  .worm-ctrl-btn { font-size:0.7rem;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap }
+  .worm-ctrl-btn:hover { border-color:var(--accent);color:var(--accent) }
+  .worm-ctrl-btn.active-ctrl { border-color:var(--accent);color:var(--accent);background:rgba(232,255,59,.08) }
   .trend-flat { color: var(--muted); }
 
   /* Toast */
@@ -374,10 +378,14 @@
 
   <!-- Ratings Worm Chart -->
   <div id="worm-chart-container" style="margin-top:28px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
       <div style="font-size:0.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Rating Evolution</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap" id="worm-legend"></div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="worm-ctrl-btn active-ctrl" id="worm-btn-all" onclick="wormShowAll()">Show All</button>
+        <button class="worm-ctrl-btn" id="worm-btn-clear" onclick="wormClearAll()">Clear All</button>
+      </div>
     </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="worm-legend"></div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;overflow-x:auto">
       <canvas id="worm-canvas" style="display:block;width:100%;min-width:360px"></canvas>
     </div>
@@ -1295,7 +1303,8 @@ const WORM_PALETTE = [
   '#38bdf8','#f472b6','#fbbf24','#4ade80','#c084fc','#f87171',
   '#34d399','#818cf8','#facc15','#2dd4bf',
 ];
-let _wormHidden = new Set();
+// _wormSelected: null = show all (default). Set = show only those players (empty set = show none).
+let _wormSelected = null;
 
 function renderWormChart() {
   const canvas = document.getElementById('worm-canvas');
@@ -1371,8 +1380,9 @@ function renderWormChart() {
   // Store hit regions for tooltip
   canvas._wormPoints = [];
 
+  const showAll = _wormSelected === null;
   players.forEach((p, pi) => {
-    if (_wormHidden.has(p.name)) return;
+    if (!showAll && !_wormSelected.has(p.name)) return;
     const color = WORM_PALETTE[pi % WORM_PALETTE.length];
     const n = p.hist.length;
     ctx.strokeStyle = color;
@@ -1413,15 +1423,22 @@ function renderWormChart() {
   });
   ctx.globalAlpha = 1;
 
-  // Legend
+  // Legend — null selection = all-mode; Set = custom selection (may be empty = show none)
+  const showAllLegend = _wormSelected === null;
   legend.innerHTML = players.map((p, pi) => {
     const color = WORM_PALETTE[pi % WORM_PALETTE.length];
-    const hidden = _wormHidden.has(p.name);
-    return `<span class="worm-chip ${hidden ? 'hidden' : ''}" onclick="toggleWormPlayer('${p.name.replace(/'/g,"\\'")}',this)" style="border-color:${hidden?'transparent':color}">
+    const isActive = showAllLegend || _wormSelected.has(p.name);
+    const cls = showAllLegend ? 'worm-chip all-mode' : (isActive ? 'worm-chip active' : 'worm-chip');
+    return `<span class="${cls}" onclick="toggleWormPlayer('${p.name.replace(/'/g,"\\'")}',this)" style="border-color:${isActive?color:'transparent'}">
       <span style="display:inline-block;width:10px;height:3px;background:${color};border-radius:2px"></span>
       ${p.name}
     </span>`;
   }).join('');
+  // Sync control buttons
+  const btnAll = document.getElementById('worm-btn-all');
+  const btnClear = document.getElementById('worm-btn-clear');
+  if (btnAll) btnAll.classList.toggle('active-ctrl', showAllLegend);
+  if (btnClear) btnClear.classList.toggle('active-ctrl', !showAllLegend);
 
   // Tooltip events
   canvas.onmousemove = (e) => {
@@ -1447,9 +1464,29 @@ function renderWormChart() {
   canvas.onmouseleave = () => { document.getElementById('worm-tooltip').style.display = 'none'; };
 }
 
-window.toggleWormPlayer = (name, el) => {
-  if (_wormHidden.has(name)) _wormHidden.delete(name);
-  else _wormHidden.add(name);
+window.toggleWormPlayer = (name) => {
+  if (_wormSelected === null) {
+    // Currently "show all" — first pill click enters custom mode with just this player
+    _wormSelected = new Set([name]);
+  } else if (_wormSelected.has(name)) {
+    // Deselect this player
+    _wormSelected.delete(name);
+    // If nothing left selected, go back to show-all
+    if (_wormSelected.size === 0) _wormSelected = null;
+  } else {
+    // Add to selection
+    _wormSelected.add(name);
+  }
+  renderWormChart();
+};
+
+window.wormShowAll = () => {
+  _wormSelected = null;  // null = show all
+  renderWormChart();
+};
+
+window.wormClearAll = () => {
+  _wormSelected = new Set();  // empty Set = show none, custom mode active
   renderWormChart();
 };
 
