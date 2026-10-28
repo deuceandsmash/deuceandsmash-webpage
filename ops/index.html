@@ -223,6 +223,7 @@ select{background:var(--card);border:1px solid var(--line);color:var(--text);bor
     <div class="top-row">
       <div class="brand">D<b>&amp;</b>S OPS</div>
       <div class="sync" id="sync"></div>
+      <a class="btn btn-sm" href="/ops/entry/" style="text-decoration:none">Front desk</a>
       <button class="btn btn-sm" id="refreshBtn" title="Reload data from the database">Refresh</button>
       <span class="who" id="who"></span>
       <button class="btn btn-sm" id="signOutBtn">Sign out</button>
@@ -346,7 +347,7 @@ const SEV_LABEL = { critical: 'Critical', serious: 'Serious', warning: 'Check', 
 const chip = sev => `<span class="chip ${sev}">${ICON[sev]}${SEV_LABEL[sev]}</span>`;
 
 /* ═══════════════════ Data prep ═══════════════════ */
-let BK = [], DAYS = [], DAY = {}, FIRST = null, LAST = null, META = null, FIRST_SEEN = {};
+let BK = [], DAYS = [], DAY = {}, FIRST = null, LAST = null, META = null, FIRST_SEEN = {}, APP = [];
 
 function bookerKey(b) {
   if (!['group', 'individual', 'open_play'].includes(b.category)) return null;
@@ -1107,6 +1108,7 @@ function viewHealth() {
     ${kpi('To check', num(open.filter(i => i.def.sev === 'warning').length), `${chip('warning')}`)}
   </div>`;
 
+  h += reconCard(a, b);
   // Tally by period
   const groups = [];
   if (healthGroup === 'month') { for (const mo of [...new Set(DAYS.filter(x => x >= a && x <= b).map(x => x.slice(0, 7)))]) { const ds = DAYS.filter(x => x >= a && x <= b && x.startsWith(mo)); groups.push({ l: fmonth(mo), from: ds[0], to: ds[ds.length - 1] }); } }
@@ -1161,6 +1163,50 @@ function viewHealth() {
   };
 }
 
+/* ═══════════════════ Sheet vs app (parallel run) ═══════════════════ */
+function reconCard(a, b) {
+  const head = `<div class="card c12"><div class="card-h"><div><h3>Sheet vs app</h3><div class="sub">During the parallel run, every booking should be in both the sheet and the desk app. Matched by date, sport and start time (±30 min).</div></div></div>`;
+  if (!APP.length) return `<div class="grid" style="margin-bottom:16px">${head}<div class="empty">No bookings have been entered in the desk app yet. This check starts the day the front desk begins using it.</div></div></div>`;
+  const appStart = APP.map(x => x.date).sort()[0], from = a > appStart ? a : appStart;
+  if (from > b) return `<div class="grid" style="margin-bottom:16px">${head}<div class="empty">The desk app started on ${fd(appStart)}, after this period.</div></div></div>`;
+  const apps = APP.filter(x => x.date >= from && x.date <= b && x.status !== 'cancelled');
+  const sheet = BK.filter(x => x.date >= from && x.date <= b && x.played);
+  const used = new Set(), pairs = [], appOnly = [];
+  for (const e of apps.sort((p, q) => p.date.localeCompare(q.date) || p.start - q.start)) {
+    let best = null, bd = 31;
+    for (const s of sheet) {
+      if (used.has(s) || s.date !== e.date) continue;
+      const sp = (s.segments && s.segments[0] && s.segments[0].sport) || null;
+      if (sp && sp !== e.sport) continue;
+      const d = s.startMin == null ? 30 : Math.abs(s.startMin - e.start);
+      if (d < bd) { bd = d; best = s; }
+    }
+    if (best) { used.add(best); pairs.push({ e, s: best }); } else appOnly.push(e);
+  }
+  const sheetOnly = sheet.filter(s => !used.has(s));
+  const diffs = pairs.filter(({ e, s }) => Math.abs((e.totals ? e.totals.due : 0) - s.rv.total) > 1 || Math.abs((e.paid || 0) - (s.paid ? s.paid.total : 0)) > 1);
+  const days = [...new Set([...apps.map(x => x.date), ...sheet.map(x => x.date)])].sort().reverse();
+  const row = d => {
+    const A_ = apps.filter(x => x.date === d), S_ = sheet.filter(x => x.date === d);
+    const ad = sum(A_, x => x.totals ? x.totals.due : 0), sd = sum(S_, x => x.rv.total), ap = sum(A_, x => x.paid || 0), sp = sum(S_, x => x.paid ? x.paid.total : 0);
+    const ok = A_.length === S_.length && Math.abs(ad - sd) < 1 && Math.abs(ap - sp) < 1;
+    return `<tr><td class="l">${fdw(d)}</td><td>${S_.length}</td><td>${A_.length}</td><td>${inr(sd)}</td><td>${inr(ad)}</td><td>${inr(sp)}</td><td>${inr(ap)}</td><td>${ok ? '<span style="color:var(--goodText)">✓ Match</span>' : `<b style="color:#ffb08f">${ad - sd < 0 ? '−' : '+'}${inr(Math.abs(ad - sd))}</b>`}</td></tr>`;
+  };
+  const who = x => (x.players || []).find(p => p.booker) || (x.players || [])[0] || {};
+  const list = [
+    ...appOnly.map(e => ({ d: e.date, t: hhmm(e.start), what: 'In the app, missing from the sheet', name: who(e).name, detail: `${e.courts.join(', ')} · due ${inr(e.totals && e.totals.due)} · paid ${inr(e.paid)}` })),
+    ...sheetOnly.map(s => ({ d: s.date, t: s.startMin != null ? hhmm(s.startMin) : '—', what: 'In the sheet, missing from the app', name: s.name, detail: `Row #${s.sheetRow} · ${inr(s.rv.total)}` })),
+    ...diffs.map(({ e, s }) => ({ d: e.date, t: hhmm(e.start), what: 'Amounts differ', name: who(e).name || s.name, detail: `Sheet row #${s.sheetRow}: revenue ${inr(s.rv.total)}, paid ${inr(s.paid && s.paid.total)} · App: due ${inr(e.totals && e.totals.due)}, paid ${inr(e.paid)}` }))
+  ].sort((p, q) => q.d.localeCompare(p.d) || p.t.localeCompare(q.t));
+  return `<div class="grid" style="margin-bottom:16px">${head}
+    <div class="kpis" style="margin-bottom:12px">${kpi('Matched', num(pairs.length - diffs.length), `<span>of ${num(Math.max(apps.length, sheet.length))} bookings since ${fd(from)}</span>`, true)}
+      ${kpi('Only in app', num(appOnly.length), '')}${kpi('Only in sheet', num(sheetOnly.length), '')}${kpi('Amounts differ', num(diffs.length), '')}</div>
+    <div class="tbl-wrap scroll-y" style="max-height:320px"><table class="tbl"><thead><tr><th class="l">Day</th><th>Sheet rows</th><th>App bookings</th><th>Sheet revenue</th><th>App due</th><th>Sheet paid</th><th>App paid</th><th>Difference</th></tr></thead><tbody>${days.map(row).join('')}</tbody></table></div>
+    ${list.length ? `<div class="tbl-wrap scroll-y" style="max-height:360px;margin-top:14px"><table class="tbl"><thead><tr><th class="l">Date</th><th class="l">Time</th><th class="l">Problem</th><th class="l">Booking</th><th class="l" style="text-align:left">Detail</th></tr></thead><tbody>
+      ${list.map(i => `<tr><td class="l">${fd(i.d)}</td><td class="l">${i.t}</td><td class="l">${esc(i.what)}</td><td class="l">${esc(i.name || '—')}</td><td class="wrap">${esc(i.detail)}</td></tr>`).join('')}</tbody></table></div>` : ''}
+  </div></div>`;
+}
+
 /* ═══════════════════ Router & render ═══════════════════ */
 const VIEWS = { today: viewDay, utilisation: viewUtil, revenue: viewRevenue, weekly: viewWeekly, players: viewPlayers, health: viewHealth };
 const NO_FILTER = new Set(['today', 'weekly']);
@@ -1210,8 +1256,9 @@ getRedirectResult(auth).catch(err => { $('#gateMsg').textContent = 'Sign-in fail
 async function load(isRefresh) {
   if (isRefresh) { $('#refreshBtn').textContent = 'Loading…'; $('#view').style.opacity = '.5'; }
   try {
-    const [bs, ms] = await Promise.all([get(ref(db, 'sheetBookings')), get(ref(db, 'meta/sync'))]);
+    const [bs, ms, es] = await Promise.all([get(ref(db, 'sheetBookings')), get(ref(db, 'meta/sync')), get(ref(db, 'entries')).catch(() => null)]);
     META = ms.val(); prep(bs.val());
+    APP = Object.values((es && es.val()) || {}).filter(x => x && x.date);
     dayISO = store.get('day', null); if (!isRefresh || !dayISO) dayISO = LAST;
     $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden');
     banners(); render();

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0E0E2C">
+<title>D&S Desk — Deuce & Smash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#0E0E2C; --card:#16163C; --card2:#1C1C48; --card3:#23235A; --line:#2A2A57; --grid:#24244C; --axis:#3A3A6A;
+  --text:#F2F2F7; --text2:#B9B9D3; --muted:#8C8CB0;
+  --yellow:#F5D628; --navy:#0E0E2C; --padel:#3987e5; --pickle:#5fa30f;
+  --good:#0ca30c; --goodText:#3ccf3c; --warn:#fab219; --serious:#ec835a; --crit:#e05555;
+  --head:'Bebas Neue', Impact, sans-serif; --body:'Barlow Condensed','Arial Narrow',system-ui,sans-serif; --ui:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--page);color:var(--text);font-family:var(--body);font-size:17px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;color:inherit}
+input,select,textarea{font-family:var(--ui);font-size:16px;color:var(--text);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--yellow);outline-offset:-1px;border-color:transparent}
+input[type=checkbox]{width:auto}
+.hidden{display:none!important}
+.brand{font-family:var(--head);letter-spacing:.04em;line-height:.9}
+.brand b{color:var(--yellow);font-weight:400}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:999px;padding:10px 18px;font-size:17px;font-weight:600;letter-spacing:.02em;min-height:44px;white-space:nowrap}
+.btn:hover{border-color:var(--axis)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--yellow);color:var(--navy);border-color:var(--yellow)}
+.btn-ghost{background:transparent}
+.btn-sm{padding:6px 12px;min-height:34px;font-size:15px}
+.btn-danger{border-color:#6b2222;color:#ff9d9d;background:transparent}
+.spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--yellow);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gate-card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:40px 32px;text-align:center}
+.gate-msg{margin-top:18px;color:var(--text2);font-size:15px;font-family:var(--ui)}
+.gate-msg.err{color:var(--serious)}
+
+header.top{position:sticky;top:0;z-index:20;background:rgba(14,14,44,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-row{display:flex;align-items:center;gap:12px;padding:10px 20px;max-width:1400px;margin:0 auto;flex-wrap:wrap}
+.top-row .brand{font-size:28px}
+.daynav{display:flex;align-items:center;gap:8px;margin-left:12px}
+.daynav h2{font-family:var(--head);font-weight:400;font-size:30px;letter-spacing:.03em;min-width:150px;text-align:center}
+.round{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:20px;display:flex;align-items:center;justify-content:center}
+.daynav input{width:auto;padding:7px 10px}
+.spacer{flex:1}
+.who{font-size:14px;color:var(--muted);font-family:var(--ui)}
+.role{font-size:12px;font-family:var(--ui);font-weight:600;border-radius:999px;padding:3px 9px;background:var(--card2);color:var(--text2)}
+.role.owner{background:rgba(245,214,40,.15);color:var(--yellow)}
+main{max-width:1400px;margin:0 auto;padding:18px 20px 120px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.card-h{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.card-h h3{font-family:var(--head);font-weight:400;font-size:24px;letter-spacing:.04em}
+.sub{color:var(--muted);font-size:14px;font-family:var(--ui)}
+
+/* Board */
+.tl-wrap{overflow-x:auto}
+.tl{position:relative;min-width:760px;font-family:var(--ui)}
+.tl-axis{position:relative;height:22px;margin-left:58px}
+.tl-axis span{position:absolute;transform:translateX(-50%);font-size:12px;color:var(--muted)}
+.tl-row{display:flex;height:62px;border-top:1px solid var(--grid)}
+.tl-row:last-child{border-bottom:1px solid var(--grid)}
+.tl-name{width:58px;flex:none;display:flex;flex-direction:column;justify-content:center;font-weight:600;font-size:15px}
+.tl-name small{font-size:11px;color:var(--muted);font-weight:500}
+.tl-lane{position:relative;flex:1;cursor:copy}
+.tl-peak{position:absolute;top:0;bottom:0;background:rgba(245,214,40,.05);pointer-events:none}
+.tl-hr{position:absolute;top:0;bottom:0;width:1px;background:var(--grid);pointer-events:none}
+.tl-now{position:absolute;top:0;bottom:0;width:2px;background:var(--crit);pointer-events:none}
+.tl-b{position:absolute;top:6px;bottom:6px;border-radius:8px;padding:5px 8px;overflow:hidden;font-size:13px;line-height:1.25;cursor:pointer;border:2px solid var(--card)}
+.tl-b.padel{background:var(--padel);color:#fff}
+.tl-b.pickle{background:var(--pickle);color:#0B1A02}
+.tl-b.cancelled,.tl-b.no_show{background:repeating-linear-gradient(45deg,var(--card3),var(--card3) 6px,var(--card2) 6px,var(--card2) 12px);color:var(--text2)}
+.tl-b .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-b .t{opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-b .due{position:absolute;top:4px;right:5px;width:10px;height:10px;border-radius:50%;background:var(--crit);border:2px solid #fff}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted);font-family:var(--ui)}
+.sp{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* Day list */
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:16px}
+.bk{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--padel);border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.bk.pickle{border-left-color:var(--pickle)}
+.bk.cancelled,.bk.no_show{opacity:.6}
+.bk:hover{border-color:var(--axis)}
+.bk .r1{display:flex;justify-content:space-between;gap:10px;font-weight:600;font-size:18px}
+.bk .r2{color:var(--text2);font-size:15px;font-family:var(--ui)}
+.bk .chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:12.5px;font-weight:600;font-family:var(--ui);white-space:nowrap}
+.chip.ok{background:rgba(12,163,12,.16);color:#7fe07f}
+.chip.due{background:rgba(224,85,85,.16);color:#ff9d9d}
+.chip.warn{background:rgba(250,178,25,.14);color:#ffd27a}
+.chip.info{background:rgba(185,185,211,.12);color:var(--text2)}
+.empty{color:var(--muted);text-align:center;padding:30px 10px;font-family:var(--ui)}
+
+/* Editor sheet */
+#sheet{position:fixed;inset:0;z-index:40;background:rgba(5,5,20,.6);display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;padding:24px 12px 0}
+.sheet{width:100%;max-width:860px;background:var(--page);border:1px solid var(--line);border-radius:18px 18px 0 0;min-height:100%;padding-bottom:110px;position:relative}
+.sheet-h{position:sticky;top:-24px;z-index:3;background:var(--page);border-bottom:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px 18px;display:flex;align-items:center;gap:12px}
+.sheet-h h2{font-family:var(--head);font-weight:400;font-size:30px;letter-spacing:.04em}
+.sec{padding:18px 18px 4px}
+.sec h4{font-family:var(--head);font-weight:400;font-size:22px;letter-spacing:.05em;color:var(--text2);margin-bottom:10px;display:flex;align-items:baseline;gap:10px}
+.sec h4 small{font-family:var(--ui);font-size:13px;color:var(--muted);letter-spacing:0}
+.row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:12px}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);font-family:var(--ui);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.chips-pick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.pick{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 14px;font-size:17px;font-weight:600;min-height:44px;display:inline-flex;align-items:center;gap:6px}
+.pick:hover{border-color:var(--axis)}
+.pick.on{background:var(--yellow);color:var(--navy);border-color:var(--yellow)}
+.pick.padel.on{background:var(--padel);border-color:var(--padel);color:#fff}
+.pick.pickle.on{background:var(--pickle);border-color:var(--pickle);color:#0B1A02}
+.pick.busy{opacity:.4;text-decoration:line-through;cursor:not-allowed}
+.pick small{font-weight:500;font-size:13px;opacity:.8;font-family:var(--ui)}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px;margin-bottom:12px}
+.seg button{background:none;border:0;color:var(--text2);font-size:16px;font-weight:600;padding:8px 14px;border-radius:999px;white-space:nowrap}
+.seg button.on{background:var(--yellow);color:var(--navy)}
+.msg{font-family:var(--ui);font-size:14px;border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.msg.err{background:rgba(224,85,85,.14);color:#ffb3b3}
+.msg.warn{background:rgba(250,178,25,.12);color:#ffd27a}
+.msg.ok{background:rgba(12,163,12,.12);color:#9be89b}
+.msg.info{background:var(--card);color:var(--text2)}
+
+/* players */
+.players{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.pl{display:inline-flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:6px 6px 6px 12px;font-size:16px;font-weight:600}
+.pl.fill{border-color:#6b5310;background:#2a2412}
+.pl .x,.pl .star{width:28px;height:28px;border-radius:50%;border:0;background:var(--card3);font-size:14px;display:flex;align-items:center;justify-content:center}
+.pl .star.on{background:var(--yellow);color:var(--navy)}
+.pl small{color:var(--muted);font-weight:500;font-family:var(--ui);font-size:12px}
+.search{position:relative;margin-bottom:10px}
+.dd{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--card2);border:1px solid var(--axis);border-radius:12px;overflow:hidden;z-index:5;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.dd button{display:flex;justify-content:space-between;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 14px;font-size:17px;text-align:left;gap:10px}
+.dd button:hover,.dd button.hl{background:var(--card3)}
+.dd button small{color:var(--muted);font-family:var(--ui);font-size:13px}
+
+/* lines */
+.lines{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 14px;margin-bottom:12px;font-family:var(--ui)}
+.ln{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--grid);font-size:15px}
+.ln:last-child{border-bottom:0}
+.ln span:first-child{color:var(--text2)}
+.ln b{font-variant-numeric:tabular-nums}
+.ln.minus b{color:#ffb08f}
+.ln.total{font-size:17px}
+.ln.total span:first-child{color:var(--text)}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin-bottom:12px}
+.item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 12px}
+.item.on{border-color:var(--yellow)}
+.item .nm{flex:1;font-size:16px;line-height:1.15}
+.item .nm small{display:block;color:var(--muted);font-family:var(--ui);font-size:13px}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card2);font-size:20px;line-height:1}
+.step b{min-width:20px;text-align:center;font-size:18px}
+.cat{font-family:var(--ui);font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:4px 0 6px}
+.pay{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-bottom:12px}
+.pay .m{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.pay .m.on{border-color:var(--yellow)}
+.pay .m .top{display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:16px}
+.pay .m .top button{font-size:12px;font-family:var(--ui);background:var(--card3);border:0;border-radius:999px;padding:4px 9px;color:var(--text2)}
+.split{width:100%;border-collapse:collapse;font-family:var(--ui);font-size:15px;margin-bottom:12px}
+.split td,.split th{padding:7px 6px;border-bottom:1px solid var(--grid);text-align:left}
+.split th{font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:600}
+.split input,.split select{padding:7px 8px;font-size:15px}
+.split td.num{width:110px}
+
+/* games */
+.game{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-family:var(--ui);font-size:15px;flex-wrap:wrap}
+.game b{font-size:18px;font-family:var(--body)}
+.game .vs{color:var(--muted)}
+.gameform{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--card);border:1px dashed var(--axis);border-radius:12px;padding:12px;margin-bottom:12px}
+.gameform .t{font-size:12px;color:var(--muted);font-family:var(--ui);font-weight:600;text-transform:uppercase;grid-column:span 2}
+
+/* footer */
+.foot{position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;justify-content:center;pointer-events:none}
+.foot-in{pointer-events:auto;width:100%;max-width:860px;background:#0A0A22;border-top:1px solid var(--axis);padding:12px 18px calc(12px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.tot{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--ui)}
+.tot div{display:flex;flex-direction:column;font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.03em}
+.tot b{font-family:var(--body);font-size:24px;color:var(--text);text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
+.tot .rem b{color:#ff9d9d} .tot .rem.zero b{color:var(--goodText)} .tot .rem.over b{color:var(--warn)}
+
+/* modal (settings) */
+.modal-table{width:100%;border-collapse:collapse;font-family:var(--ui);font-size:15px}
+.modal-table td,.modal-table th{padding:6px;border-bottom:1px solid var(--grid);text-align:left}
+.modal-table th{font-size:12px;color:var(--muted);text-transform:uppercase}
+.modal-table input,.modal-table select{padding:7px 8px;font-size:15px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;background:#0A0A22;border:1px solid var(--axis);border-radius:12px;padding:12px 18px;font-family:var(--ui);font-size:15px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+@media (max-width:640px){
+  .top-row{padding:8px 12px;gap:8px}
+  .daynav{margin-left:0;order:3;width:100%;justify-content:space-between}
+  .daynav h2{font-size:26px;min-width:0}
+  .who{display:none}
+  main{padding:12px 10px 120px}
+  #sheet{padding:0}
+  .sheet{border-radius:0}
+  .sheet-h{top:0;border-radius:0}
+  .tot b{font-size:20px}
+  .sheet-h h2{font-size:24px;white-space:nowrap}
+  .foot-in{gap:10px}
+  .foot-in .tot{width:100%;justify-content:space-between}
+  .foot-in > div[style*="flex:1"]{display:none}
+  .foot-in .btn{flex:1}
+  #saveErr{width:100%;max-width:none!important;order:-1}
+  .gameform{grid-template-columns:1fr}
+  .gameform .t{grid-column:span 1}
+}
+</style>
+</head>
+<body>
+<section id="gate"><div class="gate-card">
+  <div class="brand" style="font-size:44px">DEUCE <b>&amp;</b> SMASH</div>
+  <div class="brand" style="font-size:26px;color:var(--text2);margin-top:6px">FRONT DESK</div>
+  <p style="color:var(--text2);margin:14px 0 26px;font-size:18px">Sign in with the club Google account.</p>
+  <div id="gateBody"><div class="spinner"></div></div>
+  <div class="gate-msg" id="gateMsg"></div>
+</div></section>
+
+<div id="app" class="hidden">
+  <header class="top"><div class="top-row">
+    <div class="brand">D<b>&amp;</b>S DESK</div>
+    <div class="daynav">
+      <button class="round" id="prevDay" aria-label="Previous day">‹</button>
+      <h2 id="dayTitle"></h2>
+      <button class="round" id="nextDay" aria-label="Next day">›</button>
+      <input type="date" id="dayPick" aria-label="Pick a date">
+      <button class="btn btn-sm" id="todayBtn">Today</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="newBtn">+ New booking</button>
+    <a class="btn btn-sm hidden" id="dashLink" href="/ops/" style="text-decoration:none">Dashboard</a>
+    <button class="btn btn-sm hidden" id="settingsBtn">Settings</button>
+    <span class="role" id="role"></span>
+    <span class="who" id="who"></span>
+    <button class="btn btn-sm btn-ghost" id="signOutBtn">Sign out</button>
+  </div></header>
+  <main>
+    <div id="offline" class="msg warn hidden">You're offline. Changes are saved on this device and will upload when the connection returns. Don't close this tab.</div>
+    <div class="card"><div class="card-h"><h3>Courts</h3><span class="sub">Tap an empty slot to book it · tap a booking to open it</span></div>
+      <div class="tl-wrap"><div class="tl" id="board"></div></div>
+      <div class="legend"><span><i class="sp" style="background:var(--padel)"></i>Padel</span><span><i class="sp" style="background:var(--pickle)"></i>Pickleball</span><span><i class="sp" style="background:var(--crit);border-radius:50%"></i>Payment due</span><span>Shaded = peak hours</span></div>
+    </div>
+    <div class="list" id="list"></div>
+  </main>
+</div>
+<div id="sheet" class="hidden"></div>
+<div id="footHost"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, get, set, update, push, remove, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+/* ── Firebase: ops project (bookings & money) + club project (members & matches) ── */
+const opsApp = initializeApp({
+  apiKey: "AIzaSyCicHoHWs7R8ifZ7Q5FcjhTncgO0AOODeY", authDomain: "deuceandsmash-ops.firebaseapp.com",
+  databaseURL: "https://deuceandsmash-ops-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "deuceandsmash-ops",
+  storageBucket: "deuceandsmash-ops.firebasestorage.app", messagingSenderId: "734897702156", appId: "1:734897702156:web:044b91164114be8cc9b529"
+});
+const clubApp = initializeApp({
+  apiKey: "AIzaSyDu7A0agFAT1jwfrjCRkQe6tHg2Qu_LnDc", authDomain: "deuceandsmash-club.firebaseapp.com",
+  databaseURL: "https://deuceandsmash-club-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "deuceandsmash-club",
+  storageBucket: "deuceandsmash-club.firebasestorage.app", messagingSenderId: "953747553630", appId: "1:953747553630:web:316645b323ae12019fa3cf"
+}, 'club');
+const auth = getAuth(opsApp), db = getDatabase(opsApp);
+const clubAuth = getAuth(clubApp), clubDb = getDatabase(clubApp);
+
+const OWNERS = ['84.ranjith@gmail.com', 'rashmi.rajamanickam@gmail.com', 'manojnr.07@gmail.com'];
+const DESK = ['deuceandsmash@gmail.com'];
+
+/* ── Helpers ── */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const inr = v => '₹' + Math.round(v || 0).toLocaleString('en-IN');
+const pad = n => String(n).padStart(2, '0');
+const todayISO = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const D = iso => new Date(iso + 'T00:00:00Z');
+const addDays = (iso, n) => new Date(D(iso).getTime() + n * 864e5).toISOString().slice(0, 10);
+const dowOf = iso => D(iso).getUTCDay();
+const dateMsIST = iso => D(iso).getTime() - 330 * 60000;     // midnight IST, as epoch ms
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const fdw = iso => { const d = D(iso); return DOW[d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + MON[d.getUTCMonth()]; };
+const hhmm = m => { m = ((m % 1440) + 1440) % 1440; const h = Math.floor(m / 60), mi = m % 60; return (h % 12 || 12) + (mi ? ':' + pad(mi) : '') + (h >= 12 ? 'pm' : 'am'); };
+const hm24 = m => pad(Math.floor(m / 60) % 24) + ':' + pad(m % 60);
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const clone = o => JSON.parse(JSON.stringify(o));
+const store = { get(k, d) { try { const v = localStorage.getItem('dsdesk.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem('dsdesk.' + k, JSON.stringify(v)); } catch {} } };
+function toast(t, ms = 2600) { const el = document.createElement('div'); el.className = 'toast'; el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), ms); }
+
+/* ── Club model ── */
+const COURTS = { padel: ['P1', 'P2'], pickle: ['K1', 'K2', 'K3'] };
+const ALL_COURTS = ['P1', 'P2', 'K1', 'K2', 'K3'];
+const COURT_SPORT = { P1: 'padel', P2: 'padel', K1: 'pickle', K2: 'pickle', K3: 'pickle' };
+const SPORT = { padel: 'Padel', pickle: 'Pickleball' };
+const PLAYERS_PER_COURT = { padel: 4, pickle: 4 };
+const isPeakHour = (dow, h) => { if (h < 6) return true; return (dow === 0 || dow === 6) ? ((h >= 6 && h < 11) || (h >= 16)) : (h >= 17); };
+const TYPES = [['group', 'Group'], ['individual', 'Individual'], ['open_play', 'Open play'], ['event', 'Event'], ['party', 'Party']];
+const STATUSES = [['booked', 'Booked'], ['played', 'Played'], ['no_show', 'No-show'], ['cancelled', 'Cancelled']];
+const OVERRIDE_REASONS = ['Discount', 'Member rate', 'Complimentary', 'Launch / promo price', 'Other'];
+const BASE_METHODS = [['upi', 'UPI'], ['card', 'Card'], ['cash', 'Cash']];
+const CATS = [['racquet', 'Racquets & paddles'], ['balls', 'Balls'], ['beverage', 'Drinks'], ['other', 'Other']];
+const DEFAULT_CONFIG = {
+  rates: { padel: { off: 1300, peak: 1600 }, pickle: { off: 600, peak: 700 } },
+  items: {
+    racq_int:  { label: 'Padel racquet · Intermediate', cat: 'racquet', sport: 'padel', price: 100, order: 1, active: true },
+    racq_adv:  { label: 'Padel racquet · Advanced', cat: 'racquet', sport: 'padel', price: 200, order: 2, active: true },
+    racq_pro:  { label: 'Padel racquet · Pro', cat: 'racquet', sport: 'padel', price: 250, order: 3, active: true },
+    paddle:    { label: 'Pickleball paddle', cat: 'racquet', sport: 'pickle', price: 100, order: 4, active: true },
+    ball_bpnp: { label: 'Bullpadel Next Pro (can)', cat: 'balls', sport: 'padel', price: 700, order: 10, active: true },
+    ball_bpn:  { label: 'Bullpadel Next (can)', cat: 'balls', sport: 'padel', price: 650, order: 11, active: true },
+    ball_hpro: { label: 'Head Pro (can)', cat: 'balls', sport: 'padel', price: 650, order: 12, active: true },
+    ball_wil:  { label: 'Wilson (can)', cat: 'balls', sport: 'padel', price: 650, order: 13, active: true },
+    ball_bab:  { label: 'Babolat Ace (can)', cat: 'balls', sport: 'padel', price: 650, order: 14, active: true },
+    ball_dun:  { label: 'Dunlop (can)', cat: 'balls', sport: 'padel', price: 600, order: 15, active: true },
+    ball_hteam:{ label: 'Head Team (can)', cat: 'balls', sport: 'padel', price: 500, order: 16, active: true },
+    ball_frank:{ label: 'Franklin ball', cat: 'balls', sport: 'pickle', price: 180, order: 17, active: true },
+    wb:        { label: 'Water bottle', cat: 'beverage', sport: 'any', price: 10, order: 20, active: true },
+    go_s:      { label: 'Gatorade Orange · small', cat: 'beverage', sport: 'any', price: 20, order: 21, active: true },
+    gb_s:      { label: 'Gatorade Blue · small', cat: 'beverage', sport: 'any', price: 20, order: 22, active: true },
+    gl_s:      { label: 'Gatorade Lemon · small', cat: 'beverage', sport: 'any', price: 20, order: 23, active: true },
+    go_b:      { label: 'Gatorade Orange · big', cat: 'beverage', sport: 'any', price: 50, order: 24, active: true },
+    gb_b:      { label: 'Gatorade Blue · big', cat: 'beverage', sport: 'any', price: 50, order: 25, active: true },
+    gl_b:      { label: 'Gatorade Lemon · big', cat: 'beverage', sport: 'any', price: 50, order: 26, active: true },
+    pocari:    { label: 'Pocari Sweat', cat: 'beverage', sport: 'any', price: 65, order: 27, active: true }
+  },
+  sources: {
+    walkin:    { label: 'Walk-in', aggregator: false, order: 1, active: true },
+    phone:     { label: 'Phone / WhatsApp', aggregator: false, order: 2, active: true },
+    hudle:     { label: 'Hudle', aggregator: true, order: 3, active: true },
+    khelomore: { label: 'KheloMore', aggregator: true, order: 4, active: true }
+  }
+};
+
+/* ── State ── */
+let USER = null, IS_OWNER = false, CFG = clone(DEFAULT_CONFIG), MEMBERS = {}, DAYISO = todayISO(), ENTRIES = {}, unsub = null;
+let E = null, EDIT_LOCK = false, SAVING = false;
+
+const sorted = obj => Object.entries(obj || {}).filter(([, v]) => v && v.active !== false).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+const methods = () => [...BASE_METHODS, ...sorted(CFG.sources).filter(([, s]) => s.aggregator).map(([k, s]) => [k, s.label])];
+const methodLabel = k => (methods().find(m => m[0] === k) || [k, k])[1];
+
+/* ── Pricing ── */
+function courtCharge(sport, iso, start, minutes) {
+  const r = CFG.rates[sport], dw = dowOf(iso); let peak = 0;
+  for (let i = 0; i < minutes; i++) if (isPeakHour(dw, Math.floor(((start + i) % 1440) / 60))) peak++;
+  return { peak, off: minutes - peak, amount: Math.round((peak * r.peak + (minutes - peak) * r.off) / 60) };
+}
+function calc(e) {
+  const nC = Math.max(1, e.courts.length), isEv = e.type === 'event' || e.type === 'party';
+  const cc = courtCharge(e.sport, e.date, e.start, e.minutes);
+  const auto = cc.amount * nC;
+  const players = e.players.length, fills = e.players.filter(p => p.fill).length;
+  const expected = PLAYERS_PER_COURT[e.sport] * nC;
+  let court, share, perPerson = null;
+  if (isEv) { court = +e.charge.eventFee || 0; share = players ? court / players : 0; }
+  else if (e.charge.mode === 'player') {
+    perPerson = e.charge.perPerson != null && e.charge.perPerson !== '' ? +e.charge.perPerson : Math.round(auto / expected);
+    court = perPerson * Math.max(players, 1); share = perPerson;
+  } else {
+    court = e.charge.override != null && e.charge.override !== '' ? +e.charge.override : auto;
+    share = court / Math.max(players, expected);
+  }
+  const ex = { racquet: 0, balls: 0, beverage: 0, other: 0 };
+  for (const [k, q] of Object.entries(e.extras || {})) { const it = CFG.items[k] || (e.extrasSnap || {})[k]; if (it && q > 0) ex[it.cat || 'other'] += (it.price || 0) * q; }
+  const extras = ex.racquet + ex.balls + ex.beverage + ex.other;
+  const fillLoss = Math.round(share * fills);
+  const bill = court + extras, due = Math.max(0, bill - fillLoss);
+  const paid = Object.values(payTotals(e, { due, share, extras })).reduce((s, v) => s + v, 0);
+  return { cc, auto, court, share, perPerson, ex, extras, fills, fillLoss, bill, due, paid, remaining: due - paid, expected, nC, isEv };
+}
+function splitRows(e, c) {
+  const payers = e.players.filter(p => !p.fill);
+  const bookerIdx = Math.max(0, payers.findIndex(p => p.booker));
+  return payers.map((p, i) => {
+    const saved = (e.split || {})[p.key] || {};
+    const def = Math.round(c.share) + (i === bookerIdx ? c.extras : 0);
+    return { key: p.key, name: p.name, amount: saved.amount != null && saved.amount !== '' ? +saved.amount : def, method: saved.method || 'upi', paidBy: saved.paidBy || '', paid: !!saved.paid };
+  });
+}
+function payTotals(e, c) {
+  const t = {};
+  if (e.payMode === 'split') {
+    const rows = splitRows(e, c), byKey = Object.fromEntries(rows.map(r => [r.key, r]));
+    for (const r of rows) {
+      if (!r.paid) continue;
+      const payer = r.paidBy && byKey[r.paidBy] ? byKey[r.paidBy] : r;
+      t[payer.method] = (t[payer.method] || 0) + r.amount;
+    }
+  } else for (const [k, v] of Object.entries(e.payments || {})) if (+v) t[k] = (t[k] || 0) + +v;
+  return t;
+}
+
+/* ── Conflicts ── */
+function conflicts(e) {
+  const out = {};
+  for (const x of Object.values(ENTRIES)) {
+    if (!x || x.id === e.id || x.date !== e.date || x.status === 'cancelled') continue;
+    if (x.start < e.start + e.minutes && e.start < x.start + x.minutes) for (const c of x.courts || []) out[c] = x;
+  }
+  return out;
+}
+
+/* ── Auth ── */
+const provider = new GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
+const signInBtn = `<button class="btn btn-primary" id="signInBtn">Sign in with Google</button>`;
+function gate(html, msg = '', err = false) { $('#gate').classList.remove('hidden'); $('#app').classList.add('hidden'); $('#gateBody').innerHTML = html; $('#gateMsg').textContent = msg; $('#gateMsg').className = 'gate-msg' + (err ? ' err' : ''); }
+document.addEventListener('click', async ev => {
+  if (ev.target.closest('#signInBtn')) {
+    try { await signInWithPopup(auth, provider); }
+    catch (err) { if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(err.code)) return signInWithRedirect(auth, provider);
+      if (!['auth/popup-closed-by-user', 'auth/cancelled-popup-request'].includes(err.code)) gate(signInBtn, 'Sign-in failed: ' + (err.message || err.code), true); }
+  }
+  if (ev.target.closest('#signOutBtn') || ev.target.closest('#gateSignOut')) { await signOut(auth); }
+});
+getRedirectResult(auth).catch(() => {});
+onAuthStateChanged(auth, async user => {
+  if (!user) return gate(signInBtn);
+  const email = (user.email || '').toLowerCase();
+  if (!OWNERS.includes(email) && !DESK.includes(email)) return gate(`<button class="btn" id="gateSignOut">Sign out</button>`, `${email} isn't set up for the front desk.`, true);
+  USER = email; IS_OWNER = OWNERS.includes(email);
+  gate('<div class="spinner"></div>', 'Loading…');
+  try {
+    await signInAnonymously(clubAuth).catch(() => {});
+    const [cfgSnap, memSnap] = await Promise.all([get(ref(db, 'config')), get(ref(clubDb, 'members')).catch(() => null)]);
+    const cfg = cfgSnap.val();
+    if (cfg) CFG = { rates: { ...DEFAULT_CONFIG.rates, ...(cfg.rates || {}) }, items: cfg.items || DEFAULT_CONFIG.items, sources: cfg.sources || DEFAULT_CONFIG.sources };
+    MEMBERS = (memSnap && memSnap.val()) || {};
+    $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden');
+    $('#who').textContent = email; $('#role').textContent = IS_OWNER ? 'Owner' : 'Front desk'; $('#role').className = 'role' + (IS_OWNER ? ' owner' : '');
+    $('#dashLink').classList.toggle('hidden', !IS_OWNER); $('#settingsBtn').classList.toggle('hidden', !IS_OWNER);
+    if (!memSnap) toast('Couldn\'t load the members list. Players can still be typed in.', 4000);
+    setDay(todayISO());
+  } catch (err) {
+    gate(`<button class="btn" id="gateSignOut">Sign out</button>`, /permission/i.test(err.message || '') ? 'The database refused access for this account.' : 'Couldn\'t load: ' + (err.message || err), true);
+  }
+});
+addEventListener('online', () => $('#offline').classList.add('hidden'));
+addEventListener('offline', () => $('#offline').classList.remove('hidden'));
+
+/* ── Day & board ── */
+function setDay(iso) {
+  DAYISO = iso; store.set('day', iso);
+  $('#dayTitle').textContent = (iso === todayISO() ? 'TODAY · ' : '') + fdw(iso).toUpperCase();
+  $('#dayPick').value = iso;
+  if (unsub) unsub();
+  ENTRIES = {}; renderDay();
+  unsub = onValue(query(ref(db, 'entries'), orderByChild('date'), equalTo(iso)), snap => { ENTRIES = snap.val() || {}; renderDay(); if (E) refresh(); },
+    err => toast('Couldn\'t load bookings: ' + err.message, 5000));
+}
+$('#prevDay').onclick = () => setDay(addDays(DAYISO, -1));
+$('#nextDay').onclick = () => setDay(addDays(DAYISO, 1));
+$('#todayBtn').onclick = () => setDay(todayISO());
+$('#dayPick').onchange = e => e.target.value && setDay(e.target.value);
+$('#newBtn').onclick = () => openEditor(null, {});
+
+function renderDay() {
+  const list = Object.values(ENTRIES).filter(Boolean).sort((a, b) => a.start - b.start);
+  const dw = dowOf(DAYISO);
+  const t0 = 6 * 60, t1 = Math.max(24 * 60, ...list.map(x => x.start + x.minutes)), span = t1 - t0;
+  const L = m => ((m - t0) / span * 100).toFixed(3) + '%';
+  let axis = ''; for (let m = t0; m <= t1; m += 120) axis += `<span style="left:${L(m)}">${hhmm(m)}</span>`;
+  let bg = ''; for (let h = 6; h < t1 / 60; h++) { if (isPeakHour(dw, h % 24) && h < 23) bg += `<div class="tl-peak" style="left:${L(h * 60)};width:${(60 / span * 100).toFixed(3)}%"></div>`; if (h > 6) bg += `<div class="tl-hr" style="left:${L(h * 60)}"></div>`; }
+  const now = new Date(), nowM = now.getHours() * 60 + now.getMinutes();
+  if (DAYISO === todayISO() && nowM >= t0 && nowM <= t1) bg += `<div class="tl-now" style="left:${L(nowM)}"></div>`;
+  const rows = ALL_COURTS.map(c => {
+    const blocks = list.filter(x => (x.courts || []).includes(c)).map(x => {
+      const c2 = x.totals || {}, due = x.status !== 'cancelled' && x.status !== 'no_show' && (c2.due || 0) - (x.paid || 0) > 0;
+      const booker = (x.players || []).find(p => p.booker) || (x.players || [])[0] || {};
+      return `<div class="tl-b ${x.sport} ${x.status}" style="left:${L(x.start)};width:${(x.minutes / span * 100).toFixed(3)}%" data-open="${esc(x.id)}">
+        <div class="n">${esc(booker.name || '—')}</div><div class="t">${hhmm(x.start)}–${hhmm(x.start + x.minutes)}${x.status === 'cancelled' ? ' · cancelled' : x.status === 'no_show' ? ' · no-show' : ''}</div>${due ? '<span class="due"></span>' : ''}</div>`;
+    }).join('');
+    return `<div class="tl-row"><div class="tl-name">${c}<small>${SPORT[COURT_SPORT[c]]}</small></div><div class="tl-lane" data-court="${c}">${bg}${blocks}</div></div>`;
+  }).join('');
+  $('#board').innerHTML = `<div class="tl-axis">${axis}</div>${rows}`;
+  $('#board').onclick = ev => {
+    const b = ev.target.closest('[data-open]'); if (b) return openEditor(ENTRIES[b.dataset.open]);
+    const lane = ev.target.closest('.tl-lane'); if (!lane) return;
+    const r = lane.getBoundingClientRect(), m = t0 + (ev.clientX - r.left) / r.width * span;
+    openEditor(null, { court: lane.dataset.court, start: Math.max(t0, Math.floor(m / 30) * 30) });
+  };
+  $('#list').innerHTML = list.length ? list.map(x => {
+    const t = x.totals || {}, rem = (t.due || 0) - (x.paid || 0), booker = (x.players || []).find(p => p.booker) || (x.players || [])[0] || {};
+    const stat = x.status === 'cancelled' ? '<span class="chip info">Cancelled</span>' : x.status === 'no_show' ? '<span class="chip info">No-show</span>'
+      : rem > 0 ? `<span class="chip due">${inr(rem)} due</span>` : rem < 0 ? `<span class="chip warn">${inr(-rem)} overpaid</span>` : '<span class="chip ok">Paid ✓</span>';
+    const pc = (x.players || []).length, exp = PLAYERS_PER_COURT[x.sport] * Math.max(1, (x.courts || []).length);
+    return `<div class="bk ${x.sport} ${x.status}" data-open="${esc(x.id)}">
+      <div class="r1"><span>${hhmm(x.start)}–${hhmm(x.start + x.minutes)} · ${esc((x.courts || []).join(', '))}</span><span>${inr(t.due)}</span></div>
+      <div class="r2">${esc(booker.name || '—')} · ${esc((TYPES.find(y => y[0] === x.type) || ['', x.type])[1])} · ${esc((CFG.sources[x.source] || {}).label || x.source || '')}</div>
+      <div class="chips">${stat}${x.status === 'booked' ? '<span class="chip info">Not marked played</span>' : ''}${pc < exp && x.type !== 'event' && x.type !== 'party' ? `<span class="chip warn">${pc}/${exp} players</span>` : ''}${(x.games || []).length ? `<span class="chip info">${x.games.length} game${x.games.length > 1 ? 's' : ''}</span>` : ''}</div></div>`;
+  }).join('') : '<div class="empty">No bookings entered for this day yet.</div>';
+  $('#list').onclick = ev => { const b = ev.target.closest('[data-open]'); if (b) openEditor(ENTRIES[b.dataset.open]); };
+}
+
+/* ── Editor ── */
+function blank(pre) {
+  const court = pre.court || 'P1', sport = COURT_SPORT[court];
+  const now = new Date(), nm = Math.ceil((now.getHours() * 60 + now.getMinutes()) / 30) * 30;
+  return {
+    id: null, date: DAYISO, start: pre.start ?? (DAYISO === todayISO() ? Math.min(Math.max(nm, 360), 1380) : 1080), minutes: 60, sport, courts: [court],
+    type: 'group', source: 'walkin', players: [], charge: { mode: 'court', override: '', overrideReason: '', perPerson: '', eventFee: '' },
+    extras: {}, payMode: 'single', payments: {}, split: {}, status: 'booked', notes: '', games: []
+  };
+}
+const ageDays = iso => Math.floor((Date.now() - dateMsIST(iso)) / 864e5);
+function openEditor(entry, pre = {}) {
+  E = entry ? Object.assign(blank({}), clone(entry)) : blank(pre);
+  E.players ||= []; E.extras ||= {}; E.payments ||= {}; E.split ||= {}; E.games ||= []; E.charge ||= { mode: 'court' };
+  E._orig = entry ? clone(entry) : null;
+  EDIT_LOCK = !!entry && !IS_OWNER && ageDays(entry.date) > 1;
+  $('#sheet').classList.remove('hidden'); document.body.style.overflow = 'hidden';
+  renderEditor(); $('#sheet').scrollTop = 0;
+}
+function closeEditor() { E = null; $('#sheet').classList.add('hidden'); $('#sheet').innerHTML = ''; $('#footHost').innerHTML = ''; document.body.style.overflow = ''; }
+
+function timeOptions(sel) { let s = ''; for (let m = 300; m <= 1410; m += 30) s += `<option value="${m}" ${m === sel ? 'selected' : ''}>${hhmm(m)}</option>`; return s; }
+function renderEditor() {
+  const e = E, c = calc(e), cf = conflicts(e), dis = EDIT_LOCK ? 'disabled' : '';
+  const durs = [30, 60, 90, 120, 150, 180];
+  const memberPlayers = e.players.filter(p => p.id);
+  let h = `<div class="sheet"><div class="sheet-h"><h2>${e.id ? 'BOOKING' : 'NEW BOOKING'}</h2><span class="sub">${fdw(e.date)}</span><div class="spacer" style="flex:1"></div><button class="btn btn-sm" data-act="close">Close</button></div>`;
+  if (EDIT_LOCK) h += `<div class="sec"><div class="msg warn">This booking is more than a day old, so only an owner can change it. You can still view it.</div></div>`;
+
+  // When & where
+  h += `<div class="sec"><h4>When & where</h4>
+    <div class="row"><label class="f">Date<input type="date" data-f="date" value="${e.date}" ${dis}></label>
+      <label class="f">Start<select data-f="start" ${dis}>${timeOptions(e.start)}</select></label>
+      <label class="f">Ends<input value="${hhmm(e.start + e.minutes)}" disabled></label></div>
+    <div class="chips-pick">${durs.map(m => `<button class="pick ${e.minutes === m ? 'on' : ''}" data-dur="${m}" ${dis}>${m < 60 ? m + 'm' : (m / 60) + 'h'}</button>`).join('')}
+      <select data-f="minutes" style="width:auto" ${dis}><option value="">Other…</option>${[210, 240, 270, 300, 360, 420, 480].map(m => `<option value="${m}" ${e.minutes === m ? 'selected' : ''}>${m / 60}h</option>`).join('')}</select></div>
+    <div class="seg">${['padel', 'pickle'].map(s => `<button data-sport="${s}" class="${e.sport === s ? 'on' : ''}" ${dis}>${SPORT[s]}</button>`).join('')}</div>
+    <div class="chips-pick">${COURTS[e.sport].map(ct => { const busy = cf[ct]; const bk = busy && ((busy.players || []).find(p => p.booker) || (busy.players || [])[0] || {}).name;
+      return `<button class="pick ${e.sport} ${e.courts.includes(ct) ? 'on' : ''} ${busy ? 'busy' : ''}" data-court="${ct}" ${(busy && !e.courts.includes(ct)) || EDIT_LOCK ? 'disabled' : ''}>${ct}${busy ? ` <small>${esc(bk || 'booked')} ${hhmm(busy.start)}</small>` : ''}</button>`; }).join('')}</div>
+    ${e.courts.some(ct => cf[ct]) ? `<div class="msg err">A selected court is already booked at this time: ${e.courts.filter(ct => cf[ct]).join(', ')}. Change the time or court.</div>` : ''}
+    ${!e.courts.length ? '<div class="msg warn">Pick at least one court.</div>' : ''}
+  </div>`;
+
+  // Booking
+  h += `<div class="sec"><h4>Booking</h4>
+    <div class="chips-pick">${TYPES.map(([k, l]) => `<button class="pick ${e.type === k ? 'on' : ''}" data-type="${k}" ${dis}>${l}</button>`).join('')}</div>
+    <div class="cat">Booked through</div>
+    <div class="chips-pick">${sorted(CFG.sources).map(([k, s]) => `<button class="pick ${e.source === k ? 'on' : ''}" data-source="${k}" ${dis}>${esc(s.label)}</button>`).join('')}</div></div>`;
+
+  // Players
+  h += `<div class="sec"><h4>Players <small>${e.players.length} of ${c.expected} · can be completed during play · ★ = who booked</small></h4>
+    <div class="players">${e.players.map((p, i) => `<span class="pl ${p.fill ? 'fill' : ''}"><button class="star ${p.booker ? 'on' : ''}" data-booker="${i}" title="Booked by" ${dis}>★</button>${esc(p.name)}${p.fill ? ' <small>D&S fill-in</small>' : p.id ? '' : ' <small>not a member</small>'}<button class="x" data-rmp="${i}" aria-label="Remove" ${dis}>✕</button></span>`).join('') || '<span class="sub">No players yet. Add at least who booked.</span>'}</div>
+    ${EDIT_LOCK ? '' : `<div class="search"><input id="pq" placeholder="Search members by name or phone…" autocomplete="off"><div class="dd hidden" id="pdd"></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-act="fill">+ D&S fill-in player</button><button class="btn btn-sm" data-act="newmember">+ New member</button></div>
+    <div id="nmForm"></div>`}</div>`;
+
+  // Charges
+  h += `<div class="sec"><h4>Charges</h4>`;
+  if (c.isEv) {
+    h += `<div class="row"><label class="f">${e.type === 'party' ? 'Party' : 'Event'} fee (total)<input type="number" inputmode="numeric" data-f="eventFee" value="${esc(e.charge.eventFee)}" placeholder="0" ${dis}></label></div>`;
+  } else {
+    h += `<div class="seg"><button data-cmode="court" class="${e.charge.mode !== 'player' ? 'on' : ''}" ${dis}>Charge per court</button><button data-cmode="player" class="${e.charge.mode === 'player' ? 'on' : ''}" ${dis}>Charge per player</button></div>
+      <div class="lines">
+        ${c.cc.peak ? `<div class="ln"><span>Peak ${fmtMin(c.cc.peak)} × ${inr(CFG.rates[e.sport].peak)}/hr${c.nC > 1 ? ` × ${c.nC} courts` : ''}</span><b>${inr(c.cc.peak * CFG.rates[e.sport].peak / 60 * c.nC)}</b></div>` : ''}
+        ${c.cc.off ? `<div class="ln"><span>Off-peak ${fmtMin(c.cc.off)} × ${inr(CFG.rates[e.sport].off)}/hr${c.nC > 1 ? ` × ${c.nC} courts` : ''}</span><b>${inr(c.cc.off * CFG.rates[e.sport].off / 60 * c.nC)}</b></div>` : ''}
+        <div class="ln"><span>Rate card</span><b>${inr(c.auto)}</b></div></div>`;
+    if (e.charge.mode === 'player') {
+      h += `<div class="row"><label class="f">Price per player<input type="number" inputmode="numeric" data-f="perPerson" value="${esc(e.charge.perPerson)}" placeholder="${Math.round(c.auto / c.expected)}" ${dis}></label>
+        <label class="f">Players charged<input value="${Math.max(e.players.length, 1)}" disabled></label></div>`;
+    } else {
+      h += `<div class="row"><label class="f">Override court charge (optional)<input type="number" inputmode="numeric" data-f="override" value="${esc(e.charge.override)}" placeholder="${c.auto}" ${dis}></label>
+        <label class="f">Reason${e.charge.override !== '' && e.charge.override != null && !e.charge.overrideReason ? ' <span style="color:#ffb3b3">(required)</span>' : ''}<select data-f="overrideReason" ${dis}><option value="">—</option>${OVERRIDE_REASONS.map(r => `<option ${e.charge.overrideReason === r ? 'selected' : ''}>${r}</option>`).join('')}</select></label></div>`;
+    }
+  }
+  // Extras
+  for (const [cat, cl] of CATS) {
+    const its = sorted(CFG.items).filter(([k, it]) => it.cat === cat && (it.sport === 'any' || it.sport === e.sport || (e.extras[k] > 0)));
+    if (!its.length) continue;
+    h += `<div class="cat">${cl}</div><div class="items">${its.map(([k, it]) => { const q = e.extras[k] || 0;
+      return `<div class="item ${q ? 'on' : ''}"><div class="nm">${esc(it.label)}<small>${inr(it.price)}${q ? ` · ${inr(it.price * q)}` : ''}</small></div>
+        <div class="step"><button data-q="${k}" data-d="-1" ${!q || EDIT_LOCK ? 'disabled' : ''} aria-label="Less">−</button><b>${q}</b><button data-q="${k}" data-d="1" ${dis} aria-label="More">+</button></div></div>`; }).join('')}</div>`;
+  }
+  h += `<div class="lines" id="billLines"></div></div>`;
+
+  // Payment
+  h += `<div class="sec"><h4>Payment</h4>
+    <div class="seg"><button data-pmode="single" class="${e.payMode !== 'split' ? 'on' : ''}" ${dis}>One payment</button><button data-pmode="split" class="${e.payMode === 'split' ? 'on' : ''}" ${dis}>Split by player</button></div>`;
+  if (e.payMode === 'split') {
+    const rows = splitRows(e, c);
+    h += rows.length ? `<table class="split"><thead><tr><th>Player</th><th>Amount</th><th>Paid via</th><th>Paid</th></tr></thead><tbody>${rows.map(r => `<tr>
+      <td>${esc(r.name)}</td><td class="num"><input type="number" inputmode="numeric" data-sp="${esc(r.key)}" data-k="amount" value="${r.amount}" ${dis}></td>
+      <td><select data-sp="${esc(r.key)}" data-k="method" ${dis}>${methods().map(([k, l]) => `<option value="${k}" ${!r.paidBy && r.method === k ? 'selected' : ''}>${l}</option>`).join('')}
+        <optgroup label="Paid by another player">${rows.filter(o => o.key !== r.key).map(o => `<option value="by:${esc(o.key)}" ${r.paidBy === o.key ? 'selected' : ''}>by ${esc(o.name)}</option>`).join('')}</optgroup></select></td>
+      <td><input type="checkbox" data-sp="${esc(r.key)}" data-k="paid" ${r.paid ? 'checked' : ''} ${dis} style="width:22px;height:22px"></td></tr>`).join('')}</tbody></table>
+      <div class="sub" style="margin:-4px 0 12px">Default split: equal share of the court charge per paying player; extras go on the booker. Change any amount.</div>`
+      : '<div class="msg info">Add players to split the payment between them.</div>';
+  } else {
+    h += `<div class="pay">${methods().map(([k, l]) => `<div class="m ${+e.payments[k] ? 'on' : ''}"><div class="top"><span>${esc(l)}</span>${EDIT_LOCK ? '' : `<button data-rest="${k}">Rest here</button>`}</div>
+      <input type="number" inputmode="numeric" data-pay="${k}" value="${e.payments[k] ?? ''}" placeholder="0" ${dis}></div>`).join('')}</div>`;
+  }
+  h += `</div>`;
+
+  // Status & notes
+  h += `<div class="sec"><h4>Status</h4><div class="chips-pick">${STATUSES.map(([k, l]) => `<button class="pick ${e.status === k ? 'on' : ''}" data-status="${k}" ${dis}>${l}</button>`).join('')}</div>
+    <label class="f">Notes<textarea rows="2" data-f="notes" placeholder="Anything unusual about this booking" ${dis}>${esc(e.notes)}</textarea></label></div>`;
+
+  // Games
+  if (e.sport === 'padel' && !c.isEv) {
+    const opts = memberPlayers.map(p => `<option value="${esc(p.key)}">${esc(p.name)}</option>`).join('');
+    h += `<div class="sec"><h4>Games & scores <small>feed straight into Smash Ratings</small></h4>
+      ${e.games.map((g, i) => `<div class="game"><b>${esc(g.teamA.join(' & '))}</b><span class="vs">${g.a}–${g.b}</span><b>${esc(g.teamB.join(' & '))}</b><span class="sub">${esc(g.score)}</span>${g.matchId ? '<span class="chip ok">Saved to ratings</span>' : '<span class="chip warn">Saves with booking</span>'}<div style="flex:1"></div>${EDIT_LOCK ? '' : `<button class="btn btn-sm btn-danger" data-rmg="${i}">Remove</button>`}</div>`).join('')}
+      ${memberPlayers.length >= 4 && !EDIT_LOCK ? `<div class="gameform"><div class="t">Add a game</div>
+        <select id="ga1"><option value="">Team A · player 1</option>${opts}</select><select id="gb1"><option value="">Team B · player 1</option>${opts}</select>
+        <select id="ga2"><option value="">Team A · player 2</option>${opts}</select><select id="gb2"><option value="">Team B · player 2</option>${opts}</select>
+        <input id="gscore" placeholder="Score, e.g. 6-4 or 6-3, 4-6, 10-8"><button class="btn btn-sm" data-act="addgame">Add game</button>
+        <div id="gerr" class="sub" style="grid-column:1/-1;color:#ffb3b3"></div></div>`
+      : !EDIT_LOCK ? `<div class="msg info">Add at least 4 member players to record games.</div>` : ''}</div>`;
+  }
+  if (e.id && IS_OWNER) h += `<div class="sec"><div class="sub">Created by ${esc(e.createdBy || '—')} · last change by ${esc(e.updatedBy || '—')} ${e.updatedAt ? new Date(e.updatedAt).toLocaleString('en-IN') : ''}</div></div>`;
+  h += `</div>`;
+  $('#sheet').innerHTML = h;
+  $('#footHost').innerHTML = `<div class="foot"><div class="foot-in"><div class="tot" id="tot"></div><div style="flex:1"></div><div id="saveErr" class="sub" style="color:#ffb3b3;max-width:260px"></div>
+    ${EDIT_LOCK ? '<button class="btn" data-act="close">Close</button>' : `<button class="btn btn-ghost" data-act="close">Cancel</button><button class="btn btn-primary" data-act="save" id="saveBtn">${e.id ? 'Save changes' : 'Save booking'}</button>`}</div></div>`;
+  refresh();
+}
+const fmtMin = m => m % 60 ? (m >= 60 ? Math.floor(m / 60) + 'h ' : '') + (m % 60) + 'm' : (m / 60) + 'h';
+
+// Update computed bits without re-rendering inputs
+function refresh() {
+  if (!E) return;
+  const c = calc(E), bl = $('#billLines');
+  if (bl) bl.innerHTML = `<div class="ln"><span>${c.isEv ? (E.type === 'party' ? 'Party fee' : 'Event fee') : E.charge.mode === 'player' ? `Court · ${inr(c.perPerson)} × ${Math.max(E.players.length, 1)} players` : 'Court charge' + (E.charge.override !== '' && E.charge.override != null ? ' (overridden)' : '')}</span><b>${inr(c.court)}</b></div>
+    ${CATS.map(([k, l]) => c.ex[k] ? `<div class="ln"><span>${l}</span><b>${inr(c.ex[k])}</b></div>` : '').join('')}
+    ${c.fills ? `<div class="ln minus"><span>D&S fill-in · ${c.fills} player${c.fills > 1 ? 's' : ''} × ${inr(c.share)} not charged</span><b>−${inr(c.fillLoss)}</b></div>` : ''}
+    <div class="ln total"><span>Amount due</span><b>${inr(c.due)}</b></div>`;
+  const rem = c.remaining, cls = Math.abs(rem) < 1 ? 'zero' : rem < 0 ? 'over' : '';
+  const t = $('#tot');
+  if (t) t.innerHTML = `<div>Bill<b>${inr(c.bill)}</b></div>${c.fillLoss ? `<div>Due<b>${inr(c.due)}</b></div>` : ''}<div>Paid<b>${inr(c.paid)}</b></div>
+    <div class="rem ${cls}">${rem < 0 ? 'Overpaid' : 'Remaining'}<b>${Math.abs(rem) < 1 ? '✓ 0' : inr(Math.abs(rem))}</b></div>`;
+}
+
+function validate() {
+  const e = E, c = calc(e), cf = conflicts(e), errs = [];
+  if (!e.date) errs.push('Pick a date.');
+  if (!e.courts.length) errs.push('Pick a court.');
+  if (e.courts.some(ct => cf[ct])) errs.push('A court is double-booked.');
+  if (!e.players.length) errs.push('Add who booked.');
+  if (!c.isEv && e.charge.mode !== 'player' && e.charge.override !== '' && e.charge.override != null && !e.charge.overrideReason) errs.push('Give a reason for the overridden charge.');
+  if (c.isEv && !(+e.charge.eventFee > 0)) errs.push('Enter the event fee.');
+  return errs;
+}
+
+// Event delegation for the editor
+$('#sheet').addEventListener('click', ev => {
+  const t = ev.target.closest('button'); if (!t || !E || t.disabled) return;
+  const d = t.dataset;
+  if (d.act === 'close') return closeEditor();
+  if (d.dur) { E.minutes = +d.dur; return renderEditor(); }
+  if (d.sport) { if (E.sport !== d.sport) { E.sport = d.sport; E.courts = [COURTS[d.sport].find(ct => !conflicts(E)[ct]) || COURTS[d.sport][0]]; } return renderEditor(); }
+  if (d.court) { const i = E.courts.indexOf(d.court); if (i >= 0) E.courts.splice(i, 1); else E.courts.push(d.court); E.courts.sort(); return renderEditor(); }
+  if (d.type) { E.type = d.type; return renderEditor(); }
+  if (d.source) { E.source = d.source; return renderEditor(); }
+  if (d.status) { E.status = d.status; return renderEditor(); }
+  if (d.cmode) { E.charge.mode = d.cmode; return renderEditor(); }
+  if (d.pmode) { E.payMode = d.pmode; return renderEditor(); }
+  if (d.q) { const k = d.q; E.extras[k] = Math.max(0, (E.extras[k] || 0) + +d.d); if (!E.extras[k]) delete E.extras[k]; return renderEditor(); }
+  if (d.rest) { const c = calc(E); const cur = +E.payments[d.rest] || 0; E.payments[d.rest] = Math.max(0, cur + c.remaining); return renderEditor(); }
+  if (d.booker != null) { E.players.forEach((p, i) => p.booker = i === +d.booker); return renderEditor(); }
+  if (d.rmp != null) { const [p] = E.players.splice(+d.rmp, 1); if (p && p.booker && E.players[0]) E.players[0].booker = true; return renderEditor(); }
+  if (d.act === 'fill') { const n = E.players.filter(p => p.fill).length + 1; addPlayer({ key: 'fill-' + Date.now(), id: '', name: 'D&S fill-in' + (n > 1 ? ' ' + n : ''), fill: true }); return; }
+  if (d.act === 'newmember') return newMemberForm();
+  if (d.act === 'createmember') return createMember();
+  if (d.pick) { const m = MEMBERS[d.pick]; if (m) addPlayer({ key: m.id, id: m.id, name: m.name }); return; }
+  if (d.typed) { addPlayer({ key: 'guest-' + Date.now(), id: '', name: d.typed }); return; }
+  if (d.act === 'addgame') return addGame();
+  if (d.rmg != null) { const [g] = E.games.splice(+d.rmg, 1); if (g && g.matchId) (E._removedGames ||= []).push(g.matchId); return renderEditor(); }
+});
+$('#footHost').addEventListener('click', ev => { const t = ev.target.closest('button'); if (!t) return; if (t.dataset.act === 'close') closeEditor(); if (t.dataset.act === 'save') save(); });
+$('#sheet').addEventListener('input', ev => {
+  const t = ev.target; if (!E) return;
+  if (t.id === 'pq') return searchMembers(t.value);
+  if (t.dataset.f) {
+    const f = t.dataset.f;
+    if (['override', 'perPerson', 'eventFee', 'overrideReason'].includes(f)) E.charge[f] = t.value;
+    else if (f === 'notes') E.notes = t.value;
+    else return;
+    return refresh();
+  }
+  if (t.dataset.pay) { E.payments[t.dataset.pay] = t.value; return refresh(); }
+  if (t.dataset.sp && t.dataset.k === 'amount') { (E.split[t.dataset.sp] ||= {}).amount = t.value; return refresh(); }
+});
+$('#sheet').addEventListener('change', ev => {
+  const t = ev.target; if (!E) return;
+  const f = t.dataset.f;
+  if (f === 'date' && t.value) { E.date = t.value; return renderEditor(); }
+  if (f === 'start') { E.start = +t.value; return renderEditor(); }
+  if (f === 'minutes' && t.value) { E.minutes = +t.value; return renderEditor(); }
+  if (f === 'overrideReason') { E.charge.overrideReason = t.value; return renderEditor(); }
+  if (f === 'override') return renderEditor();
+  if (t.dataset.sp) {
+    const s = (E.split[t.dataset.sp] ||= {}), c = calc(E), row = splitRows(E, c).find(r => r.key === t.dataset.sp);
+    if (row && s.amount == null) s.amount = row.amount;
+    if (t.dataset.k === 'method') { if (t.value.startsWith('by:')) { s.paidBy = t.value.slice(3); } else { s.method = t.value; s.paidBy = ''; } }
+    if (t.dataset.k === 'paid') s.paid = t.checked;
+    return refresh();
+  }
+});
+$('#sheet').addEventListener('keydown', ev => {
+  if (ev.target.id !== 'pq') return;
+  const btns = [...document.querySelectorAll('#pdd button')]; if (!btns.length) return;
+  let i = btns.findIndex(b => b.classList.contains('hl'));
+  if (ev.key === 'ArrowDown') { ev.preventDefault(); i = Math.min(btns.length - 1, i + 1); }
+  else if (ev.key === 'ArrowUp') { ev.preventDefault(); i = Math.max(0, i - 1); }
+  else if (ev.key === 'Enter') { ev.preventDefault(); (btns[Math.max(0, i)]).click(); return; } else return;
+  btns.forEach((b, j) => b.classList.toggle('hl', j === i));
+});
+
+/* ── Players & members ── */
+function searchMembers(q) {
+  const dd = $('#pdd'); q = q.trim().toLowerCase();
+  if (q.length < 1) { dd.classList.add('hidden'); return; }
+  const have = new Set(E.players.map(p => p.id).filter(Boolean)), qd = q.replace(/\D/g, '');
+  const hits = Object.values(MEMBERS).filter(m => m && m.active !== false && !have.has(m.id) &&
+    ((m.name || '').toLowerCase().includes(q) || (m.fullName || '').toLowerCase().includes(q) || (qd.length >= 4 && String(m.phone || '').replace(/\D/g, '').includes(qd))))
+    .sort((a, b) => ((a.name || '').toLowerCase().startsWith(q) ? 0 : 1) - ((b.name || '').toLowerCase().startsWith(q) ? 0 : 1) || (a.name || '').localeCompare(b.name || '')).slice(0, 8);
+  const raw = $('#pq').value.trim();
+  dd.innerHTML = hits.map((m, i) => `<button data-pick="${esc(m.id)}" class="${i === 0 ? 'hl' : ''}"><span>${esc(m.name)}${m.fullName && m.fullName !== m.name ? ` <small>${esc(m.fullName)}</small>` : ''}</span><small>${esc(m.levelOverride || m.membership || '')}${m.phone ? ' · ' + esc(String(m.phone).slice(-4).padStart(String(m.phone).length > 4 ? 6 : 0, '•')) : ''}</small></button>`).join('')
+    + `<button data-act="newmember"><span>+ Add "${esc(raw)}" as a new member</span><small>recommended</small></button>`
+    + `<button data-typed="${esc(raw)}"><span>Use "${esc(raw)}" without a member record</span><small>guest</small></button>`;
+  dd.classList.remove('hidden');
+}
+function addPlayer(p) {
+  if (!E.players.some(x => x.booker)) p.booker = true;
+  E.players.push(p); renderEditor();
+  const q = $('#pq'); if (q) q.focus();
+}
+function newMemberForm() {
+  const typed = ($('#pq') || {}).value || '';
+  $('#nmForm').innerHTML = `<div class="gameform" style="margin-top:12px"><div class="t">New member · saved to the members list</div>
+    <input id="nmName" placeholder="Name as players know them" value="${esc(typed.trim())}"><input id="nmFull" placeholder="Full name (optional)">
+    <input id="nmPhone" inputmode="tel" placeholder="Phone"><select id="nmLevel"><option value="">Level (if known)</option>${['Beginner', 'Beginner+', 'Intermediate', 'Intermediate+', 'Advanced', 'Advanced High', 'Elite'].map(l => `<option>${l}</option>`).join('')}</select>
+    <button class="btn btn-sm btn-primary" data-act="createmember">Add member & player</button><div id="nmErr" class="sub" style="color:#ffb3b3"></div></div>`;
+  const dd = $('#pdd'); if (dd) dd.classList.add('hidden');
+  $('#nmName').focus();
+}
+async function createMember() {
+  const name = $('#nmName').value.trim(), phone = $('#nmPhone').value.trim();
+  if (!name) { $('#nmErr').textContent = 'Name is required.'; return; }
+  const dupe = Object.values(MEMBERS).find(m => m && ((m.name || '').toLowerCase() === name.toLowerCase() || (phone && String(m.phone || '').replace(/\D/g, '').endsWith(phone.replace(/\D/g, '').slice(-10)) && phone.replace(/\D/g, '').length >= 10)));
+  if (dupe) { $('#nmErr').innerHTML = `Looks like <b>${esc(dupe.name)}</b> already exists. <button class="btn btn-sm" data-pick="${esc(dupe.id)}">Use ${esc(dupe.name)}</button>`; return; }
+  let id = slug(name) || 'member', n = 2; while (MEMBERS[id]) id = slug(name) + '-' + n++;
+  const now = new Date().toISOString();
+  const m = { id, name, fullName: $('#nmFull').value.trim(), phone, email: '', levelOverride: $('#nmLevel').value, membership: '', notes: 'Added at the front desk',
+    ratingOverride: '', source: 'desk', sport: E.sport === 'padel' ? 'Padel' : 'Pickleball', whatsappName: '', createdAt: now, updatedAt: now, active: true };
+  try { await set(ref(clubDb, `members/${id}`), m); }
+  catch (err) { $('#nmErr').textContent = 'Couldn\'t save to the members list: ' + err.message; return; }
+  MEMBERS[id] = m; toast(`${name} added to members`);
+  addPlayer({ key: id, id, name });
+}
+
+/* ── Games ── */
+function addGame() {
+  const v = id => $(id).value, keys = [v('#ga1'), v('#ga2'), v('#gb1'), v('#gb2')], err = $('#gerr');
+  if (keys.some(k => !k)) { err.textContent = 'Pick all four players.'; return; }
+  if (new Set(keys).size < 4) { err.textContent = 'Each player can only appear once.'; return; }
+  const sc = v('#gscore').trim(), sets = sc.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+  if (!sets.length || !sets.every(s => /^\d{1,2}\s*-\s*\d{1,2}$/.test(s))) { err.textContent = 'Score like 6-4, or 6-3, 4-6, 10-8.'; return; }
+  const pairs = sets.map(s => s.split('-').map(x => +x.trim()));
+  const nameOf = k => (E.players.find(p => p.key === k) || {}).name;
+  E.games.push({ teamA: [nameOf(keys[0]), nameOf(keys[1])], teamB: [nameOf(keys[2]), nameOf(keys[3])], ids: keys, a: pairs.reduce((s, p) => s + p[0], 0), b: pairs.reduce((s, p) => s + p[1], 0), score: sets.map(s => s.replace(/\s/g, '')).join(', '), sets: sets.length });
+  renderEditor();
+}
+
+/* ── Save ── */
+async function save() {
+  if (SAVING) return;
+  const errs = validate(); $('#saveErr').textContent = errs.join(' ');
+  if (errs.length) return;
+  SAVING = true; $('#saveBtn').disabled = true; $('#saveBtn').textContent = 'Saving…';
+  const e = E, c = calc(e), isNew = !e.id, now = new Date().toISOString();
+  const id = e.id || push(ref(db, 'entries')).key;
+  const pt = payTotals(e, c);
+  // Ratings: write new games, drop removed ones (club database, existing members-portal format)
+  const games = [];
+  try {
+    for (const g of e.games) {
+      if (g.matchId) { games.push(g); continue; }
+      const matchId = `${e.date}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      await set(ref(clubDb, `openPlayMatches/${matchId}`), { date: e.date, format: 'openplay', teamA: g.teamA, teamB: g.teamB, a: g.a, b: g.b, score: g.score, sets: g.sets,
+        status: 'confirmed', enteredAt: now, note: `Desk — ${g.teamA.join(' & ')} vs ${g.teamB.join(' & ')}`, source: 'desk', bookingId: id, court: e.courts.join(',') });
+      games.push({ ...g, matchId });
+    }
+    for (const mid of e._removedGames || []) await remove(ref(clubDb, `openPlayMatches/${mid}`)).catch(() => {});
+  } catch (err) { toast('Games couldn\'t be saved to ratings: ' + err.message, 5000); games.push(...e.games.filter(g => !g.matchId && !games.includes(g))); }
+
+  const extrasDetail = Object.entries(e.extras).filter(([, q]) => q > 0).map(([k, q]) => { const it = CFG.items[k] || {}; return { k, label: it.label || k, cat: it.cat || 'other', price: it.price || 0, qty: q }; });
+  const doc = {
+    id, date: e.date, dateMs: dateMsIST(e.date), start: e.start, minutes: e.minutes, startTime: hm24(e.start), endTime: hm24(e.start + e.minutes),
+    sport: e.sport, courts: e.courts, type: e.type, source: e.source,
+    players: e.players.map(p => ({ key: p.key, id: p.id || '', name: p.name, fill: !!p.fill, booker: !!p.booker })),
+    charge: { mode: c.isEv ? 'event' : e.charge.mode || 'court', rateCard: c.auto, peakMin: c.cc.peak, offMin: c.cc.off, override: e.charge.override === '' ? null : e.charge.override ?? null,
+      overrideReason: e.charge.overrideReason || '', perPerson: c.perPerson, eventFee: c.isEv ? +e.charge.eventFee || 0 : null },
+    extras: e.extras, extrasDetail,
+    totals: { court: c.court, racquet: c.ex.racquet, balls: c.ex.balls, beverage: c.ex.beverage, other: c.ex.other, bill: c.bill, fills: c.fills, fillLoss: c.fillLoss, share: Math.round(c.share), due: c.due },
+    payMode: e.payMode, payments: pt, split: e.payMode === 'split' ? Object.fromEntries(splitRows(e, c).map(r => [r.key, { amount: r.amount, method: r.method, paidBy: r.paidBy, paid: r.paid }])) : null,
+    paid: c.paid, status: e.status, notes: e.notes || '', games,
+    createdBy: e.createdBy || USER, createdAt: e.createdAt || now, updatedBy: USER, updatedAt: now
+  };
+  try {
+    await set(ref(db, `entries/${id}`), doc);
+    await push(ref(db, `entryLog/${id}`), { at: now, by: USER, action: isNew ? 'create' : 'update', summary: `${doc.startTime} ${doc.courts.join(',')} · due ${doc.totals.due} · paid ${doc.paid} · ${doc.status}` }).catch(() => {});
+    // Visit record on the members side: who played, when, where (no money)
+    const mids = doc.players.filter(p => p.id).map(p => p.id);
+    set(ref(clubDb, `visits/${id}`), { bookingId: id, date: doc.date, start: doc.startTime, end: doc.endTime, minutes: doc.minutes, sport: doc.sport, courts: doc.courts, type: doc.type,
+      status: doc.status, players: mids, names: doc.players.map(p => p.name), updatedAt: now }).catch(() => {});
+    toast(isNew ? 'Booking saved' : 'Changes saved');
+    if (e.date !== DAYISO) setDay(e.date);
+    closeEditor();
+  } catch (err) {
+    $('#saveErr').textContent = /permission/i.test(err.message) ? 'Not allowed: bookings older than yesterday can only be changed by an owner.' : 'Couldn\'t save: ' + err.message;
+  } finally { SAVING = false; const b = $('#saveBtn'); if (b) { b.disabled = false; b.textContent = isNew ? 'Save booking' : 'Save changes'; } }
+}
+
+/* ── Owner settings: prices, items, sources ── */
+$('#settingsBtn').onclick = () => openSettings();
+function openSettings() {
+  const S = clone(CFG);
+  const draw = () => {
+    $('#sheet').innerHTML = `<div class="sheet"><div class="sheet-h"><h2>SETTINGS</h2><span class="sub">Owners only · applies to new bookings</span><div style="flex:1"></div><button class="btn btn-sm" data-sx="close">Close</button></div>
+    <div class="sec"><h4>Court rates <small>per court per hour</small></h4><table class="modal-table"><tr><th></th><th>Off-peak</th><th>Peak</th></tr>
+      ${['padel', 'pickle'].map(s => `<tr><td>${SPORT[s]}</td><td><input type="number" data-rate="${s}.off" value="${S.rates[s].off}"></td><td><input type="number" data-rate="${s}.peak" value="${S.rates[s].peak}"></td></tr>`).join('')}</table>
+      <div class="sub" style="margin-top:8px">Peak: weekdays 5–11pm · weekends 6–11am & 4–11pm.</div></div>
+    <div class="sec"><h4>Items for sale</h4><div class="tbl-wrap" style="overflow-x:auto"><table class="modal-table"><tr><th>Item</th><th>Type</th><th>Sport</th><th>Price</th><th>On sale</th></tr>
+      ${Object.entries(S.items).sort((a, b) => (a[1].order || 0) - (b[1].order || 0)).map(([k, it]) => `<tr><td><input data-it="${k}" data-k="label" value="${esc(it.label)}"></td>
+        <td><select data-it="${k}" data-k="cat">${CATS.map(([ck, cl]) => `<option value="${ck}" ${it.cat === ck ? 'selected' : ''}>${cl}</option>`).join('')}</select></td>
+        <td><select data-it="${k}" data-k="sport">${[['any', 'Any'], ['padel', 'Padel'], ['pickle', 'Pickleball']].map(([sk, sl]) => `<option value="${sk}" ${it.sport === sk ? 'selected' : ''}>${sl}</option>`).join('')}</select></td>
+        <td style="width:100px"><input type="number" data-it="${k}" data-k="price" value="${it.price}"></td><td><input type="checkbox" data-it="${k}" data-k="active" ${it.active !== false ? 'checked' : ''} style="width:22px;height:22px"></td></tr>`).join('')}
+      </table></div><button class="btn btn-sm" data-sx="additem" style="margin-top:10px">+ Add item</button></div>
+    <div class="sec"><h4>Booking sources <small>aggregators also appear as a payment method</small></h4><table class="modal-table"><tr><th>Source</th><th>Aggregator</th><th>In use</th></tr>
+      ${Object.entries(S.sources).sort((a, b) => (a[1].order || 0) - (b[1].order || 0)).map(([k, s]) => `<tr><td><input data-src="${k}" data-k="label" value="${esc(s.label)}"></td><td><input type="checkbox" data-src="${k}" data-k="aggregator" ${s.aggregator ? 'checked' : ''} style="width:22px;height:22px"></td><td><input type="checkbox" data-src="${k}" data-k="active" ${s.active !== false ? 'checked' : ''} style="width:22px;height:22px"></td></tr>`).join('')}
+      </table><button class="btn btn-sm" data-sx="addsrc" style="margin-top:10px">+ Add source</button></div>
+    <div class="sec"><button class="btn btn-primary" data-sx="save">Save settings</button> <span class="sub" id="sxMsg"></span></div></div>`;
+  };
+  draw(); $('#sheet').classList.remove('hidden'); document.body.style.overflow = 'hidden';
+  const sh = $('#sheet');
+  sh.oninput = sh.onchange = ev => {
+    const t = ev.target, val = t.type === 'checkbox' ? t.checked : t.type === 'number' ? +t.value : t.value;
+    if (t.dataset.rate) { const [s, k] = t.dataset.rate.split('.'); S.rates[s][k] = +t.value; }
+    if (t.dataset.it) S.items[t.dataset.it][t.dataset.k] = val;
+    if (t.dataset.src) S.sources[t.dataset.src][t.dataset.k] = val;
+  };
+  sh.onclick = async ev => {
+    const b = ev.target.closest('[data-sx]'); if (!b) return;
+    const a = b.dataset.sx;
+    if (a === 'close') { sh.oninput = sh.onchange = sh.onclick = null; closeEditor(); }
+    if (a === 'additem') { S.items['item_' + Date.now().toString(36)] = { label: 'New item', cat: 'beverage', sport: 'any', price: 0, order: 99, active: true }; draw(); }
+    if (a === 'addsrc') { const label = prompt('Name of the new booking source (e.g. Playo)'); if (label) { S.sources[slug(label).replace(/-/g, '') || 'src' + Date.now()] = { label, aggregator: true, order: 50, active: true }; draw(); } }
+    if (a === 'save') {
+      try { await set(ref(db, 'config'), S); CFG = clone(S); $('#sxMsg').textContent = 'Saved.'; toast('Settings saved'); }
+      catch (err) { $('#sxMsg').textContent = 'Couldn\'t save: ' + err.message; }
+    }
+  };
+}
+</script>
+</body>
+</html>
