@@ -644,12 +644,12 @@ function buildAllPlayersPerfChart(mode) {
     const cols = 4;
     playerData.forEach((p, pi) => {
       const col = pi % cols, row = Math.floor(pi / cols);
-      const lx = 2 + col * 78, ly = H + 14 + row * 15;
-      legend += `<rect x="${lx}" y="${ly-6}" width="10" height="3" rx="1.5" fill="${PALETTE[pi%PALETTE.length]}"/>`;
-      legend += `<text x="${lx+13}" y="${ly}" fill="rgba(255,255,255,0.7)" font-size="8.5" font-family="inherit">${p.name}</text>`;
+      const lx = 2 + col * 78, ly = H + 12 + row * 12;
+      legend += `<rect x="${lx}" y="${ly-5}" width="8" height="3" rx="1.5" fill="${PALETTE[pi%PALETTE.length]}"/>`;
+      legend += `<text x="${lx+11}" y="${ly}" fill="rgba(255,255,255,0.7)" font-size="6" font-family="inherit">${p.name}</text>`;
     });
     const legendRows = Math.ceil(playerData.length / cols);
-    const svgH = H + 10 + legendRows * 15 + 4;
+    const svgH = H + 8 + legendRows * 12 + 4;
 
     const isPts = mode === 'pts';
     return `<div style="margin-top:20px">
