@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FS11KFH6MK"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-FS11KFH6MK');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Deuce & Smash — Pune's Largest Integrated Padel & Pickleball Club</title>
@@ -12,7 +21,7 @@ html{scroll-behavior:smooth;overflow-x:hidden}
 body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
 /* ===== NAV ===== */
-.nav{position:fixed;top:60px;left:0;right:0;z-index:1000;padding:20px 48px;display:flex;align-items:center;justify-content:space-between;transition:all .5s cubic-bezier(.16,1,.3,1)}
+.nav{position:fixed;top:var(--csb-h,60px);left:0;right:0;z-index:1000;padding:20px 48px;display:flex;align-items:center;justify-content:space-between;transition:all .5s cubic-bezier(.16,1,.3,1)}
 .nav.scrolled{background:rgba(6,6,18,.92);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);padding:14px 48px;border-bottom:1px solid rgba(255,255,255,.04)}
 .nav-logo{height:48px;opacity:0;transform:translateY(-10px);animation:fadeDown .8s .2s forwards}
 .nav-links{display:flex;gap:36px;list-style:none}
@@ -31,7 +40,7 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
 .nav-cta a:hover{background:var(--green-light);transform:translateY(-1px);box-shadow:0 8px 32px rgba(125,197,21,.3)}
 
 /* ===== HERO ===== */
-.hero{min-height:100vh;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#060612;padding-top:148px}
+.hero{min-height:100vh;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#060612;padding-top:calc(var(--csb-h,60px) + 88px)}
 .hero-canvas{position:absolute;inset:0;z-index:1}
 .hero-canvas canvas{width:100%;height:100%}
 .hero-overlay{position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(0deg,#060612 0%,rgba(6,6,18,.45) 16%,transparent 32%,transparent 68%,rgba(6,6,18,.4) 84%,#060612 100%),radial-gradient(ellipse 70% 58% at 50% 46%,rgba(6,6,18,.72) 0%,rgba(6,6,18,.55) 38%,rgba(6,6,18,.2) 65%,transparent 80%),radial-gradient(ellipse 110% 100% at 50% 50%,transparent 20%,rgba(6,6,18,.5) 58%,#060612 87%)}
@@ -206,7 +215,7 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
 .nav-hamburger.open span:nth-child(2){opacity:0;transform:translateX(-12px)}
 .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 
-.nav-mobile{position:fixed;top:60px;left:0;right:0;bottom:0;z-index:998;background:rgba(6,6,18,.97);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:0;pointer-events:none;transform:translateY(-16px);transition:opacity .4s cubic-bezier(.16,1,.3,1),transform .4s cubic-bezier(.16,1,.3,1)}
+.nav-mobile{position:fixed;top:var(--csb-h,60px);left:0;right:0;bottom:0;z-index:998;background:rgba(6,6,18,.97);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;opacity:0;pointer-events:none;transform:translateY(-16px);transition:opacity .4s cubic-bezier(.16,1,.3,1),transform .4s cubic-bezier(.16,1,.3,1)}
 .nav-mobile.open{opacity:1;pointer-events:all;transform:translateY(0)}
 .nav-mobile-links{list-style:none;text-align:center;margin-bottom:36px;padding:0}
 .nav-mobile-links li{overflow:hidden}
@@ -319,8 +328,8 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
   background:linear-gradient(105deg,transparent 30%,rgba(125,197,21,.04) 50%,transparent 70%);
   animation:csb-shimmer 4s ease-in-out infinite}
 @keyframes csb-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-#coming-soon-bar a{display:flex;align-items:center;justify-content:center;gap:16px;padding:0 32px;
-  height:60px;text-decoration:none;color:inherit;position:relative;z-index:1;transition:background .3s}
+#coming-soon-bar a{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 16px;padding:10px 24px;
+  min-height:60px;text-decoration:none;color:inherit;position:relative;z-index:1;transition:background .3s}
 #coming-soon-bar a:hover{background:rgba(125,197,21,.04)}
 .csb-dot{width:9px;height:9px;border-radius:50%;background:#7DC515;flex-shrink:0;
   box-shadow:0 0 10px rgba(125,197,21,1),0 0 24px rgba(125,197,21,.5);
@@ -331,7 +340,7 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
   background:rgba(125,197,21,.12);border:1px solid rgba(125,197,21,.35);
   padding:4px 12px;border-radius:20px;flex-shrink:0;white-space:nowrap}
 .csb-text{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;
-  letter-spacing:.06em;color:rgba(255,255,255,.95);white-space:nowrap;
+  letter-spacing:.06em;color:rgba(255,255,255,.95);white-space:normal;text-align:center;max-width:min(640px,80vw);
   text-shadow:0 0 30px rgba(125,197,21,.15)}
 .csb-text em{font-style:normal;color:#9DDF2A}
 .csb-text .csb-sep{color:rgba(255,255,255,.3);margin:0 4px}
@@ -346,16 +355,15 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
   background:linear-gradient(135deg,#22C05E,#2AE872)}
 /* Mobile banner */
 @media(max-width:768px){
-  #coming-soon-bar a{gap:10px;padding:0 16px;height:52px}
-  .csb-tag{font-size:10px;padding:3px 9px;letter-spacing:.16em}
-  .csb-text{font-size:13px;letter-spacing:.03em}
+  #coming-soon-bar a{gap:8px 12px;padding:8px 16px;min-height:52px}
+  .csb-text{font-size:13px;letter-spacing:.03em;max-width:92vw}
   .csb-divider{display:none}
   .csb-wa{font-size:11px;padding:7px 12px 7px 9px;gap:6px}
   .csb-wa svg{width:14px;height:14px}
 }
 @media(max-width:420px){
-  .csb-tag{display:none}
-  .csb-text{font-size:12px}
+  .csb-text{font-size:11.5px;max-width:90vw}
+  #coming-soon-bar a{padding:8px 12px}
 }
 
 </style>
@@ -366,8 +374,7 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
 <div id="coming-soon-bar">
   <a href="https://chat.whatsapp.com/IQThmGfOA0pFeS9XYe2MHi?mode=gi_t" target="_blank" rel="noopener noreferrer">
     <span class="csb-dot"></span>
-    <span class="csb-tag">Opening May 2026</span>
-    <span class="csb-text"><em>Opening Soon in Baner</em><span class="csb-sep">—</span>Be the first to play. Join the Waitlist!</span>
+    <span class="csb-text">Join Pune's most vibrant and fastest growing community for Padel and Pickleball</span>
     <span class="csb-divider"></span>
     <span class="csb-wa"><svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Join WhatsApp</span>
   </a>
@@ -383,7 +390,7 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
     <li><a href="#facilities">Facilities</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
-  <div class="nav-cta"><a href="#book">Book a Court</a></div>
+  <div class="nav-cta"><a href="https://hudle.in/venues/deuce-smash-baner/259009" target="_blank" rel="noopener noreferrer">Book a Court</a></div>
   <button class="nav-hamburger" id="navHamburger" aria-label="Open menu">
     <span></span><span></span><span></span>
   </button>
@@ -399,7 +406,7 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
     <li><a href="#contact"    class="nav-mobile-link">Contact</a></li>
   </ul>
   <div class="nav-mobile-divider"></div>
-  <a href="#book" class="nav-mobile-cta">Book a Court</a>
+  <a href="https://hudle.in/venues/deuce-smash-baner/259009" target="_blank" rel="noopener noreferrer" class="nav-mobile-cta">Book a Court</a>
 </div>
 
 <!-- HERO -->
@@ -420,7 +427,7 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
     <p class="hero-sub" style="opacity:0;animation:fadeUp .8s 1s forwards;">Play the Point. Own the Game</p>
     <p class="hero-largest" style="opacity:0;animation:fadeUp .8s 1.2s forwards;">7 Courts · 2 Sports · 1 Obsession</p>
     <div class="hero-ctas" style="opacity:0;animation:fadeUp .8s 1.5s forwards;">
-      <a href="#book" class="btn-primary">Book Your Court</a>
+      <a href="https://hudle.in/venues/deuce-smash-baner/259009" target="_blank" rel="noopener noreferrer" class="btn-primary">Book Your Court</a>
       <a href="#sports" class="btn-ghost">Explore Sports</a>
     </div>
   </div>
@@ -543,7 +550,7 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
         <div class="section-label" style="justify-content:flex-start">Meet The Duo</div>
         <h3 class="mascot-banner-title">Meet <span style="color:var(--blue-light)">Deuce</span> & <span style="color:var(--green)">Smash</span></h3>
         <p class="mascot-banner-desc">Our fearless mascots — a pickleball with serious attitude and a padel ball with unstoppable swagger. Competitive fire, playful energy, and a community that shows up ready to rally. Whether you're Team Deuce or Team Smash — there's a court waiting for you.</p>
-        <a href="#book" class="btn-primary" style="margin-top:24px">Join the Club</a>
+        <a href="https://chat.whatsapp.com/IQThmGfOA0pFeS9XYe2MHi?mode=gi_t" target="_blank" rel="noopener noreferrer" class="btn-primary" style="margin-top:24px">Join the Club</a>
       </div>
     </div>
   </div>
@@ -605,7 +612,7 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
       <div class="section-label" style="justify-content:center">Ready to Play?</div>
       <h2 class="cta-title">Your Court<br/>is <span class="green">Waiting.</span></h2>
       <p class="cta-sub">Book your first session today. No experience required — just bring the energy. Seven world-class courts, two incredible sports, one unforgettable experience.</p>
-      <a href="#" class="btn-primary">Book a Court Now</a>
+      <a href="https://hudle.in/venues/deuce-smash-baner/259009" target="_blank" rel="noopener noreferrer" class="btn-primary">Book a Court Now</a>
     </div>
   </div>
 </section>
@@ -618,9 +625,9 @@ body{font-family:'Barlow',sans-serif;background:#060612;color:var(--white);overf
       <div class="footer-tagline">Pune's Largest Integrated Padel & Pickleball Club</div>
     </div>
     <div class="footer-links">
-      <div class="footer-col"><div class="footer-col-title">Club</div><a href="#">About Us</a><a href="#">Our Courts</a><a href="#">Coaching</a><a href="#">Membership</a></div>
-      <div class="footer-col"><div class="footer-col-title">Play</div><a href="#">Book a Court</a><a href="#">Tournaments</a><a href="#">Events</a><a href="#">Corporate</a></div>
-      <div class="footer-col"><div class="footer-col-title">Connect</div><a href="#">Instagram</a><a href="#">WhatsApp</a><a href="#">Contact Us</a><a href="#">Location</a></div>
+      <div class="footer-col"><div class="footer-col-title">Club</div><a href="#about">About Us</a><a href="#sports">Our Courts</a><a href="javascript:void(0)" class="footer-link-info">Coaching</a><a href="javascript:void(0)" class="footer-link-info">Membership</a></div>
+      <div class="footer-col"><div class="footer-col-title">Play</div><a href="https://hudle.in/venues/deuce-smash-baner/259009" target="_blank" rel="noopener noreferrer">Book a Court</a><a href="javascript:void(0)" class="footer-link-general">Tournaments</a><a href="javascript:void(0)" class="footer-link-general">Events</a><a href="javascript:void(0)" class="footer-link-general">Corporate</a></div>
+      <div class="footer-col"><div class="footer-col-title">Connect</div><a href="https://www.instagram.com/deuceandsmash/" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://chat.whatsapp.com/IQThmGfOA0pFeS9XYe2MHi?mode=gi_t" target="_blank" rel="noopener noreferrer">WhatsApp</a><a href="javascript:void(0)" class="footer-link-contact">Contact Us</a><a href="https://maps.app.goo.gl/QaEkD2qseZLMxjP5A" target="_blank" rel="noopener noreferrer">Location</a></div>
     </div>
   </div>
   <div class="footer-bottom">
@@ -858,6 +865,31 @@ document.querySelectorAll('.stat-number').forEach(el => cObs.observe(el));
 
 <script>
 (function(){
+  // Keep nav / mobile-nav / hero offset in sync with the actual (possibly
+  // multi-line, responsive) height of the top banner, so it's never clipped
+  // or overlapped on any screen size.
+  var bar = document.getElementById('coming-soon-bar');
+  if(bar){
+    function syncBarHeight(){
+      var h = bar.offsetHeight;
+      if(h > 0) document.documentElement.style.setProperty('--csb-h', h + 'px');
+    }
+    syncBarHeight();
+    window.addEventListener('load', syncBarHeight);
+    window.addEventListener('resize', syncBarHeight);
+    window.addEventListener('orientationchange', syncBarHeight);
+    if('ResizeObserver' in window){
+      new ResizeObserver(syncBarHeight).observe(bar);
+    }
+    if(document.fonts && document.fonts.ready){
+      document.fonts.ready.then(syncBarHeight);
+    }
+  }
+})();
+</script>
+
+<script>
+(function(){
   var btn    = document.getElementById('muteToggle');
   var icon   = document.getElementById('muteIcon');
   var label  = document.getElementById('muteLabel');
@@ -933,6 +965,67 @@ document.querySelectorAll('.stat-number').forEach(el => cObs.observe(el));
   menu.addEventListener('touchend', function(e){
     if(e.changedTouches[0].clientY - touchStartY < -60) closeMenu();
   }, {passive:true});
+})();
+</script>
+
+
+<!-- ══ INFO MODAL ══════════════════════════════════════ -->
+<div id="infoModal" class="info-modal" aria-hidden="true">
+  <div class="info-modal-backdrop"></div>
+  <div class="info-modal-box">
+    <button class="info-modal-close" aria-label="Close">&times;</button>
+    <div class="info-modal-label">Get In Touch</div>
+    <p class="info-modal-text" id="infoModalText"></p>
+  </div>
+</div>
+<style>
+.info-modal{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease}
+.info-modal.open{opacity:1;pointer-events:auto}
+.info-modal-backdrop{position:absolute;inset:0;background:rgba(6,6,18,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.info-modal-box{position:relative;max-width:min(420px,88vw);width:100%;background:linear-gradient(165deg,#14144A 0%,#0E0E2C 100%);border:1px solid rgba(125,197,21,.25);border-radius:20px;padding:40px 32px 32px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.5);transform:translateY(12px) scale(.97);transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.info-modal.open .info-modal-box{transform:translateY(0) scale(1)}
+.info-modal-close{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-size:20px;line-height:1;cursor:pointer;transition:all .3s}
+.info-modal-close:hover{background:rgba(255,255,255,.08);color:#fff}
+.info-modal-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--green);margin-bottom:14px}
+.info-modal-text{font-family:'Barlow',sans-serif;font-size:16px;line-height:1.7;color:rgba(255,255,255,.85)}
+.info-modal-text a{color:var(--green);text-decoration:underline;text-underline-offset:2px;transition:color .3s}
+.info-modal-text a:hover{color:var(--green-light)}
+</style>
+<script>
+(function(){
+  var modal   = document.getElementById('infoModal');
+  var textEl  = document.getElementById('infoModalText');
+  var closeBtn= modal.querySelector('.info-modal-close');
+  var backdrop= modal.querySelector('.info-modal-backdrop');
+
+  var MAIL_LINK = '<a href="mailto:deuceandsmash@gmail.com">deuceandsmash@gmail.com</a>';
+  var MSG_INFO    = 'Contact us directly for Coaching details and Membership benefits.<br>Email: ' + MAIL_LINK + '<br>Mobile: +91 90283 37970';
+  var MSG_GENERAL = 'Contact us directly.<br>Email: ' + MAIL_LINK + '<br>Mobile: +91 90283 37970';
+  var MSG_CONTACT = 'Email: ' + MAIL_LINK + '<br>Mobile: +91 90283 37970';
+
+  function openModal(msg){
+    textEl.innerHTML = msg;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+  }
+  function closeModal(){
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+  }
+  document.querySelectorAll('.footer-link-info').forEach(function(a){
+    a.addEventListener('click', function(e){ e.preventDefault(); openModal(MSG_INFO); });
+  });
+  document.querySelectorAll('.footer-link-general').forEach(function(a){
+    a.addEventListener('click', function(e){ e.preventDefault(); openModal(MSG_GENERAL); });
+  });
+  document.querySelectorAll('.footer-link-contact').forEach(function(a){
+    a.addEventListener('click', function(e){ e.preventDefault(); openModal(MSG_CONTACT); });
+  });
+  closeBtn.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', closeModal);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeModal(); });
 })();
 </script>
 
