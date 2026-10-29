@@ -630,13 +630,13 @@ function buildAllPlayersPerfChart(mode) {
         : Math.round(minV + (maxV - minV) * i / yTicks);
       const y = yScale(v);
       grid += `<line x1="${PAD.l}" x2="${PAD.l+cW}" y1="${y}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
-      grid += `<text x="${PAD.l-4}" y="${y+3.5}" fill="rgba(255,255,255,0.38)" font-size="8" font-family="inherit" text-anchor="end">${v}</text>`;
+      grid += `<text x="${PAD.l-4}" y="${y+3.5}" fill="rgba(255,255,255,0.38)" font-size="6" font-family="inherit" text-anchor="end">${v}</text>`;
     }
 
     // X-axis labels
-    let xLabels = `<text x="${xScale(0)}" y="${PAD.t+cH+16}" fill="rgba(255,255,255,0.28)" font-size="8" font-family="inherit" text-anchor="middle">S</text>`;
+    let xLabels = `<text x="${xScale(0)}" y="${PAD.t+cH+16}" fill="rgba(255,255,255,0.28)" font-size="6" font-family="inherit" text-anchor="middle">S</text>`;
     rounds.forEach((r, i) => {
-      xLabels += `<text x="${xScale(i+1)}" y="${PAD.t+cH+16}" fill="rgba(255,255,255,0.42)" font-size="8" font-family="inherit" text-anchor="middle">R${r}</text>`;
+      xLabels += `<text x="${xScale(i+1)}" y="${PAD.t+cH+16}" fill="rgba(255,255,255,0.42)" font-size="6" font-family="inherit" text-anchor="middle">R${r}</text>`;
     });
 
     // Legend — 4-per-row, compact
