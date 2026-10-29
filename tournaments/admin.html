@@ -199,6 +199,12 @@
         <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Championship round is always appended automatically</div>
       </div>
 
+      <div class="form-row">
+        <label class="form-label">Number of Courts</label>
+        <input class="form-input" type="number" id="t-courts" min="1" max="10" value="2" placeholder="e.g. 2" oninput="renderSelectedPlayers()">
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Courts available for this tournament (max is determined by number of players)</div>
+      </div>
+
       <div class="form-row" id="random-rounds-row">
         <label class="form-label">Random Mix Rounds</label>
         <input class="form-input" type="number" id="t-random" min="1" max="10" value="2" placeholder="e.g. 2">
@@ -327,6 +333,11 @@
         <input class="form-input" type="number" id="edit-random" min="1" max="10" placeholder="e.g. 2">
         <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Mexicano formats only</div>
       </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="form-label">Number of Courts</label>
+      <input class="form-input" type="number" id="edit-courts" min="1" max="10" placeholder="e.g. 2" style="max-width:160px">
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:3px">Courts available (capped by player count)</div>
     </div>
     <div style="margin-bottom:12px">
       <label class="form-label">Scoring</label>
@@ -574,8 +585,10 @@ function renderSelectedPlayers() {
     `<span class="pill">${n} <span class="x" onclick="togglePlayer('${n.replace(/'/g,"\\'")}')">✕</span></span>`
   ).join('');
   const n = selectedPlayers.length;
-  const courts = Math.floor(n / 4);
-  const byes = n % 4 === 0 ? 0 : 4 - (n % 4);
+  const maxCts = Math.floor(n / 4);
+  const courtsInputEl = document.getElementById('t-courts');
+  const courts = Math.min(parseInt(courtsInputEl?.value) || maxCts, maxCts);
+  const byes = n - courts * 4;
   document.getElementById('player-count-msg').textContent =
     n ? `${n} players · ${courts} court${courts!==1?'s':''} · ${byes > 0 ? byes + ' sitting out per round' : 'no byes'}` : '';
   const fmt = document.getElementById('t-format')?.value;
@@ -629,6 +642,8 @@ window.createTournament = async () => {
   if (activeTournament) { res.innerHTML = '<span style="color:var(--warn)">Archive the active tournament first</span>'; return; }
 
   const N = selectedPlayers.length;
+  const maxCourts = Math.floor(N / 4);
+  const configuredCourts = Math.min(parseInt(document.getElementById('t-courts').value) || maxCourts, maxCourts);
   const totalRounds = mexRounds + 1; // +1 for championship
   const MEXICANO_END = mexRounds - 2;
   const CHAMP = mexRounds;
@@ -647,7 +662,7 @@ window.createTournament = async () => {
   const tData = {
     name, status: 'active', createdAt: new Date().toISOString(),
     players: selectedPlayers,
-    config: { date, sport, format, totalRounds, randomRounds, mexicanoEnd: MEXICANO_END, championshipRound: CHAMP, target, scoringType, setFormat, startTime, endTime, times, constraints, teams: isTeamFormat(format) ? teamPairings : null },
+    config: { date, sport, format, totalRounds, randomRounds, mexicanoEnd: MEXICANO_END, championshipRound: CHAMP, target, scoringType, setFormat, startTime, endTime, times, constraints, courts: configuredCourts, teams: isTeamFormat(format) ? teamPairings : null },
     state,
   };
 
@@ -867,6 +882,8 @@ function renderRoundsTab() {
     const editRandRow = document.getElementById('edit-random-row');
     if (editRandRow) editRandRow.style.display = isMex ? '' : 'none';
     document.getElementById('edit-random').value = randomRounds;
+    const courtsEl = document.getElementById('edit-courts');
+    if (courtsEl) courtsEl.value = config.courts || Math.floor(players.length / 4);
     // Scoring
     const scoringType = config.scoringType || 'points';
     document.getElementById('edit-scoring-type').value = scoringType;
@@ -1117,6 +1134,7 @@ window.generateNextRound = async () => {
   const { players, state, config } = t;
   const N = players.length;
   const { totalRounds, randomRounds, championshipRound, target } = config;
+  const configuredCourts = config.courts || Math.floor(N / 4);
   const ri = state.current;
 
   // Check all previous rounds submitted
@@ -1142,15 +1160,15 @@ window.generateNextRound = async () => {
   } else if (isChamp) {
     round = generateChampionship(state, N, players);
   } else if (fmt === 'team-mexicano' && teamIndices) {
-    round = generateTeamMexicano(state, teamIndices, ri, randomRounds);
+    round = generateTeamMexicano(state, teamIndices, ri, randomRounds, configuredCourts);
   } else if (fmt === 'team-americano' && teamIndices) {
-    round = generateTeamAmericano(state, teamIndices);
+    round = generateTeamAmericano(state, teamIndices, configuredCourts);
   } else if (fmt === 'americano') {
-    round = generateAmericano(state, N, ri);
+    round = generateAmericano(state, N, ri, configuredCourts);
   } else if (ri < randomRounds) {
-    round = generateRandom(state, N);
+    round = generateRandom(state, N, configuredCourts);
   } else {
-    round = generateMexicano(state, N, ri);
+    round = generateMexicano(state, N, ri, configuredCourts);
   }
 
   round.isChamp = isChamp;
@@ -1166,10 +1184,10 @@ window.generateNextRound = async () => {
   showToast(`Round ${ri + 1} generated`, 'ok');
 };
 
-function generateRandom(state, N) {
+function generateRandom(state, N, configuredCourts) {
   const order = shuffle([...Array(N).keys()]);
   // Pair up for courts, remainder are byes
-  const courts = Math.floor(N / 4);
+  const courts = Math.min(configuredCourts || Math.floor(N / 4), Math.floor(N / 4));
   const matches = [];
   for (let c = 0; c < courts; c++) {
     matches.push({ c, p1: [order[c*4], order[c*4+1]], p2: [order[c*4+2], order[c*4+3]] });
@@ -1179,8 +1197,8 @@ function generateRandom(state, N) {
 }
 
 // Americano: partners rotate every round, no pair repeats; ranked by individual pts
-function generateAmericano(state, N, ri) {
-  const courts = Math.floor(N / 4);
+function generateAmericano(state, N, ri, configuredCourts) {
+  const courts = Math.min(configuredCourts || Math.floor(N / 4), Math.floor(N / 4));
   const byeCount = N - courts * 4;
 
   // Build history of past partnerships from submitted rounds
@@ -1233,11 +1251,11 @@ function generateAmericano(state, N, ri) {
   return { matches, byes, scores: [] };
 }
 
-function generateMexicano(state, N, ri) {
+function generateMexicano(state, N, ri, configuredCourts) {
   // Sort by points descending
   const ranked = [...Array(N).keys()].sort((a, b) => state.pts[b] - state.pts[a] || state.played[a] - state.played[b]);
   // Assign byes to players with fewest byes, then fewest pts
-  const courts = Math.floor(N / 4);
+  const courts = Math.min(configuredCourts || Math.floor(N / 4), Math.floor(N / 4));
   const byeCount = N - courts * 4;
   const byes = [];
   if (byeCount > 0) {
@@ -1267,9 +1285,9 @@ function generateChampionship(state, N, players) {
 }
 
 // Team Mexicano: fixed teams, rank by combined pts, pair top vs top (like Mexicano but unit is a team)
-function generateTeamMexicano(state, teams, ri, randomRounds) {
+function generateTeamMexicano(state, teams, ri, randomRounds, configuredCourts) {
   const T = teams.length; // number of teams
-  const courts = Math.floor(T / 2);
+  const courts = Math.min(configuredCourts || Math.floor(T / 2), Math.floor(T / 2));
   const byeTeamCount = T - courts * 2;
 
   // Sum pts for each team
@@ -1305,9 +1323,9 @@ function generateTeamMexicano(state, teams, ri, randomRounds) {
 }
 
 // Team Americano: fixed teams, rotate opponents round-by-round in round-robin style
-function generateTeamAmericano(state, teams) {
+function generateTeamAmericano(state, teams, configuredCourts) {
   const T = teams.length;
-  const courts = Math.floor(T / 2);
+  const courts = Math.min(configuredCourts || Math.floor(T / 2), Math.floor(T / 2));
   const byeTeamCount = T - courts * 2;
 
   // Build opponent history — which teams has each team faced
@@ -1552,7 +1570,7 @@ async function saveTournamentMeta(t, submitted) {
     fmt === 'round-robin'   ? 'Round Robin' :
     fmt === 'knockout'      ? 'Knockout' : fmt;
 
-  const courts = t.players ? Math.floor(t.players.length / 4) : 0;
+  const courts = t.config?.courts || (t.players ? Math.floor(t.players.length / 4) : 0);
 
   await set(ref(db, `tournaments/_meta/${t.id}`), {
     key:        t.id,
@@ -1585,6 +1603,9 @@ window.saveEditedSettings = async () => {
   msg.textContent = '';
 
   const mexRounds = parseInt(document.getElementById('edit-rounds').value);
+  const N = t.players?.length || 0;
+  const maxCourts = N > 0 ? Math.floor(N / 4) : 10;
+  const editedCourts = Math.min(parseInt(document.getElementById('edit-courts').value) || maxCourts, maxCourts);
   const timesRaw = document.getElementById('edit-times').value.trim();
   const times = timesRaw ? timesRaw.split('\n').map(s => s.trim()).filter(Boolean) : [];
   const startTime = document.getElementById('edit-start-time').value || null;
@@ -1632,6 +1653,7 @@ window.saveEditedSettings = async () => {
     times,
     startTime,
     endTime,
+    courts: editedCourts,
     constraints: editConstraints
   };
 
