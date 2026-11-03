@@ -852,7 +852,7 @@ function renderEditor() {
   const st = $('#sheet').scrollTop;
   $('#sheet').innerHTML = h; $('#sheet').scrollTop = st;
   $('#footHost').innerHTML = `<div class="foot"><div class="foot-in"><div class="tot" id="tot"></div><div class="fsp" style="flex:1"></div><div id="saveErr" class="sub" style="color:#ffb3b3;max-width:280px"></div>
-    ${EDIT_LOCK ? '<button class="btn" data-act="close">Close</button>' : `<button class="btn btn-ghost" data-act="close">Cancel</button><button class="btn btn-primary" data-act="save" id="saveBtn">${e.id ? 'Save changes' : 'Save booking'}</button>`}</div></div>`;
+    ${EDIT_LOCK ? '<button class="btn" data-act="close">Close</button>' : `<button class="btn btn-ghost" data-act="close">Cancel</button><button class="btn btn-primary" data-act="save" id="saveBtn">${saveLabel(c)}</button>`}</div></div>`;
   refresh();
 }
 function refresh() {
@@ -867,7 +867,9 @@ function refresh() {
   const t = $('#tot');
   if (t) t.innerHTML = `<div>Bill<b>${inr(c.bill)}</b></div>${c.fillLoss ? `<div>Due<b>${inr(c.due)}</b></div>` : ''}<div>Paid<b>${inr(c.paid)}</b></div>
     <div class="rem ${cls}">${rem < 0 ? 'Overpaid' : 'Remaining'}<b>${Math.abs(rem) < 1 ? '✓ 0' : inr(Math.abs(rem))}</b></div>`;
+  const sb = $('#saveBtn'); if (sb && !SAVING) sb.textContent = saveLabel(c);
 }
+const saveLabel = c => E.status === 'booked' && c.remaining > 0.5 ? 'Save · keep tab open' : (E.id ? 'Save changes' : 'Save booking');
 
 /* ── Games & scores (padel): a whole session with rotating partners ── */
 function gamePool(e) {
@@ -977,12 +979,14 @@ async function save() {
     let games = 0;
     if (e.sport === 'padel') { try { games = await writeGames(e, e.id); } catch (err) { toast('Games couldn\'t be saved to ratings: ' + err.message, 5000); } }
     await commit(e);
-    toast((isNew ? 'Booking saved' : 'Changes saved') + (games ? ` · ${games} game${games > 1 ? 's' : ''} sent to ratings` : ''));
+    const open = e.status === 'booked' && calc(e).remaining > 0.5;
+    toast((open ? 'Saved · tab kept open' : isNew ? 'Booking saved' : 'Changes saved') + (games ? ` · ${games} game${games > 1 ? 's' : ''} sent to ratings` : ''));
+    if (open && VIEW !== 'tabs') setView('tabs');
     if (e.date !== DAYISO) setDay(e.date);
     closeEditor();
   } catch (err) {
     $('#saveErr').textContent = /permission/i.test(err.message) ? 'Not allowed: bookings older than yesterday can only be changed by an owner.' : 'Couldn\'t save: ' + err.message;
-  } finally { SAVING = false; const b = $('#saveBtn'); if (b) { b.disabled = false; b.textContent = isNew ? 'Save booking' : 'Save changes'; } }
+  } finally { SAVING = false; const b = $('#saveBtn'); if (b) { b.disabled = false; b.textContent = E ? saveLabel(calc(E)) : ''; } }
 }
 
 /* ── Events: editor and quick screens share #sheet ── */
