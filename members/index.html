@@ -609,9 +609,16 @@ DSR.compute=(seeds,matches,today)=>{
     const allPlayers=[...A,...B];
     const skip=allPlayers.some(p=>{const s=seeds[p.name];return s?.assessedAt&&m.date<s.assessedAt;});
     if(skip)continue;
-    const ra=(A[0].r+A[1].r)/2,rb=(B[0].r+B[1].r)/2;
-    const E=DSR.expected(ra,rb);const Sa=m.a/(m.a+m.b);const W=DSR.W[m.format];const d=dayNum(m.date);
-    const apply=(p,team,opp,oppAvg,surprise)=>{
+    const W=DSR.W[m.format];const d=dayNum(m.date);
+    // Parse individual sets when available (score like "6-3, 4-6"), else treat as one set
+    const setScores=(()=>{
+      if(m.setsData&&Array.isArray(m.setsData)&&m.setsData.length)return m.setsData.map(s=>({a:s.a,b:s.b}));
+      const parts=String(m.score||"").split(/[,;]/).map(s=>s.trim()).filter(s=>/^\d{1,2}-\d{1,2}$/.test(s));
+      if(parts.length>1)return parts.map(s=>{const[a,b]=s.split('-').map(Number);return{a,b};});
+      return[{a:m.a,b:m.b}];
+    })();
+    const nSets=setScores.length;
+    const apply=(p,team,opp,oppAvg,surprise,isFirst)=>{
       const away=p.last==null?0:d-p.last;
       let status=DSR.isProvisional(p)?"provisional":p.me<30?"established":"veteran";
       if(away>=DSR.BREAK.provisional)status="provisional";
@@ -621,11 +628,16 @@ DSR.compute=(seeds,matches,today)=>{
       if(surprise>0&&p.r>=DSR.QUALITY_GATE.from&&oppAvg<DSR.QUALITY_GATE.oppBelow)mult=DSR.QUALITY_GATE.gain;
       const delta=K*mult*W*surprise*DSR.SCALE;const before=p.r;
       p.r=Math.min(7,Math.max(0,p.r+delta));
-      const st=DSR.setsIn(m)*W;p.me+=W;p.sets+=st;p.matches++;p.last=d;
-      team.filter(x=>x!==p).forEach(x=>p.partners.add(x.name));opp.forEach(x=>p.opps.add(x.name));
+      if(isFirst){p.me+=W;p.sets+=nSets*W;p.matches++;p.last=d;
+        team.filter(x=>x!==p).forEach(x=>p.partners.add(x.name));opp.forEach(x=>p.opps.add(x.name));}
       p.hist.push({date:m.date,r:p.r,delta:p.r-before,id:m.id});
     };
-    A.forEach(p=>apply(p,A,B,rb,Sa-E));B.forEach(p=>apply(p,B,A,ra,E-Sa));
+    setScores.forEach((ss,si)=>{
+      const ra=(A[0].r+A[1].r)/2,rb=(B[0].r+B[1].r)/2;
+      const E=DSR.expected(ra,rb);const Sa=ss.a/(ss.a+ss.b);
+      const isFirst=si===0;
+      A.forEach(p=>apply(p,A,B,rb,Sa-E,isFirst));B.forEach(p=>apply(p,B,A,ra,E-Sa,isFirst));
+    });
   }
   const t=dayNum(today);
   Object.values(S).forEach(p=>{
@@ -1552,6 +1564,7 @@ window.submitMatch = async () => {
   const matchData = {
     date, format, teamA: [a1,a2], teamB: [b1,b2],
     a: ta, b: tb, score: scoreText, sets: pairs.length,
+    setsData: totals.map(p=>({a:p[0],b:p[1]})),
     status: 'confirmed', enteredAt: new Date().toISOString(),
     note: `Open play — ${a1} & ${a2} vs ${b1} & ${b2}`,
   };
@@ -1613,11 +1626,14 @@ window.showOpHistory = () => {
       </div>`;
     }).join('');
     const matchRows = matches.map(m => {
+      // Determine if score has individual sets (comma-separated like "6-3, 4-6")
+      const setScoreStr = String(m.score||'');
+      const setScoreParts = setScoreStr.split(/[,;]/).map(s=>s.trim()).filter(s=>/^\d{1,2}-\d{1,2}$/.test(s));
+      const hasSetScores = setScoreParts.length > 1;
       const sa = m.a ?? m.score?.split('-')[0] ?? '?';
       const sb = m.b ?? m.score?.split('-')[1] ?? '?';
       const aWon = parseInt(sa) > parseInt(sb);
       const bWon = parseInt(sb) > parseInt(sa);
-      const scoreColor = 'var(--text)';
       const aColor = aWon ? 'var(--success)' : bWon ? 'var(--danger)' : 'var(--muted)';
       const bColor = bWon ? 'var(--success)' : aWon ? 'var(--danger)' : 'var(--muted)';
       const teamANames = (m.teamA||[]).map(n => {
@@ -1635,9 +1651,13 @@ window.showOpHistory = () => {
           <span style="color:${bColor}">${teamBNames}</span>
         </div>
         <div class="op-match-score">
-          <span style="color:${aColor}">${sa}</span>
-          <span style="color:var(--muted);font-size:0.8rem">–</span>
-          <span style="color:${bColor}">${sb}</span>
+          ${hasSetScores ? setScoreParts.map((sp,si)=>{
+            const [pA,pB]=sp.split('-').map(Number);
+            const sA=pA>pB?'var(--success)':pA<pB?'var(--danger)':'var(--muted)';
+            const sB=pB>pA?'var(--success)':pB<pA?'var(--danger)':'var(--muted)';
+            return `${si>0?'<span style="color:var(--muted);font-size:0.7rem;margin:0 2px">,</span>':''}` +
+              `<span style="color:${sA}">${pA}</span><span style="color:var(--muted);font-size:0.8rem">–</span><span style="color:${sB}">${pB}</span>`;
+          }).join('') : `<span style="color:${aColor}">${sa}</span><span style="color:var(--muted);font-size:0.8rem">–</span><span style="color:${bColor}">${sb}</span>`}
         </div>
         <button onclick="editOpMatch('${m.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:0.7rem;color:var(--muted);cursor:pointer;white-space:nowrap" title="Edit match">✏️</button>
       </div>`;
@@ -1733,7 +1753,7 @@ window.saveOpMatch = async (matchId) => {
   if (!scoreText || !pairs.every(p=>/^\d{1,2}-\d{1,2}$/.test(p))) { err.textContent = 'Score like 6-4 or 6-3, 7-5'; return; }
   const totals = pairs.map(p=>p.split('-').map(Number));
   const ta = totals.reduce((s,p)=>s+p[0],0), tb = totals.reduce((s,p)=>s+p[1],0);
-  const updated = { ...opMatches[matchId], date, format, teamA:[a1,a2], teamB:[b1,b2], a:ta, b:tb, score:scoreText, sets:pairs.length, note:`Open play — ${a1} & ${a2} vs ${b1} & ${b2}`, editedAt:new Date().toISOString() };
+  const updated = { ...opMatches[matchId], date, format, teamA:[a1,a2], teamB:[b1,b2], a:ta, b:tb, score:scoreText, sets:pairs.length, setsData:totals.map(p=>({a:p[0],b:p[1]})), note:`Open play — ${a1} & ${a2} vs ${b1} & ${b2}`, editedAt:new Date().toISOString() };
   await set(ref(db, `openPlayMatches/${matchId}`), updated);
   opMatches[matchId] = updated;
   document.getElementById('edit-match-overlay').remove();
