@@ -923,7 +923,7 @@ function parseScore(s) {
   const sets = String(s || '').split(/[,;]/).map(x => x.trim()).filter(Boolean);
   if (!sets.length || !sets.every(x => /^\d{1,2}\s*-\s*\d{1,2}$/.test(x))) return null;
   const pairs = sets.map(x => x.split('-').map(y => +y.trim()));
-  return { a: sum(pairs, p => p[0]), b: sum(pairs, p => p[1]), score: sets.map(x => x.replace(/\s/g, '')).join(', '), sets: sets.length };
+  return { a: sum(pairs, p => p[0]), b: sum(pairs, p => p[1]), score: sets.map(x => x.replace(/\s/g, '')).join(', '), sets: sets.length, setsData: pairs.map(p => ({ a: p[0], b: p[1] })) };
 }
 function gameProblems(e) {
   const errs = [];
@@ -949,7 +949,7 @@ async function writeGames(e, id) {
     const sc = parseScore(g.score); if (!sc) continue;
     const matchId = g.matchId || `${e.date}-desk-${uid()}`;
     const teamA = [nameOf(g.a1), nameOf(g.a2)], teamB = [nameOf(g.b1), nameOf(g.b2)];
-    await set(ref(clubDb, `openPlayMatches/${matchId}`), { date: e.date, format: 'openplay', teamA, teamB, a: sc.a, b: sc.b, score: sc.score, sets: sc.sets,
+    await set(ref(clubDb, `openPlayMatches/${matchId}`), { date: e.date, format: 'openplay', teamA, teamB, a: sc.a, b: sc.b, score: sc.score, sets: sc.sets, setsData: sc.setsData,
       status: 'confirmed', enteredAt: now, note: `Desk — ${teamA.join(' & ')} vs ${teamB.join(' & ')}`, source: 'desk', bookingId: id, court: e.courts.join(','), session: e.type === 'open_play' ? 'desk-' + id : '' });
     g.matchId = matchId; g._saved = sig; wrote++;
   }
