@@ -32,7 +32,7 @@ input[type=checkbox]{width:auto}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn-primary{background:var(--yellow);color:var(--navy);border-color:var(--yellow)}
 .btn-ghost{background:transparent}
-.btn-sm{padding:6px 12px;min-height:34px;font-size:15px}
+.btn-sm{padding:6px 12px;min-height:36px;font-size:15px}
 .btn-danger{border-color:#6b2222;color:#ff9d9d;background:transparent}
 .spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--yellow);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -54,6 +54,7 @@ header.top{position:sticky;top:0;z-index:20;background:rgba(14,14,44,.95);backdr
 .role{font-size:12px;font-family:var(--ui);font-weight:600;border-radius:999px;padding:3px 9px;background:var(--card2);color:var(--text2)}
 .role.owner{background:rgba(245,214,40,.15);color:var(--yellow)}
 main{max-width:1400px;margin:0 auto;padding:18px 20px 120px}
+.viewseg{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
 
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
 .card-h{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
@@ -99,13 +100,27 @@ main{max-width:1400px;margin:0 auto;padding:18px 20px 120px}
 .chip.info{background:rgba(185,185,211,.12);color:var(--text2)}
 .empty{color:var(--muted);text-align:center;padding:30px 10px;font-family:var(--ui)}
 
+/* Open tabs */
+.tabs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px}
+.tab{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--padel);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.tab.pickle{border-top-color:var(--pickle)}
+.tab .th{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.tab .th b{font-family:var(--head);font-weight:400;font-size:26px;letter-spacing:.04em}
+.tab .prow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--grid)}
+.tab .prow .nm{font-size:18px;font-weight:600;line-height:1.15}
+.tab .prow .nm small{display:block;font-family:var(--ui);font-size:12.5px;color:var(--muted);font-weight:500}
+.tab .prow .bal{font-family:var(--ui);font-weight:600;font-variant-numeric:tabular-nums;text-align:right;min-width:72px}
+.tab .prow .bal.zero{color:var(--goodText)} .tab .prow .bal.owe{color:#ff9d9d}
+.tab .prow .acts{display:flex;gap:6px}
+.tab .tf{display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--grid);padding-top:10px}
+
 /* Editor sheet */
 #sheet{position:fixed;inset:0;z-index:40;background:rgba(5,5,20,.6);display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;padding:24px 12px 0}
-.sheet{width:100%;max-width:860px;background:var(--page);border:1px solid var(--line);border-radius:18px 18px 0 0;min-height:100%;padding-bottom:110px;position:relative}
+.sheet{width:100%;max-width:900px;background:var(--page);border:1px solid var(--line);border-radius:18px 18px 0 0;min-height:100%;padding-bottom:120px;position:relative}
 .sheet-h{position:sticky;top:-24px;z-index:3;background:var(--page);border-bottom:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px 18px;display:flex;align-items:center;gap:12px}
 .sheet-h h2{font-family:var(--head);font-weight:400;font-size:30px;letter-spacing:.04em}
 .sec{padding:18px 18px 4px}
-.sec h4{font-family:var(--head);font-weight:400;font-size:22px;letter-spacing:.05em;color:var(--text2);margin-bottom:10px;display:flex;align-items:baseline;gap:10px}
+.sec h4{font-family:var(--head);font-weight:400;font-size:22px;letter-spacing:.05em;color:var(--text2);margin-bottom:10px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .sec h4 small{font-family:var(--ui);font-size:13px;color:var(--muted);letter-spacing:0}
 .row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:12px}
 label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);font-family:var(--ui);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
@@ -125,6 +140,7 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 .msg.warn{background:rgba(250,178,25,.12);color:#ffd27a}
 .msg.ok{background:rgba(12,163,12,.12);color:#9be89b}
 .msg.info{background:var(--card);color:var(--text2)}
+.cat{font-family:var(--ui);font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:6px 0 8px}
 
 /* players */
 .players{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
@@ -139,7 +155,30 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 .dd button:hover,.dd button.hl{background:var(--card3)}
 .dd button small{color:var(--muted);font-family:var(--ui);font-size:13px}
 
-/* lines */
+/* owners + thumbnails */
+.owners{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;position:sticky;top:44px;z-index:2;background:var(--page);padding:6px 0}
+.own{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:6px 12px;font-size:16px;font-weight:600;min-height:44px;display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;line-height:1.1}
+.own small{font-family:var(--ui);font-size:12px;color:var(--muted);font-weight:500}
+.own.on{border-color:var(--yellow);background:rgba(245,214,40,.12)}
+.own.on small{color:var(--yellow)}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;margin-bottom:12px}
+.th-item{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-height:132px}
+.th-item:hover{border-color:var(--axis)}
+.th-item:active{transform:scale(.97)}
+.th-item .pic{width:60px;height:60px;display:flex;align-items:center;justify-content:center}
+.th-item .pic img{width:60px;height:60px;object-fit:cover;border-radius:10px}
+.th-item .pic svg{width:56px;height:56px}
+.th-item .lb{font-size:14.5px;font-weight:600;line-height:1.1}
+.th-item .pr{font-family:var(--ui);font-size:12.5px;color:var(--muted)}
+.th-item .q{position:absolute;top:6px;right:6px;min-width:26px;height:26px;border-radius:13px;background:var(--yellow);color:var(--navy);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.tabsum{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.ts-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-family:var(--ui);font-size:14px}
+.ts-row > b{font-family:var(--body);font-size:17px;min-width:110px}
+.ts-row .it{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border-radius:999px;padding:3px 4px 3px 10px}
+.ts-row .it button{width:24px;height:24px;border-radius:50%;border:0;background:var(--card3);font-size:14px;line-height:1}
+.ts-row .amt{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* lines & pay */
 .lines{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 14px;margin-bottom:12px;font-family:var(--ui)}
 .ln{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--grid);font-size:15px}
 .ln:last-child{border-bottom:0}
@@ -148,46 +187,45 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 .ln.minus b{color:#ffb08f}
 .ln.total{font-size:17px}
 .ln.total span:first-child{color:var(--text)}
-.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin-bottom:12px}
-.item{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 12px}
-.item.on{border-color:var(--yellow)}
-.item .nm{flex:1;font-size:16px;line-height:1.15}
-.item .nm small{display:block;color:var(--muted);font-family:var(--ui);font-size:13px}
-.step{display:flex;align-items:center;gap:6px}
-.step button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card2);font-size:20px;line-height:1}
-.step b{min-width:20px;text-align:center;font-size:18px}
-.cat{font-family:var(--ui);font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:4px 0 6px}
-.pay{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-bottom:12px}
-.pay .m{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
-.pay .m.on{border-color:var(--yellow)}
-.pay .m .top{display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:16px}
-.pay .m .top button{font-size:12px;font-family:var(--ui);background:var(--card3);border:0;border-radius:999px;padding:4px 9px;color:var(--text2)}
-.split{width:100%;border-collapse:collapse;font-family:var(--ui);font-size:15px;margin-bottom:12px}
-.split td,.split th{padding:7px 6px;border-bottom:1px solid var(--grid);text-align:left}
-.split th{font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:600}
-.split input,.split select{padding:7px 8px;font-size:15px}
-.split td.num{width:110px}
+.tbl{width:100%;border-collapse:collapse;font-family:var(--ui);font-size:15px;margin-bottom:12px}
+.tbl td,.tbl th{padding:8px 6px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap}
+.tbl th{font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:600}
+.tbl td:first-child,.tbl th:first-child{text-align:left}
+.tbl td.owe{color:#ff9d9d;font-weight:600} .tbl td.zero{color:var(--goodText);font-weight:600}
+.payform{background:var(--card);border:1px dashed var(--axis);border-radius:12px;padding:12px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px}
+.payform .who{display:flex;flex-wrap:wrap;gap:8px}
+.payform .who label{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-family:var(--ui);font-size:15px;color:var(--text)}
+.payform .who input{width:20px;height:20px}
+.paylist .p{display:flex;gap:10px;align-items:center;font-family:var(--ui);font-size:14px;padding:7px 0;border-bottom:1px solid var(--grid);flex-wrap:wrap}
+.paylist .p b{font-variant-numeric:tabular-nums}
+.paylist .p span{color:var(--text2)}
 
 /* games */
-.game{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-family:var(--ui);font-size:15px;flex-wrap:wrap}
-.game b{font-size:18px;font-family:var(--body)}
-.game .vs{color:var(--muted)}
-.gameform{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--card);border:1px dashed var(--axis);border-radius:12px;padding:12px;margin-bottom:12px}
-.gameform .t{font-size:12px;color:var(--muted);font-family:var(--ui);font-weight:600;text-transform:uppercase;grid-column:span 2}
+.gtable{width:100%;border-collapse:collapse;margin-bottom:10px;font-family:var(--ui)}
+.gtable td{padding:5px 4px;vertical-align:middle}
+.gtable select,.gtable input{padding:8px 8px;font-size:15px}
+.gtable .vs{color:var(--muted);font-size:13px;text-align:center;width:28px}
+.gtable .num{color:var(--muted);width:26px;font-size:13px}
+.gtable .sc{width:110px}
+.gtable .st{width:96px;text-align:center}
+.gtable .x{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card2)}
+.gwrap{overflow-x:auto}
 
 /* footer */
 .foot{position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;justify-content:center;pointer-events:none}
-.foot-in{pointer-events:auto;width:100%;max-width:860px;background:#0A0A22;border-top:1px solid var(--axis);padding:12px 18px calc(12px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.foot-in{pointer-events:auto;width:100%;max-width:900px;background:#0A0A22;border-top:1px solid var(--axis);padding:12px 18px calc(12px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .tot{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--ui)}
 .tot div{display:flex;flex-direction:column;font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:.03em}
 .tot b{font-family:var(--body);font-size:24px;color:var(--text);text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
 .tot .rem b{color:#ff9d9d} .tot .rem.zero b{color:var(--goodText)} .tot .rem.over b{color:var(--warn)}
 
-/* modal (settings) */
 .modal-table{width:100%;border-collapse:collapse;font-family:var(--ui);font-size:15px}
-.modal-table td,.modal-table th{padding:6px;border-bottom:1px solid var(--grid);text-align:left}
+.modal-table td,.modal-table th{padding:6px;border-bottom:1px solid var(--grid);text-align:left;vertical-align:middle}
 .modal-table th{font-size:12px;color:var(--muted);text-transform:uppercase}
 .modal-table input,.modal-table select{padding:7px 8px;font-size:15px}
+.modal-table .pic{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.modal-table .pic img{width:44px;height:44px;object-fit:cover;border-radius:8px}
+.modal-table .pic svg{width:40px;height:40px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;background:#0A0A22;border:1px solid var(--axis);border-radius:12px;padding:12px 18px;font-family:var(--ui);font-size:15px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 @media (max-width:640px){
   .top-row{padding:8px 12px;gap:8px}
@@ -198,15 +236,16 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
   #sheet{padding:0}
   .sheet{border-radius:0}
   .sheet-h{top:0;border-radius:0}
-  .tot b{font-size:20px}
   .sheet-h h2{font-size:24px;white-space:nowrap}
+  .tot b{font-size:20px}
   .foot-in{gap:10px}
   .foot-in .tot{width:100%;justify-content:space-between}
-  .foot-in > div[style*="flex:1"]{display:none}
+  .foot-in .fsp{display:none}
   .foot-in .btn{flex:1}
   #saveErr{width:100%;max-width:none!important;order:-1}
-  .gameform{grid-template-columns:1fr}
-  .gameform .t{grid-column:span 1}
+  .tabs-grid{grid-template-columns:1fr}
+  .thumbs{grid-template-columns:repeat(3,1fr)}
+  .owners{top:52px}
 }
 </style>
 </head>
@@ -239,11 +278,15 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
   </div></header>
   <main>
     <div id="offline" class="msg warn hidden">You're offline. Changes are saved on this device and will upload when the connection returns. Don't close this tab.</div>
-    <div class="card"><div class="card-h"><h3>Courts</h3><span class="sub">Tap an empty slot to book it · tap a booking to open it</span></div>
-      <div class="tl-wrap"><div class="tl" id="board"></div></div>
-      <div class="legend"><span><i class="sp" style="background:var(--padel)"></i>Padel</span><span><i class="sp" style="background:var(--pickle)"></i>Pickleball</span><span><i class="sp" style="background:var(--crit);border-radius:50%"></i>Payment due</span><span>Shaded = peak hours</span></div>
+    <div class="viewseg"><div class="seg" style="margin:0"><button data-view="tabs" id="vTabs">Open tabs</button><button data-view="board" id="vBoard">Courts</button></div><span class="sub" id="viewHint"></span></div>
+    <div id="viewTabs"></div>
+    <div id="viewBoard" class="hidden">
+      <div class="card"><div class="card-h"><h3>Courts</h3><span class="sub">Tap an empty slot to book it · tap a booking to open it</span></div>
+        <div class="tl-wrap"><div class="tl" id="board"></div></div>
+        <div class="legend"><span><i class="sp" style="background:var(--padel)"></i>Padel</span><span><i class="sp" style="background:var(--pickle)"></i>Pickleball</span><span><i class="sp" style="background:var(--crit);border-radius:50%"></i>Payment due</span><span>Shaded = peak hours</span></div>
+      </div>
+      <div class="list" id="list"></div>
     </div>
-    <div class="list" id="list"></div>
   </main>
 </div>
 <div id="sheet" class="hidden"></div>
@@ -252,9 +295,9 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, get, set, update, push, remove, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, get, set, push, remove, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-/* ── Firebase: ops project (bookings & money) + club project (members & matches) ── */
+/* ── Firebase: ops project (bookings & money) + club project (members, matches, sessions) ── */
 const opsApp = initializeApp({
   apiKey: "AIzaSyCicHoHWs7R8ifZ7Q5FcjhTncgO0AOODeY", authDomain: "deuceandsmash-ops.firebaseapp.com",
   databaseURL: "https://deuceandsmash-ops-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "deuceandsmash-ops",
@@ -274,21 +317,25 @@ const DESK = ['deuceandsmash@gmail.com'];
 /* ── Helpers ── */
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const inr = v => '₹' + Math.round(v || 0).toLocaleString('en-IN');
+const inr = v => (v < -0.5 ? '−' : '') + '₹' + Math.abs(Math.round(v || 0)).toLocaleString('en-IN');
 const pad = n => String(n).padStart(2, '0');
+const sum = (a, f) => a.reduce((s, x) => s + (f ? f(x) : x || 0), 0);
 const todayISO = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
 const D = iso => new Date(iso + 'T00:00:00Z');
 const addDays = (iso, n) => new Date(D(iso).getTime() + n * 864e5).toISOString().slice(0, 10);
 const dowOf = iso => D(iso).getUTCDay();
-const dateMsIST = iso => D(iso).getTime() - 330 * 60000;     // midnight IST, as epoch ms
+const dateMsIST = iso => D(iso).getTime() - 330 * 60000;
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const fdw = iso => { const d = D(iso); return DOW[d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + MON[d.getUTCMonth()]; };
 const hhmm = m => { m = ((m % 1440) + 1440) % 1440; const h = Math.floor(m / 60), mi = m % 60; return (h % 12 || 12) + (mi ? ':' + pad(mi) : '') + (h >= 12 ? 'pm' : 'am'); };
 const hm24 = m => pad(Math.floor(m / 60) % 24) + ':' + pad(m % 60);
+const sessTime = (s, e) => { const f = m => { m %= 1440; const h = Math.floor(m / 60); return (h % 12 || 12) + ':' + pad(m % 60); }, ap = m => (m % 1440) >= 720 ? 'PM' : 'AM';
+  return ap(s) === ap(e) ? `${f(s)}–${f(e)} ${ap(e)}` : `${f(s)} ${ap(s)}–${f(e)} ${ap(e)}`; };
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-const clone = o => JSON.parse(JSON.stringify(o));
+const clone = o => JSON.parse(JSON.stringify(o ?? null));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const store = { get(k, d) { try { const v = localStorage.getItem('dsdesk.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem('dsdesk.' + k, JSON.stringify(v)); } catch {} } };
-function toast(t, ms = 2600) { const el = document.createElement('div'); el.className = 'toast'; el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), ms); }
+function toast(t, ms = 2400) { document.querySelectorAll('.toast').forEach(x => x.remove()); const el = document.createElement('div'); el.className = 'toast'; el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), ms); }
 
 /* ── Club model ── */
 const COURTS = { padel: ['P1', 'P2'], pickle: ['K1', 'K2', 'K3'] };
@@ -298,33 +345,35 @@ const SPORT = { padel: 'Padel', pickle: 'Pickleball' };
 const PLAYERS_PER_COURT = { padel: 4, pickle: 4 };
 const isPeakHour = (dow, h) => { if (h < 6) return true; return (dow === 0 || dow === 6) ? ((h >= 6 && h < 11) || (h >= 16)) : (h >= 17); };
 const TYPES = [['group', 'Group'], ['individual', 'Individual'], ['open_play', 'Open play'], ['event', 'Event'], ['party', 'Party']];
-const STATUSES = [['booked', 'Booked'], ['played', 'Played'], ['no_show', 'No-show'], ['cancelled', 'Cancelled']];
+const STATUSES = [['booked', 'Booked / in play'], ['played', 'Played'], ['no_show', 'No-show'], ['cancelled', 'Cancelled']];
+const OP_LEVELS = ['Beginner', 'Beginner / Beginner+', 'Beginner+', 'Beginner+ / Inter', 'Inter', 'Inter / Inter+', 'Inter+', 'Strong Inter', 'Advanced'];
+const OP_GROUPS = ['Community', 'Team Smash'];
 const OVERRIDE_REASONS = ['Discount', 'Member rate', 'Complimentary', 'Launch / promo price', 'Other'];
 const BASE_METHODS = [['upi', 'UPI'], ['card', 'Card'], ['cash', 'Cash']];
-const CATS = [['racquet', 'Racquets & paddles'], ['balls', 'Balls'], ['beverage', 'Drinks'], ['other', 'Other']];
+const CATS = [['beverage', 'Drinks'], ['racquet', 'Racquets & paddles'], ['balls', 'Balls'], ['other', 'Other']];
 const DEFAULT_CONFIG = {
   rates: { padel: { off: 1300, peak: 1600 }, pickle: { off: 600, peak: 700 } },
   items: {
-    racq_int:  { label: 'Padel racquet · Intermediate', cat: 'racquet', sport: 'padel', price: 100, order: 1, active: true },
-    racq_adv:  { label: 'Padel racquet · Advanced', cat: 'racquet', sport: 'padel', price: 200, order: 2, active: true },
-    racq_pro:  { label: 'Padel racquet · Pro', cat: 'racquet', sport: 'padel', price: 250, order: 3, active: true },
-    paddle:    { label: 'Pickleball paddle', cat: 'racquet', sport: 'pickle', price: 100, order: 4, active: true },
-    ball_bpnp: { label: 'Bullpadel Next Pro (can)', cat: 'balls', sport: 'padel', price: 700, order: 10, active: true },
-    ball_bpn:  { label: 'Bullpadel Next (can)', cat: 'balls', sport: 'padel', price: 650, order: 11, active: true },
-    ball_hpro: { label: 'Head Pro (can)', cat: 'balls', sport: 'padel', price: 650, order: 12, active: true },
-    ball_wil:  { label: 'Wilson (can)', cat: 'balls', sport: 'padel', price: 650, order: 13, active: true },
-    ball_bab:  { label: 'Babolat Ace (can)', cat: 'balls', sport: 'padel', price: 650, order: 14, active: true },
-    ball_dun:  { label: 'Dunlop (can)', cat: 'balls', sport: 'padel', price: 600, order: 15, active: true },
-    ball_hteam:{ label: 'Head Team (can)', cat: 'balls', sport: 'padel', price: 500, order: 16, active: true },
-    ball_frank:{ label: 'Franklin ball', cat: 'balls', sport: 'pickle', price: 180, order: 17, active: true },
-    wb:        { label: 'Water bottle', cat: 'beverage', sport: 'any', price: 10, order: 20, active: true },
-    go_s:      { label: 'Gatorade Orange · small', cat: 'beverage', sport: 'any', price: 20, order: 21, active: true },
-    gb_s:      { label: 'Gatorade Blue · small', cat: 'beverage', sport: 'any', price: 20, order: 22, active: true },
-    gl_s:      { label: 'Gatorade Lemon · small', cat: 'beverage', sport: 'any', price: 20, order: 23, active: true },
-    go_b:      { label: 'Gatorade Orange · big', cat: 'beverage', sport: 'any', price: 50, order: 24, active: true },
-    gb_b:      { label: 'Gatorade Blue · big', cat: 'beverage', sport: 'any', price: 50, order: 25, active: true },
-    gl_b:      { label: 'Gatorade Lemon · big', cat: 'beverage', sport: 'any', price: 50, order: 26, active: true },
-    pocari:    { label: 'Pocari Sweat', cat: 'beverage', sport: 'any', price: 65, order: 27, active: true }
+    wb:        { label: 'Water bottle', cat: 'beverage', sport: 'any', price: 10, order: 1, active: true, icon: 'water' },
+    go_s:      { label: 'Gatorade Orange · small', cat: 'beverage', sport: 'any', price: 20, order: 2, active: true, icon: 'gat:orange:s' },
+    gb_s:      { label: 'Gatorade Blue · small', cat: 'beverage', sport: 'any', price: 20, order: 3, active: true, icon: 'gat:blue:s' },
+    gl_s:      { label: 'Gatorade Lemon · small', cat: 'beverage', sport: 'any', price: 20, order: 4, active: true, icon: 'gat:lemon:s' },
+    go_b:      { label: 'Gatorade Orange · big', cat: 'beverage', sport: 'any', price: 50, order: 5, active: true, icon: 'gat:orange:b' },
+    gb_b:      { label: 'Gatorade Blue · big', cat: 'beverage', sport: 'any', price: 50, order: 6, active: true, icon: 'gat:blue:b' },
+    gl_b:      { label: 'Gatorade Lemon · big', cat: 'beverage', sport: 'any', price: 50, order: 7, active: true, icon: 'gat:lemon:b' },
+    pocari:    { label: 'Pocari Sweat', cat: 'beverage', sport: 'any', price: 65, order: 8, active: true, icon: 'pocari' },
+    racq_int:  { label: 'Padel racquet · Intermediate', cat: 'racquet', sport: 'padel', price: 100, order: 20, active: true, icon: 'racq:int' },
+    racq_adv:  { label: 'Padel racquet · Advanced', cat: 'racquet', sport: 'padel', price: 200, order: 21, active: true, icon: 'racq:adv' },
+    racq_pro:  { label: 'Padel racquet · Pro', cat: 'racquet', sport: 'padel', price: 250, order: 22, active: true, icon: 'racq:pro' },
+    paddle:    { label: 'Pickleball paddle', cat: 'racquet', sport: 'pickle', price: 100, order: 23, active: true, icon: 'paddle' },
+    ball_bpnp: { label: 'Bullpadel Next Pro (can)', cat: 'balls', sport: 'padel', price: 700, order: 30, active: true, icon: 'can:red' },
+    ball_bpn:  { label: 'Bullpadel Next (can)', cat: 'balls', sport: 'padel', price: 650, order: 31, active: true, icon: 'can:black' },
+    ball_hpro: { label: 'Head Pro (can)', cat: 'balls', sport: 'padel', price: 650, order: 32, active: true, icon: 'can:blue' },
+    ball_wil:  { label: 'Wilson (can)', cat: 'balls', sport: 'padel', price: 650, order: 33, active: true, icon: 'can:red' },
+    ball_bab:  { label: 'Babolat Ace (can)', cat: 'balls', sport: 'padel', price: 650, order: 34, active: true, icon: 'can:blue' },
+    ball_dun:  { label: 'Dunlop (can)', cat: 'balls', sport: 'padel', price: 600, order: 35, active: true, icon: 'can:black' },
+    ball_hteam:{ label: 'Head Team (can)', cat: 'balls', sport: 'padel', price: 500, order: 36, active: true, icon: 'can:white' },
+    ball_frank:{ label: 'Franklin ball', cat: 'balls', sport: 'pickle', price: 180, order: 37, active: true, icon: 'pball' }
   },
   sources: {
     walkin:    { label: 'Walk-in', aggregator: false, order: 1, active: true },
@@ -334,26 +383,61 @@ const DEFAULT_CONFIG = {
   }
 };
 
+/* ── Item thumbnails: built-in drawings (owners can replace any with a photo in Settings) ── */
+const GAT = { orange: '#ff8a1d', blue: '#2f7bff', lemon: '#e8df2e', red: '#e5413b' };
+function inferIcon(k, it) {
+  if (it.icon) return it.icon;
+  const l = (it.label || '').toLowerCase();
+  if (/water/.test(l) || k === 'wb') return 'water';
+  if (/pocari/.test(l)) return 'pocari';
+  if (/gatorade/.test(l)) return 'gat:' + (/blue/.test(l) ? 'blue' : /lemon/.test(l) ? 'lemon' : 'orange') + ':' + (/big|large/.test(l) ? 'b' : 's');
+  if (/paddle/.test(l)) return 'paddle';
+  if (/racquet|racket/.test(l)) return 'racq:' + (/pro/.test(l) ? 'pro' : /adv/.test(l) ? 'adv' : 'int');
+  if (/franklin|pickle/.test(l)) return 'pball';
+  if (it.cat === 'balls') return 'can:black';
+  if (it.cat === 'beverage') return 'gat:red:s';
+  return 'tag';
+}
+function iconSVG(code) {
+  const [t, a, b] = String(code || 'tag').split(':');
+  const S = inner => `<svg viewBox="0 0 64 64" aria-hidden="true">${inner}</svg>`;
+  if (t === 'water') return S(`<rect x="25" y="5" width="14" height="7" rx="2" fill="#1A6FD4"/><path d="M24 14h16l4 8v32a6 6 0 0 1-6 6H26a6 6 0 0 1-6-6V22z" fill="#bfe6ff" stroke="#8fd3ff" stroke-width="2"/><rect x="21" y="30" width="22" height="12" fill="#fff" opacity=".9"/><path d="M26 34h12M26 38h8" stroke="#1A6FD4" stroke-width="2"/>`);
+  if (t === 'gat') { const c = GAT[a] || GAT.orange, big = b === 'b', top = big ? 4 : 16;
+    return S(`<rect x="25" y="${top}" width="14" height="6" rx="2" fill="#111"/><path d="M23 ${top + 7}h18l3 6V${big ? 56 : 54}a5 5 0 0 1-5 5H25a5 5 0 0 1-5-5V${top + 13}z" fill="${c}"/><rect x="20" y="${top + (big ? 20 : 15)}" width="24" height="${big ? 16 : 12}" fill="#111" opacity=".85"/><path d="M33 ${top + (big ? 22 : 16)}l-5 ${big ? 7 : 5}h4l-2 ${big ? 5 : 4} 6-${big ? 8 : 6}h-4z" fill="${c}"/>`); }
+  if (t === 'pocari') return S(`<rect x="19" y="8" width="26" height="50" rx="5" fill="#fff"/><rect x="19" y="8" width="26" height="22" rx="5" fill="#1d4fd8"/><rect x="19" y="24" width="26" height="6" fill="#1d4fd8"/><path d="M22 36c6-4 14-4 20 0" stroke="#1d4fd8" stroke-width="3" fill="none"/><rect x="22" y="44" width="20" height="3" rx="1.5" fill="#1d4fd8" opacity=".5"/>`);
+  if (t === 'racq') { const c = { int: '#7DC515', adv: '#3987e5', pro: '#F5D628' }[a] || '#7DC515';
+    return S(`<ellipse cx="32" cy="22" rx="16" ry="18" fill="${c}"/><g fill="#0E0E2C" opacity=".45"><circle cx="26" cy="12" r="2"/><circle cx="32" cy="10" r="2"/><circle cx="38" cy="12" r="2"/><circle cx="23" cy="32" r="2"/><circle cx="29" cy="34" r="2"/><circle cx="35" cy="34" r="2"/><circle cx="41" cy="32" r="2"/></g><path d="M28 38h8l-1 6h-6z" fill="${c}"/><rect x="28.5" y="43" width="7" height="18" rx="3" fill="#222"/><text x="32" y="26" text-anchor="middle" font-family="Arial" font-weight="700" font-size="10" fill="#0E0E2C">${a === 'pro' ? 'PRO' : a === 'adv' ? 'ADV' : 'INT'}</text>`); }
+  if (t === 'paddle') return S(`<rect x="15" y="4" width="34" height="38" rx="15" fill="#5fa30f"/><rect x="19" y="8" width="26" height="30" rx="12" fill="none" stroke="#c7f08a" stroke-width="2"/><rect x="28" y="40" width="8" height="21" rx="3" fill="#222"/>`);
+  if (t === 'pball') return S(`<circle cx="32" cy="32" r="24" fill="#e9f02a"/><g fill="#9aa61a"><circle cx="32" cy="16" r="3.5"/><circle cx="20" cy="24" r="3.5"/><circle cx="44" cy="24" r="3.5"/><circle cx="32" cy="32" r="3.5"/><circle cx="20" cy="40" r="3.5"/><circle cx="44" cy="40" r="3.5"/><circle cx="32" cy="48" r="3.5"/></g>`);
+  if (t === 'can') { const c = { red: '#d6342c', blue: '#1A6FD4', black: '#1d1d1d', white: '#e9e9ef' }[a] || '#1d1d1d';
+    return S(`<rect x="17" y="6" width="30" height="54" rx="6" fill="${c}"/><ellipse cx="32" cy="8" rx="15" ry="4" fill="#cfd2dc"/><g fill="#dff03b" stroke="#a6b51a" stroke-width="1"><circle cx="32" cy="20" r="7"/><circle cx="32" cy="34" r="7"/><circle cx="32" cy="48" r="7"/></g>`); }
+  return S(`<path d="M10 30L30 10h22v22L32 52z" fill="#3a3a6a"/><circle cx="44" cy="18" r="4" fill="#B9B9D3"/>`);
+}
+const itemPic = (k, it) => it && it.img ? `<img src="${esc(it.img)}" alt="">` : iconSVG(inferIcon(k, it || {}));
+
 /* ── State ── */
 let USER = null, IS_OWNER = false, CFG = clone(DEFAULT_CONFIG), MEMBERS = {}, DAYISO = todayISO(), ENTRIES = {}, unsub = null;
-let E = null, EDIT_LOCK = false, SAVING = false;
+let E = null, EDIT_LOCK = false, SAVING = false, VIEW = store.get('view', 'tabs');
 
 const sorted = obj => Object.entries(obj || {}).filter(([, v]) => v && v.active !== false).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
 const methods = () => [...BASE_METHODS, ...sorted(CFG.sources).filter(([, s]) => s.aggregator).map(([k, s]) => [k, s.label])];
 const methodLabel = k => (methods().find(m => m[0] === k) || [k, k])[1];
+const itemOf = (k, e) => CFG.items[k] || (e && e.itemSnap && e.itemSnap[k]) || { label: k, price: 0, cat: 'other' };
+const payersOf = e => e.players.filter(p => !p.fill);
+const bookerOf = e => e.players.find(p => p.booker) || e.players[0] || null;
+const lockedFor = e => !IS_OWNER && e.date && Math.floor((Date.now() - dateMsIST(e.date)) / 864e5) > 1;
 
-/* ── Pricing ── */
+/* ── Pricing & per-player balances ── */
 function courtCharge(sport, iso, start, minutes) {
   const r = CFG.rates[sport], dw = dowOf(iso); let peak = 0;
   for (let i = 0; i < minutes; i++) if (isPeakHour(dw, Math.floor(((start + i) % 1440) / 60))) peak++;
   return { peak, off: minutes - peak, amount: Math.round((peak * r.peak + (minutes - peak) * r.off) / 60) };
 }
+function itemsCost(map, e) { let t = 0; for (const [k, q] of Object.entries(map || {})) if (q > 0) t += (itemOf(k, e).price || 0) * q; return t; }
 function calc(e) {
   const nC = Math.max(1, e.courts.length), isEv = e.type === 'event' || e.type === 'party';
-  const cc = courtCharge(e.sport, e.date, e.start, e.minutes);
-  const auto = cc.amount * nC;
-  const players = e.players.length, fills = e.players.filter(p => p.fill).length;
-  const expected = PLAYERS_PER_COURT[e.sport] * nC;
+  const cc = courtCharge(e.sport, e.date, e.start, e.minutes), auto = cc.amount * nC;
+  const players = e.players.length, fills = e.players.filter(p => p.fill).length, expected = PLAYERS_PER_COURT[e.sport] * nC;
   let court, share, perPerson = null;
   if (isEv) { court = +e.charge.eventFee || 0; share = players ? court / players : 0; }
   else if (e.charge.mode === 'player') {
@@ -363,34 +447,37 @@ function calc(e) {
     court = e.charge.override != null && e.charge.override !== '' ? +e.charge.override : auto;
     share = court / Math.max(players, expected);
   }
+  const fillLoss = Math.round(share * fills), courtDue = Math.max(0, court - fillLoss);
+  const P = payersOf(e), pkeys = new Set(P.map(p => p.key));
+  // items by category, and by whose tab (items left on a removed / fill-in player fall back to shared)
   const ex = { racquet: 0, balls: 0, beverage: 0, other: 0 };
-  for (const [k, q] of Object.entries(e.extras || {})) { const it = CFG.items[k] || (e.extrasSnap || {})[k]; if (it && q > 0) ex[it.cat || 'other'] += (it.price || 0) * q; }
+  let sharedCost = 0; const own = {};
+  for (const [owner, map] of Object.entries(e.items || {})) for (const [k, q] of Object.entries(map || {})) {
+    if (!(q > 0)) continue; const it = itemOf(k, e), v = (it.price || 0) * q, cat = ex[it.cat] != null ? it.cat : 'other';
+    ex[cat] += v;
+    if (owner !== 'shared' && pkeys.has(owner)) own[owner] = (own[owner] || 0) + v; else sharedCost += v;
+  }
   const extras = ex.racquet + ex.balls + ex.beverage + ex.other;
-  const fillLoss = Math.round(share * fills);
   const bill = court + extras, due = Math.max(0, bill - fillLoss);
-  const paid = Object.values(payTotals(e, { due, share, extras })).reduce((s, v) => s + v, 0);
-  return { cc, auto, court, share, perPerson, ex, extras, fills, fillLoss, bill, due, paid, remaining: due - paid, expected, nC, isEv };
-}
-function splitRows(e, c) {
-  const payers = e.players.filter(p => !p.fill);
-  const bookerIdx = Math.max(0, payers.findIndex(p => p.booker));
-  return payers.map((p, i) => {
-    const saved = (e.split || {})[p.key] || {};
-    const def = Math.round(c.share) + (i === bookerIdx ? c.extras : 0);
-    return { key: p.key, name: p.name, amount: saved.amount != null && saved.amount !== '' ? +saved.amount : def, method: saved.method || 'upi', paidBy: saved.paidBy || '', paid: !!saved.paid };
-  });
-}
-function payTotals(e, c) {
-  const t = {};
-  if (e.payMode === 'split') {
-    const rows = splitRows(e, c), byKey = Object.fromEntries(rows.map(r => [r.key, r]));
-    for (const r of rows) {
-      if (!r.paid) continue;
-      const payer = r.paidBy && byKey[r.paidBy] ? byKey[r.paidBy] : r;
-      t[payer.method] = (t[payer.method] || 0) + r.amount;
+  const n = P.length, courtEach = n ? courtDue / n : 0, sharedEach = n ? sharedCost / n : 0;
+  const per = P.map(p => ({ key: p.key, name: p.name, court: courtEach, own: own[p.key] || 0, shared: sharedEach, charge: courtEach + (own[p.key] || 0) + sharedEach, paid: 0 }));
+  const byKey = Object.fromEntries(per.map(x => [x.key, x]));
+  const rem = Object.fromEntries(per.map(x => [x.key, { c: x.court, i: x.own + x.shared }]));
+  const take = (k, amt, bucket) => { const r = rem[k]; if (!r) return amt; const t = Math.min(amt, r[bucket]); r[bucket] -= t; byKey[k].paid += t; return amt - t; };
+  const byMethod = {}; let paid = 0, credit = 0;
+  for (const p of e.pays || []) {
+    const amt = +p.amount || 0; if (!amt) continue;
+    paid += amt; byMethod[p.method] = (byMethod[p.method] || 0) + amt;
+    let left = amt;
+    const targets = (p.payers || []).filter(k => rem[k]);
+    if (targets.length) { for (const k of targets) { left = take(k, left, 'c'); left = take(k, left, 'i'); } }
+    else if (n) { // whole-booking payment: court shares first, then items, spread evenly
+      for (const bucket of ['c', 'i']) { let guard = 0; while (left > 0.5 && guard++ < 50) { const open = per.filter(x => rem[x.key][bucket] > 0.5); if (!open.length) break; const each = left / open.length; for (const x of open) left = left - each + take(x.key, each, bucket); } }
     }
-  } else for (const [k, v] of Object.entries(e.payments || {})) if (+v) t[k] = (t[k] || 0) + +v;
-  return t;
+    credit += left;
+  }
+  for (const x of per) x.balance = x.charge - x.paid;
+  return { cc, auto, court, share, perPerson, ex, extras, fills, fillLoss, courtDue, bill, due, paid, remaining: due - paid, expected, nC, isEv, per, byMethod, sharedCost, credit };
 }
 
 /* ── Conflicts ── */
@@ -401,6 +488,66 @@ function conflicts(e) {
     if (x.start < e.start + e.minutes && e.start < x.start + x.minutes) for (const c of x.courts || []) out[c] = x;
   }
   return out;
+}
+
+/* ── Saved booking <-> draft (also converts bookings saved by the first version) ── */
+const keyByName = (e, n) => { if (!n) return ''; const p = e.players.find(x => x.name === n); if (p) return p.key; const m = Object.values(MEMBERS).find(x => x && x.name === n); return m ? m.id : ''; };
+function toDraft(entry) {
+  const e = Object.assign(blank({}), clone(entry));
+  e.players ||= []; e.charge ||= { mode: 'court' }; e.items ||= {};
+  if (entry.extras && Object.keys(entry.extras).length && !entry.items) e.items = { shared: { ...entry.extras } };
+  if (!Array.isArray(entry.pays)) {
+    e.pays = [];
+    if (entry.payMode === 'split' && entry.split) { for (const [k, r] of Object.entries(entry.split)) if (r && r.paid) e.pays.push({ id: uid(), method: r.method || 'upi', amount: +r.amount || 0, payers: [r.paidBy || k], at: entry.updatedAt || '', by: entry.updatedBy || '' }); }
+    else for (const [k, v] of Object.entries(entry.payments || {})) if (+v) e.pays.push({ id: uid(), method: k, amount: +v, payers: [], at: entry.updatedAt || '', by: entry.updatedBy || '' });
+  }
+  e.pays = (e.pays || []).map(p => ({ ...p, payers: p.payers || [] }));
+  e.games = (entry.games || []).map(g => g.a1 !== undefined ? { ...g } : ({ matchId: g.matchId, a1: (g.ids || [])[0] || keyByName(e, (g.teamA || [])[0]), a2: (g.ids || [])[1] || keyByName(e, (g.teamA || [])[1]),
+    b1: (g.ids || [])[2] || keyByName(e, (g.teamB || [])[0]), b2: (g.ids || [])[3] || keyByName(e, (g.teamB || [])[1]), score: g.score || '' }));
+  e.games.forEach(g => { g.lid = uid(); if (!g.matchId) delete g.matchId; g._saved = g.matchId ? JSON.stringify([g.a1, g.a2, g.b1, g.b2, g.score]) : null; });
+  delete e.extras; delete e.payments; delete e.split; delete e.payMode; delete e.extrasDetail;
+  return e;
+}
+function buildDoc(e, id, now) {
+  const c = calc(e);
+  const itemsDetail = [], cleanItems = {}, snap = {};
+  for (const [owner, map] of Object.entries(e.items || {})) {
+    const m = {};
+    for (const [k, q] of Object.entries(map || {})) if (q > 0) { m[k] = q; const it = itemOf(k, e); itemsDetail.push({ owner, k, label: it.label, cat: it.cat || 'other', price: it.price || 0, qty: q }); snap[k] = { label: it.label, cat: it.cat || 'other', price: it.price || 0 }; }
+    if (Object.keys(m).length) cleanItems[owner] = m;
+  }
+  return {
+    id, date: e.date, dateMs: dateMsIST(e.date), start: e.start, minutes: e.minutes, startTime: hm24(e.start), endTime: hm24(e.start + e.minutes),
+    sport: e.sport, courts: e.courts, type: e.type, source: e.source, level: e.type === 'open_play' ? (e.level || '') : '', group: e.type === 'open_play' ? (e.group || 'Community') : '',
+    players: e.players.map(p => ({ key: p.key, id: p.id || '', name: p.name, fill: !!p.fill, booker: !!p.booker })),
+    charge: { mode: c.isEv ? 'event' : e.charge.mode || 'court', rateCard: c.auto, peakMin: c.cc.peak, offMin: c.cc.off, override: e.charge.override === '' ? null : e.charge.override ?? null,
+      overrideReason: e.charge.overrideReason || '', perPerson: c.perPerson, eventFee: c.isEv ? +e.charge.eventFee || 0 : null },
+    items: cleanItems, itemsDetail, itemSnap: snap,
+    totals: { court: c.court, racquet: c.ex.racquet, balls: c.ex.balls, beverage: c.ex.beverage, other: c.ex.other, bill: c.bill, fills: c.fills, fillLoss: c.fillLoss, share: Math.round(c.share), due: c.due },
+    tabs: Object.fromEntries(c.per.map(x => [x.key, { name: x.name, charge: Math.round(x.charge), paid: Math.round(x.paid), balance: Math.round(x.balance), items: Math.round(x.own + x.shared) }])),
+    pays: (e.pays || []).map(p => ({ id: p.id, method: p.method, amount: +p.amount || 0, payers: p.payers || [], at: p.at || now, by: p.by || USER })),
+    payments: c.byMethod, paid: c.paid, status: e.status, notes: e.notes || '',
+    games: (e.games || []).filter(g => g.matchId || [g.a1, g.a2, g.b1, g.b2, g.score].some(Boolean)).map(g => ({ matchId: g.matchId || null, a1: g.a1 || '', a2: g.a2 || '', b1: g.b1 || '', b2: g.b2 || '', score: g.score || '' })),
+    createdBy: e.createdBy || USER, createdAt: e.createdAt || now, updatedBy: USER, updatedAt: now
+  };
+}
+// Write a booking: used by the full editor and by quick actions on Open tabs
+async function commit(e, action = 'update') {
+  const now = new Date().toISOString(), isNew = !e.createdAt, id = e.id || push(ref(db, 'entries')).key;
+  e.id = id;
+  const doc = buildDoc(e, id, now);
+  await set(ref(db, `entries/${id}`), doc);
+  e.createdAt = doc.createdAt; e.createdBy = doc.createdBy;
+  push(ref(db, `entryLog/${id}`), { at: now, by: USER, action: isNew ? 'create' : action, summary: `${doc.startTime} ${doc.courts.join(',')} · due ${doc.totals.due} · paid ${doc.paid} · ${doc.status}` }).catch(() => {});
+  const mids = doc.players.filter(p => p.id).map(p => p.id);
+  set(ref(clubDb, `visits/${id}`), { bookingId: id, date: doc.date, start: doc.startTime, end: doc.endTime, minutes: doc.minutes, sport: doc.sport, courts: doc.courts, type: doc.type,
+    status: doc.status, players: mids, names: doc.players.map(p => p.name), updatedAt: now }).catch(() => {});
+  if (doc.type === 'open_play' && doc.sport === 'padel') {
+    const st = doc.status === 'cancelled' ? 'Cancelled' : doc.status === 'no_show' ? 'Not filled' : (doc.date <= todayISO() ? 'Played' : 'Scheduled');
+    set(ref(clubDb, `openPlaySessions/desk-${id}`), { id: 'desk-' + id, bookingId: id, source: 'desk', date: doc.date, time: sessTime(doc.start, doc.start + doc.minutes), start: doc.start,
+      level: doc.level || '', group: doc.group || 'Community', players: doc.players.filter(p => !p.fill).map(p => p.name), fill: doc.totals.fills, status: st, note: doc.notes || '', courts: doc.courts, games: doc.games.filter(g => g.matchId).length, updatedAt: now }).catch(() => {});
+  }
+  return doc;
 }
 
 /* ── Auth ── */
@@ -432,7 +579,7 @@ onAuthStateChanged(auth, async user => {
     $('#who').textContent = email; $('#role').textContent = IS_OWNER ? 'Owner' : 'Front desk'; $('#role').className = 'role' + (IS_OWNER ? ' owner' : '');
     $('#dashLink').classList.toggle('hidden', !IS_OWNER); $('#settingsBtn').classList.toggle('hidden', !IS_OWNER);
     if (!memSnap) toast('Couldn\'t load the members list. Players can still be typed in.', 4000);
-    setDay(todayISO());
+    setView(VIEW); setDay(todayISO());
   } catch (err) {
     gate(`<button class="btn" id="gateSignOut">Sign out</button>`, /permission/i.test(err.message || '') ? 'The database refused access for this account.' : 'Couldn\'t load: ' + (err.message || err), true);
   }
@@ -440,14 +587,20 @@ onAuthStateChanged(auth, async user => {
 addEventListener('online', () => $('#offline').classList.add('hidden'));
 addEventListener('offline', () => $('#offline').classList.remove('hidden'));
 
-/* ── Day & board ── */
+/* ── Day & views ── */
+function setView(v) {
+  VIEW = v; store.set('view', v);
+  $('#viewTabs').classList.toggle('hidden', v !== 'tabs'); $('#viewBoard').classList.toggle('hidden', v !== 'board');
+  $('#vTabs').classList.toggle('on', v === 'tabs'); $('#vBoard').classList.toggle('on', v === 'board'); renderDay();
+}
+document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
 function setDay(iso) {
-  DAYISO = iso; store.set('day', iso);
+  DAYISO = iso;
   $('#dayTitle').textContent = (iso === todayISO() ? 'TODAY · ' : '') + fdw(iso).toUpperCase();
   $('#dayPick').value = iso;
   if (unsub) unsub();
   ENTRIES = {}; renderDay();
-  unsub = onValue(query(ref(db, 'entries'), orderByChild('date'), equalTo(iso)), snap => { ENTRIES = snap.val() || {}; renderDay(); if (E) refresh(); },
+  unsub = onValue(query(ref(db, 'entries'), orderByChild('date'), equalTo(iso)), snap => { ENTRIES = snap.val() || {}; renderDay(); if (E && !E._quick) refresh(); },
     err => toast('Couldn\'t load bookings: ' + err.message, 5000));
 }
 $('#prevDay').onclick = () => setDay(addDays(DAYISO, -1));
@@ -456,7 +609,8 @@ $('#todayBtn').onclick = () => setDay(todayISO());
 $('#dayPick').onchange = e => e.target.value && setDay(e.target.value);
 $('#newBtn').onclick = () => openEditor(null, {});
 
-function renderDay() {
+function renderDay() { renderBoard(); renderTabs(); }
+function renderBoard() {
   const list = Object.values(ENTRIES).filter(Boolean).sort((a, b) => a.start - b.start);
   const dw = dowOf(DAYISO);
   const t0 = 6 * 60, t1 = Math.max(24 * 60, ...list.map(x => x.start + x.minutes)), span = t1 - t0;
@@ -467,7 +621,7 @@ function renderDay() {
   if (DAYISO === todayISO() && nowM >= t0 && nowM <= t1) bg += `<div class="tl-now" style="left:${L(nowM)}"></div>`;
   const rows = ALL_COURTS.map(c => {
     const blocks = list.filter(x => (x.courts || []).includes(c)).map(x => {
-      const c2 = x.totals || {}, due = x.status !== 'cancelled' && x.status !== 'no_show' && (c2.due || 0) - (x.paid || 0) > 0;
+      const due = x.status !== 'cancelled' && x.status !== 'no_show' && ((x.totals || {}).due || 0) - (x.paid || 0) > 0.5;
       const booker = (x.players || []).find(p => p.booker) || (x.players || [])[0] || {};
       return `<div class="tl-b ${x.sport} ${x.status}" style="left:${L(x.start)};width:${(x.minutes / span * 100).toFixed(3)}%" data-open="${esc(x.id)}">
         <div class="n">${esc(booker.name || '—')}</div><div class="t">${hhmm(x.start)}–${hhmm(x.start + x.minutes)}${x.status === 'cancelled' ? ' · cancelled' : x.status === 'no_show' ? ' · no-show' : ''}</div>${due ? '<span class="due"></span>' : ''}</div>`;
@@ -484,14 +638,123 @@ function renderDay() {
   $('#list').innerHTML = list.length ? list.map(x => {
     const t = x.totals || {}, rem = (t.due || 0) - (x.paid || 0), booker = (x.players || []).find(p => p.booker) || (x.players || [])[0] || {};
     const stat = x.status === 'cancelled' ? '<span class="chip info">Cancelled</span>' : x.status === 'no_show' ? '<span class="chip info">No-show</span>'
-      : rem > 0 ? `<span class="chip due">${inr(rem)} due</span>` : rem < 0 ? `<span class="chip warn">${inr(-rem)} overpaid</span>` : '<span class="chip ok">Paid ✓</span>';
+      : rem > 0.5 ? `<span class="chip due">${inr(rem)} due</span>` : rem < -0.5 ? `<span class="chip warn">${inr(-rem)} overpaid</span>` : '<span class="chip ok">Paid ✓</span>';
     const pc = (x.players || []).length, exp = PLAYERS_PER_COURT[x.sport] * Math.max(1, (x.courts || []).length);
     return `<div class="bk ${x.sport} ${x.status}" data-open="${esc(x.id)}">
       <div class="r1"><span>${hhmm(x.start)}–${hhmm(x.start + x.minutes)} · ${esc((x.courts || []).join(', '))}</span><span>${inr(t.due)}</span></div>
       <div class="r2">${esc(booker.name || '—')} · ${esc((TYPES.find(y => y[0] === x.type) || ['', x.type])[1])} · ${esc((CFG.sources[x.source] || {}).label || x.source || '')}</div>
-      <div class="chips">${stat}${x.status === 'booked' ? '<span class="chip info">Not marked played</span>' : ''}${pc < exp && x.type !== 'event' && x.type !== 'party' ? `<span class="chip warn">${pc}/${exp} players</span>` : ''}${(x.games || []).length ? `<span class="chip info">${x.games.length} game${x.games.length > 1 ? 's' : ''}</span>` : ''}</div></div>`;
+      <div class="chips">${stat}${x.status === 'booked' ? '<span class="chip info">In play / not closed</span>' : ''}${pc < exp && x.type !== 'event' && x.type !== 'party' ? `<span class="chip warn">${pc}/${exp} players</span>` : ''}${(x.games || []).filter(g => g.matchId).length ? `<span class="chip info">${x.games.filter(g => g.matchId).length} game${x.games.filter(g => g.matchId).length > 1 ? 's' : ''} scored</span>` : ''}</div></div>`;
   }).join('') : '<div class="empty">No bookings entered for this day yet.</div>';
   $('#list').onclick = ev => { const b = ev.target.closest('[data-open]'); if (b) openEditor(ENTRIES[b.dataset.open]); };
+}
+
+/* ── Open tabs: every live booking with each player's running balance ── */
+function openTabsList() {
+  return Object.values(ENTRIES).filter(x => x && x.status !== 'cancelled' && x.status !== 'no_show' && (x.status === 'booked' || ((x.totals || {}).due || 0) - (x.paid || 0) > 0.5))
+    .sort((a, b) => a.start - b.start);
+}
+function renderTabs() {
+  const list = openTabsList();
+  $('#vTabs').textContent = `Open tabs${list.length ? ' (' + list.length + ')' : ''}`;
+  $('#viewHint').textContent = VIEW === 'tabs' ? 'Sessions in play or with money still due. Add items to a player as they take them; take payment when they leave.' : '';
+  if (!list.length) {
+    $('#viewTabs').innerHTML = `<div class="card"><div class="empty">No open tabs ${DAYISO === todayISO() ? 'right now' : 'on this day'}. New bookings appear here until they're paid and marked played.<br><br><button class="btn btn-primary" id="tNew">+ New booking</button></div></div>`;
+    const b = $('#tNew'); if (b) b.onclick = () => openEditor(null, {}); return;
+  }
+  const now = new Date(), nowM = now.getHours() * 60 + now.getMinutes();
+  $('#viewTabs').innerHTML = `<div class="tabs-grid">${list.map(x => {
+    const d = toDraft(x), c = calc(d), live = DAYISO === todayISO() && nowM >= x.start && nowM < x.start + x.minutes;
+    const rows = c.per.map(p => {
+      const its = Object.entries((d.items || {})[p.key] || {}).filter(([, q]) => q > 0).map(([k, q]) => `${q}× ${itemOf(k, d).label.replace(/ \(can\)/, '')}`).join(', ');
+      return `<div class="prow"><div class="nm">${esc(p.name)}<small>${its ? esc(its) : 'No items yet'}${c.sharedCost ? ' · + share of shared' : ''}</small></div>
+        <div class="bal ${p.balance > 0.5 ? 'owe' : 'zero'}">${p.balance > 0.5 ? inr(p.balance) : 'Paid ✓'}</div>
+        <div class="acts"><button class="btn btn-sm" data-qadd="${esc(x.id)}" data-p="${esc(p.key)}">+ Items</button><button class="btn btn-sm" data-qpay="${esc(x.id)}" data-p="${esc(p.key)}" ${p.balance > 0.5 ? '' : 'disabled'}>Pay</button></div></div>`;
+    }).join('') || `<div class="msg warn" style="margin:0">No players added yet. Open the booking to add who's playing.</div>`;
+    return `<div class="tab ${x.sport}"><div class="th"><b>${esc((x.courts || []).join(' + '))} · ${hhmm(x.start)}–${hhmm(x.start + x.minutes)}</b>${live ? '<span class="chip ok">● Playing now</span>' : x.status === 'played' ? '<span class="chip info">Played</span>' : ''}</div>
+      <div class="sub">${esc((TYPES.find(y => y[0] === x.type) || ['', x.type])[1])} · ${esc((CFG.sources[x.source] || {}).label || '')} · bill ${inr(c.due)}${c.fills ? ` · ${c.fills} D&S fill-in` : ''}</div>
+      ${rows}
+      <div class="tf"><span class="sub" style="flex:1">${c.remaining > 0.5 ? `<b style="color:#ff9d9d">${inr(c.remaining)}</b> still due` : '<b style="color:var(--goodText)">All paid</b>'}</span>
+        <button class="btn btn-sm" data-qadd="${esc(x.id)}" data-p="shared">+ Shared</button>
+        ${c.remaining > 0.5 ? `<button class="btn btn-sm" data-qpay="${esc(x.id)}" data-p="*">${c.per.length > 1 ? 'Pay all' : 'Pay'}</button>` : ''}
+        ${x.status === 'booked' ? `<button class="btn btn-sm" data-qplayed="${esc(x.id)}">Mark played</button>` : ''}
+        <button class="btn btn-sm btn-ghost" data-open="${esc(x.id)}">Open</button></div></div>`;
+  }).join('')}</div>`;
+}
+$('#viewTabs').addEventListener('click', async ev => {
+  const b = ev.target.closest('button'); if (!b || b.disabled) return;
+  if (b.dataset.open) return openEditor(ENTRIES[b.dataset.open]);
+  if (b.dataset.qadd) return quickItems(ENTRIES[b.dataset.qadd], b.dataset.p);
+  if (b.dataset.qpay) return quickPay(ENTRIES[b.dataset.qpay], b.dataset.p);
+  if (b.dataset.qplayed) {
+    const d = toDraft(ENTRIES[b.dataset.qplayed]); if (lockedFor(d)) return toast('Only an owner can change bookings older than yesterday.');
+    d.status = 'played'; try { await commit(d, 'played'); toast('Marked played'); } catch (err) { toast('Couldn\'t save: ' + err.message, 4000); }
+  }
+});
+
+// Quick: add items to one player (or the shared tab) without opening the booking
+function quickItems(entry, owner) {
+  const d = toDraft(entry); if (lockedFor(d)) return toast('Only an owner can change bookings older than yesterday.');
+  E = d; E._quick = true; E._owner = owner; EDIT_LOCK = false;
+  const who = owner === 'shared' ? 'Shared' : (d.players.find(p => p.key === owner) || {}).name || '';
+  const draw = () => {
+    const c = calc(E), bal = owner === 'shared' ? null : c.per.find(p => p.key === owner);
+    $('#sheet').innerHTML = `<div class="sheet"><div class="sheet-h"><h2>${esc(who.toUpperCase())}</h2><span class="sub">${esc(E.courts.join(' + '))} · ${hhmm(E.start)}–${hhmm(E.start + E.minutes)}${owner === 'shared' ? ' · split between all players' : ''}</span><div style="flex:1"></div><button class="btn btn-sm" data-qx="close">Cancel</button></div>
+      <div class="sec"><h4>Tap to add <small>each tap adds one</small></h4>${thumbGrid(E, owner)}
+      <h4>${owner === 'shared' ? 'Shared tab' : esc(who) + '\'s tab'}</h4>
+      <div class="tabsum">${tabRow(E, owner, who) || '<span class="sub">Nothing yet.</span>'}</div></div></div>`;
+    $('#footHost').innerHTML = `<div class="foot"><div class="foot-in"><div class="tot">${bal ? `<div>${esc(who)} owes<b>${inr(bal.balance)}</b></div>` : ''}<div>Booking still due<b>${inr(c.remaining)}</b></div></div><div class="fsp" style="flex:1"></div>
+      <button class="btn btn-ghost" data-qx="close">Cancel</button><button class="btn btn-primary" data-qx="save">Done · save</button></div></div>`;
+  };
+  E._redraw = draw; openSheet(); draw();
+}
+// Quick: take a payment from one player (optionally covering others) or from everyone
+function quickPay(entry, who) {
+  const d = toDraft(entry); if (lockedFor(d)) return toast('Only an owner can change bookings older than yesterday.');
+  E = d; E._quick = true; EDIT_LOCK = false; E._pay = { payers: who === '*' ? payersOf(d).map(p => p.key) : [who], method: 'upi', amount: null };
+  const draw = () => {
+    const c = calc(E);
+    $('#sheet').innerHTML = `<div class="sheet"><div class="sheet-h"><h2>TAKE PAYMENT</h2><span class="sub">${esc(E.courts.join(' + '))} · ${hhmm(E.start)}–${hhmm(E.start + E.minutes)}</span><div style="flex:1"></div><button class="btn btn-sm" data-qx="close">Cancel</button></div>
+      <div class="sec">${balanceTable(E, c, false)}${payForm(E, c, true)}</div></div>`;
+    $('#footHost').innerHTML = `<div class="foot"><div class="foot-in"><div class="tot"><div>Booking still due<b>${inr(c.remaining)}</b></div></div><div class="fsp" style="flex:1"></div><button class="btn btn-ghost" data-qx="close">Cancel</button></div></div>`;
+  };
+  E._redraw = draw; openSheet(); draw();
+}
+function openSheet() { $('#sheet').classList.remove('hidden'); document.body.style.overflow = 'hidden'; $('#sheet').scrollTop = 0; }
+
+/* ── Shared UI pieces ── */
+function thumbGrid(e, owner) {
+  let h = '';
+  const mine = (e.items || {})[owner] || {};
+  for (const [cat, cl] of CATS) {
+    const its = sorted(CFG.items).filter(([k, it]) => (it.cat || 'other') === cat && (it.sport === 'any' || it.sport === e.sport || mine[k] > 0));
+    if (!its.length) continue;
+    h += `<div class="cat">${cl}</div><div class="thumbs">${its.map(([k, it]) => `<button class="th-item" data-add="${k}" ${EDIT_LOCK ? 'disabled' : ''} aria-label="Add ${esc(it.label)}">
+      ${mine[k] ? `<span class="q">${mine[k]}</span>` : ''}<span class="pic">${itemPic(k, it)}</span><span class="lb">${esc(it.label)}</span><span class="pr">${inr(it.price)}</span></button>`).join('')}</div>`;
+  }
+  return h;
+}
+function tabRow(e, owner, name) {
+  const map = (e.items || {})[owner] || {}, its = Object.entries(map).filter(([, q]) => q > 0);
+  if (!its.length) return '';
+  return `<div class="ts-row"><b>${esc(name)}</b>${its.map(([k, q]) => `<span class="it">${q}× ${esc(itemOf(k, e).label)}<button data-sub="${k}" data-o="${esc(owner)}" aria-label="Remove one" ${EDIT_LOCK ? 'disabled' : ''}>−</button></span>`).join('')}<span class="amt">${inr(itemsCost(map, e))}</span></div>`;
+}
+function balanceTable(e, c, withButtons = true) {
+  if (!c.per.length) return `<div class="msg info">Add players to keep a tab for each of them. Until then, payments count against the whole booking.</div>`;
+  return `<table class="tbl"><thead><tr><th>Player</th><th>Court</th><th>Items</th><th>Paid</th><th>Balance</th>${withButtons ? '<th></th>' : ''}</tr></thead><tbody>
+    ${c.per.map(p => `<tr><td>${esc(p.name)}</td><td>${inr(p.court)}</td><td>${inr(p.own + p.shared)}</td><td>${inr(p.paid)}</td><td class="${p.balance > 0.5 ? 'owe' : 'zero'}">${p.balance > 0.5 ? inr(p.balance) : '✓'}</td>
+      ${withButtons ? `<td>${EDIT_LOCK || p.balance <= 0.5 ? '' : `<button class="btn btn-sm" data-payfor="${esc(p.key)}">Pay</button>`}</td>` : ''}</tr>`).join('')}</tbody></table>`;
+}
+function payForm(e, c, quick) {
+  const P = c.per, st = e._pay; if (!st) return '';
+  const sel = st.payers.filter(k => P.some(p => p.key === k));
+  const owed = P.length ? sum(P.filter(p => sel.includes(p.key)), p => Math.max(0, p.balance)) : Math.max(0, c.remaining);
+  const amt = st.amount != null ? st.amount : Math.round(owed);
+  return `<div class="payform"><div style="font-weight:600;font-size:18px">${P.length ? 'Paying for' : 'Payment for the booking'}</div>
+    ${P.length ? `<div class="who">${P.map(p => `<label><input type="checkbox" data-pp="${esc(p.key)}" ${sel.includes(p.key) ? 'checked' : ''}>${esc(p.name)} <span class="sub">${p.balance > 0.5 ? inr(p.balance) : 'paid'}</span></label>`).join('')}</div>
+      <div class="sub">Tick more than one when someone pays for others.</div>` : ''}
+    <div class="row" style="margin:0"><label class="f">Amount<input type="number" inputmode="numeric" id="payAmt" value="${amt}"></label></div>
+    <div class="chips-pick" style="margin:0">${methods().map(([k, l]) => `<button class="pick ${st.method === k ? 'on' : ''}" data-pm="${k}">${esc(l)}</button>`).join('')}</div>
+    <div style="display:flex;gap:8px"><button class="btn btn-primary" data-act="recordpay">${quick ? 'Record & save' : 'Record payment'}</button>${quick ? '' : '<button class="btn btn-ghost" data-act="cancelpay">Cancel</button>'}</div></div>`;
 }
 
 /* ── Editor ── */
@@ -500,30 +763,27 @@ function blank(pre) {
   const now = new Date(), nm = Math.ceil((now.getHours() * 60 + now.getMinutes()) / 30) * 30;
   return {
     id: null, date: DAYISO, start: pre.start ?? (DAYISO === todayISO() ? Math.min(Math.max(nm, 360), 1380) : 1080), minutes: 60, sport, courts: [court],
-    type: 'group', source: 'walkin', players: [], charge: { mode: 'court', override: '', overrideReason: '', perPerson: '', eventFee: '' },
-    extras: {}, payMode: 'single', payments: {}, split: {}, status: 'booked', notes: '', games: []
+    type: 'group', source: 'walkin', level: '', group: 'Community', players: [], charge: { mode: 'court', override: '', overrideReason: '', perPerson: '', eventFee: '' },
+    items: {}, pays: [], status: 'booked', notes: '', games: []
   };
 }
-const ageDays = iso => Math.floor((Date.now() - dateMsIST(iso)) / 864e5);
 function openEditor(entry, pre = {}) {
-  E = entry ? Object.assign(blank({}), clone(entry)) : blank(pre);
-  E.players ||= []; E.extras ||= {}; E.payments ||= {}; E.split ||= {}; E.games ||= []; E.charge ||= { mode: 'court' };
-  E._orig = entry ? clone(entry) : null;
-  EDIT_LOCK = !!entry && !IS_OWNER && ageDays(entry.date) > 1;
-  $('#sheet').classList.remove('hidden'); document.body.style.overflow = 'hidden';
-  renderEditor(); $('#sheet').scrollTop = 0;
+  E = entry ? toDraft(entry) : blank(pre);
+  E._removedGames = [];
+  EDIT_LOCK = !!entry && lockedFor(E);
+  const b = bookerOf(E); E._owner = b && !b.fill ? b.key : 'shared';
+  openSheet(); renderEditor();
 }
-function closeEditor() { E = null; $('#sheet').classList.add('hidden'); $('#sheet').innerHTML = ''; $('#footHost').innerHTML = ''; document.body.style.overflow = ''; }
+function closeEditor() { E = null; EDIT_LOCK = false; $('#sheet').classList.add('hidden'); $('#sheet').innerHTML = ''; $('#footHost').innerHTML = ''; document.body.style.overflow = ''; }
 
 function timeOptions(sel) { let s = ''; for (let m = 300; m <= 1410; m += 30) s += `<option value="${m}" ${m === sel ? 'selected' : ''}>${hhmm(m)}</option>`; return s; }
+const fmtMin = m => m % 60 ? (m >= 60 ? Math.floor(m / 60) + 'h ' : '') + (m % 60) + 'm' : (m / 60) + 'h';
 function renderEditor() {
   const e = E, c = calc(e), cf = conflicts(e), dis = EDIT_LOCK ? 'disabled' : '';
   const durs = [30, 60, 90, 120, 150, 180];
-  const memberPlayers = e.players.filter(p => p.id);
-  let h = `<div class="sheet"><div class="sheet-h"><h2>${e.id ? 'BOOKING' : 'NEW BOOKING'}</h2><span class="sub">${fdw(e.date)}</span><div class="spacer" style="flex:1"></div><button class="btn btn-sm" data-act="close">Close</button></div>`;
+  let h = `<div class="sheet"><div class="sheet-h"><h2>${e.id ? 'BOOKING' : 'NEW BOOKING'}</h2><span class="sub">${fdw(e.date)} · ${esc(e.courts.join(' + '))} ${hhmm(e.start)}</span><div style="flex:1"></div><button class="btn btn-sm" data-act="close">Close</button></div>`;
   if (EDIT_LOCK) h += `<div class="sec"><div class="msg warn">This booking is more than a day old, so only an owner can change it. You can still view it.</div></div>`;
 
-  // When & where
   h += `<div class="sec"><h4>When & where</h4>
     <div class="row"><label class="f">Date<input type="date" data-f="date" value="${e.date}" ${dis}></label>
       <label class="f">Start<select data-f="start" ${dis}>${timeOptions(e.start)}</select></label>
@@ -534,24 +794,22 @@ function renderEditor() {
     <div class="chips-pick">${COURTS[e.sport].map(ct => { const busy = cf[ct]; const bk = busy && ((busy.players || []).find(p => p.booker) || (busy.players || [])[0] || {}).name;
       return `<button class="pick ${e.sport} ${e.courts.includes(ct) ? 'on' : ''} ${busy ? 'busy' : ''}" data-court="${ct}" ${(busy && !e.courts.includes(ct)) || EDIT_LOCK ? 'disabled' : ''}>${ct}${busy ? ` <small>${esc(bk || 'booked')} ${hhmm(busy.start)}</small>` : ''}</button>`; }).join('')}</div>
     ${e.courts.some(ct => cf[ct]) ? `<div class="msg err">A selected court is already booked at this time: ${e.courts.filter(ct => cf[ct]).join(', ')}. Change the time or court.</div>` : ''}
-    ${!e.courts.length ? '<div class="msg warn">Pick at least one court.</div>' : ''}
-  </div>`;
+    ${!e.courts.length ? '<div class="msg warn">Pick at least one court.</div>' : ''}</div>`;
 
-  // Booking
   h += `<div class="sec"><h4>Booking</h4>
     <div class="chips-pick">${TYPES.map(([k, l]) => `<button class="pick ${e.type === k ? 'on' : ''}" data-type="${k}" ${dis}>${l}</button>`).join('')}</div>
+    ${e.type === 'open_play' ? `<div class="row"><label class="f">Open play level<select data-f="level" ${dis}><option value="">—</option>${OP_LEVELS.map(l => `<option ${e.level === l ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="f">Group<select data-f="group" ${dis}>${OP_GROUPS.map(g => `<option ${(e.group || 'Community') === g ? 'selected' : ''}>${g}</option>`).join('')}</select></label></div>` : ''}
     <div class="cat">Booked through</div>
     <div class="chips-pick">${sorted(CFG.sources).map(([k, s]) => `<button class="pick ${e.source === k ? 'on' : ''}" data-source="${k}" ${dis}>${esc(s.label)}</button>`).join('')}</div></div>`;
 
-  // Players
   h += `<div class="sec"><h4>Players <small>${e.players.length} of ${c.expected} · can be completed during play · ★ = who booked</small></h4>
     <div class="players">${e.players.map((p, i) => `<span class="pl ${p.fill ? 'fill' : ''}"><button class="star ${p.booker ? 'on' : ''}" data-booker="${i}" title="Booked by" ${dis}>★</button>${esc(p.name)}${p.fill ? ' <small>D&S fill-in</small>' : p.id ? '' : ' <small>not a member</small>'}<button class="x" data-rmp="${i}" aria-label="Remove" ${dis}>✕</button></span>`).join('') || '<span class="sub">No players yet. Add at least who booked.</span>'}</div>
     ${EDIT_LOCK ? '' : `<div class="search"><input id="pq" placeholder="Search members by name or phone…" autocomplete="off"><div class="dd hidden" id="pdd"></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-act="fill">+ D&S fill-in player</button><button class="btn btn-sm" data-act="newmember">+ New member</button></div>
     <div id="nmForm"></div>`}</div>`;
 
-  // Charges
-  h += `<div class="sec"><h4>Charges</h4>`;
+  h += `<div class="sec"><h4>Court charge</h4>`;
   if (c.isEv) {
     h += `<div class="row"><label class="f">${e.type === 'party' ? 'Party' : 'Event'} fee (total)<input type="number" inputmode="numeric" data-f="eventFee" value="${esc(e.charge.eventFee)}" placeholder="0" ${dis}></label></div>`;
   } else {
@@ -560,81 +818,143 @@ function renderEditor() {
         ${c.cc.peak ? `<div class="ln"><span>Peak ${fmtMin(c.cc.peak)} × ${inr(CFG.rates[e.sport].peak)}/hr${c.nC > 1 ? ` × ${c.nC} courts` : ''}</span><b>${inr(c.cc.peak * CFG.rates[e.sport].peak / 60 * c.nC)}</b></div>` : ''}
         ${c.cc.off ? `<div class="ln"><span>Off-peak ${fmtMin(c.cc.off)} × ${inr(CFG.rates[e.sport].off)}/hr${c.nC > 1 ? ` × ${c.nC} courts` : ''}</span><b>${inr(c.cc.off * CFG.rates[e.sport].off / 60 * c.nC)}</b></div>` : ''}
         <div class="ln"><span>Rate card</span><b>${inr(c.auto)}</b></div></div>`;
-    if (e.charge.mode === 'player') {
-      h += `<div class="row"><label class="f">Price per player<input type="number" inputmode="numeric" data-f="perPerson" value="${esc(e.charge.perPerson)}" placeholder="${Math.round(c.auto / c.expected)}" ${dis}></label>
-        <label class="f">Players charged<input value="${Math.max(e.players.length, 1)}" disabled></label></div>`;
-    } else {
-      h += `<div class="row"><label class="f">Override court charge (optional)<input type="number" inputmode="numeric" data-f="override" value="${esc(e.charge.override)}" placeholder="${c.auto}" ${dis}></label>
+    if (e.charge.mode === 'player') h += `<div class="row"><label class="f">Price per player<input type="number" inputmode="numeric" data-f="perPerson" value="${esc(e.charge.perPerson)}" placeholder="${Math.round(c.auto / c.expected)}" ${dis}></label><label class="f">Players charged<input value="${Math.max(e.players.length, 1)}" disabled></label></div>`;
+    else h += `<div class="row"><label class="f">Override court charge (optional)<input type="number" inputmode="numeric" data-f="override" value="${esc(e.charge.override)}" placeholder="${c.auto}" ${dis}></label>
         <label class="f">Reason${e.charge.override !== '' && e.charge.override != null && !e.charge.overrideReason ? ' <span style="color:#ffb3b3">(required)</span>' : ''}<select data-f="overrideReason" ${dis}><option value="">—</option>${OVERRIDE_REASONS.map(r => `<option ${e.charge.overrideReason === r ? 'selected' : ''}>${r}</option>`).join('')}</select></label></div>`;
-    }
-  }
-  // Extras
-  for (const [cat, cl] of CATS) {
-    const its = sorted(CFG.items).filter(([k, it]) => it.cat === cat && (it.sport === 'any' || it.sport === e.sport || (e.extras[k] > 0)));
-    if (!its.length) continue;
-    h += `<div class="cat">${cl}</div><div class="items">${its.map(([k, it]) => { const q = e.extras[k] || 0;
-      return `<div class="item ${q ? 'on' : ''}"><div class="nm">${esc(it.label)}<small>${inr(it.price)}${q ? ` · ${inr(it.price * q)}` : ''}</small></div>
-        <div class="step"><button data-q="${k}" data-d="-1" ${!q || EDIT_LOCK ? 'disabled' : ''} aria-label="Less">−</button><b>${q}</b><button data-q="${k}" data-d="1" ${dis} aria-label="More">+</button></div></div>`; }).join('')}</div>`;
-  }
-  h += `<div class="lines" id="billLines"></div></div>`;
-
-  // Payment
-  h += `<div class="sec"><h4>Payment</h4>
-    <div class="seg"><button data-pmode="single" class="${e.payMode !== 'split' ? 'on' : ''}" ${dis}>One payment</button><button data-pmode="split" class="${e.payMode === 'split' ? 'on' : ''}" ${dis}>Split by player</button></div>`;
-  if (e.payMode === 'split') {
-    const rows = splitRows(e, c);
-    h += rows.length ? `<table class="split"><thead><tr><th>Player</th><th>Amount</th><th>Paid via</th><th>Paid</th></tr></thead><tbody>${rows.map(r => `<tr>
-      <td>${esc(r.name)}</td><td class="num"><input type="number" inputmode="numeric" data-sp="${esc(r.key)}" data-k="amount" value="${r.amount}" ${dis}></td>
-      <td><select data-sp="${esc(r.key)}" data-k="method" ${dis}>${methods().map(([k, l]) => `<option value="${k}" ${!r.paidBy && r.method === k ? 'selected' : ''}>${l}</option>`).join('')}
-        <optgroup label="Paid by another player">${rows.filter(o => o.key !== r.key).map(o => `<option value="by:${esc(o.key)}" ${r.paidBy === o.key ? 'selected' : ''}>by ${esc(o.name)}</option>`).join('')}</optgroup></select></td>
-      <td><input type="checkbox" data-sp="${esc(r.key)}" data-k="paid" ${r.paid ? 'checked' : ''} ${dis} style="width:22px;height:22px"></td></tr>`).join('')}</tbody></table>
-      <div class="sub" style="margin:-4px 0 12px">Default split: equal share of the court charge per paying player; extras go on the booker. Change any amount.</div>`
-      : '<div class="msg info">Add players to split the payment between them.</div>';
-  } else {
-    h += `<div class="pay">${methods().map(([k, l]) => `<div class="m ${+e.payments[k] ? 'on' : ''}"><div class="top"><span>${esc(l)}</span>${EDIT_LOCK ? '' : `<button data-rest="${k}">Rest here</button>`}</div>
-      <input type="number" inputmode="numeric" data-pay="${k}" value="${e.payments[k] ?? ''}" placeholder="0" ${dis}></div>`).join('')}</div>`;
   }
   h += `</div>`;
 
-  // Status & notes
+  // Items, charged to a player's tab or shared
+  const P = payersOf(e);
+  if (e._owner !== 'shared' && !P.some(p => p.key === e._owner)) e._owner = P[0] ? P[0].key : 'shared';
+  h += `<div class="sec"><h4>Items <small>pick whose tab, then tap items · shared items are split between all players</small></h4>
+    <div class="owners">${P.map(p => { const x = c.per.find(y => y.key === p.key); return `<button class="own ${e._owner === p.key ? 'on' : ''}" data-owner="${esc(p.key)}">${esc(p.name)}<small>${x && x.own ? inr(x.own) + ' items' : 'no items'}</small></button>`; }).join('')}
+      <button class="own ${e._owner === 'shared' ? 'on' : ''}" data-owner="shared">Shared<small>${c.sharedCost ? inr(c.sharedCost) : 'balls, etc.'}</small></button></div>
+    ${thumbGrid(e, e._owner)}
+    <div class="tabsum">${[...P.map(p => tabRow(e, p.key, p.name)), tabRow(e, 'shared', 'Shared')].join('')}</div>
+    <div class="lines" id="billLines"></div></div>`;
+
+  // Payment: each player's tab and the payments taken so far
+  h += `<div class="sec"><h4>Payment <small>take payment per player as they leave, or all at once</small></h4>
+    <div id="balWrap">${balanceTable(e, c, true)}</div>
+    ${e._pay ? payForm(e, c, false) : (EDIT_LOCK ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn btn-sm" data-payfor="*">${P.length > 1 ? 'Pay for everyone' : 'Take payment'}</button>
+      ${(CFG.sources[e.source] || {}).aggregator ? `<button class="btn btn-sm" data-act="prepaid">Court prepaid on ${esc(CFG.sources[e.source].label)}</button>` : ''}</div>`)}
+    ${(e.pays || []).length ? `<div class="paylist">${e.pays.map((p, i) => `<div class="p"><b>${inr(p.amount)}</b><span>${esc(methodLabel(p.method))}</span><span>${p.payers && p.payers.length ? 'for ' + esc(p.payers.map(k => (e.players.find(x => x.key === k) || { name: '?' }).name).join(', ')) : 'whole booking'}</span>
+      <span class="sub">${p.at ? new Date(p.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : 'now'}</span><div style="flex:1"></div>${EDIT_LOCK ? '' : `<button class="btn btn-sm btn-danger" data-rmpay="${i}">Remove</button>`}</div>`).join('')}</div>` : ''}</div>`;
+
   h += `<div class="sec"><h4>Status</h4><div class="chips-pick">${STATUSES.map(([k, l]) => `<button class="pick ${e.status === k ? 'on' : ''}" data-status="${k}" ${dis}>${l}</button>`).join('')}</div>
     <label class="f">Notes<textarea rows="2" data-f="notes" placeholder="Anything unusual about this booking" ${dis}>${esc(e.notes)}</textarea></label></div>`;
 
-  // Games
-  if (e.sport === 'padel' && !c.isEv) {
-    const opts = memberPlayers.map(p => `<option value="${esc(p.key)}">${esc(p.name)}</option>`).join('');
-    h += `<div class="sec"><h4>Games & scores <small>feed straight into Smash Ratings</small></h4>
-      ${e.games.map((g, i) => `<div class="game"><b>${esc(g.teamA.join(' & '))}</b><span class="vs">${g.a}–${g.b}</span><b>${esc(g.teamB.join(' & '))}</b><span class="sub">${esc(g.score)}</span>${g.matchId ? '<span class="chip ok">Saved to ratings</span>' : '<span class="chip warn">Saves with booking</span>'}<div style="flex:1"></div>${EDIT_LOCK ? '' : `<button class="btn btn-sm btn-danger" data-rmg="${i}">Remove</button>`}</div>`).join('')}
-      ${memberPlayers.length >= 4 && !EDIT_LOCK ? `<div class="gameform"><div class="t">Add a game</div>
-        <select id="ga1"><option value="">Team A · player 1</option>${opts}</select><select id="gb1"><option value="">Team B · player 1</option>${opts}</select>
-        <select id="ga2"><option value="">Team A · player 2</option>${opts}</select><select id="gb2"><option value="">Team B · player 2</option>${opts}</select>
-        <input id="gscore" placeholder="Score, e.g. 6-4 or 6-3, 4-6, 10-8"><button class="btn btn-sm" data-act="addgame">Add game</button>
-        <div id="gerr" class="sub" style="grid-column:1/-1;color:#ffb3b3"></div></div>`
-      : !EDIT_LOCK ? `<div class="msg info">Add at least 4 member players to record games.</div>` : ''}</div>`;
-  }
+  if (e.sport === 'padel' && !c.isEv) h += gamesSection(e);
   if (e.id && IS_OWNER) h += `<div class="sec"><div class="sub">Created by ${esc(e.createdBy || '—')} · last change by ${esc(e.updatedBy || '—')} ${e.updatedAt ? new Date(e.updatedAt).toLocaleString('en-IN') : ''}</div></div>`;
   h += `</div>`;
-  $('#sheet').innerHTML = h;
-  $('#footHost').innerHTML = `<div class="foot"><div class="foot-in"><div class="tot" id="tot"></div><div style="flex:1"></div><div id="saveErr" class="sub" style="color:#ffb3b3;max-width:260px"></div>
+  const st = $('#sheet').scrollTop;
+  $('#sheet').innerHTML = h; $('#sheet').scrollTop = st;
+  $('#footHost').innerHTML = `<div class="foot"><div class="foot-in"><div class="tot" id="tot"></div><div class="fsp" style="flex:1"></div><div id="saveErr" class="sub" style="color:#ffb3b3;max-width:280px"></div>
     ${EDIT_LOCK ? '<button class="btn" data-act="close">Close</button>' : `<button class="btn btn-ghost" data-act="close">Cancel</button><button class="btn btn-primary" data-act="save" id="saveBtn">${e.id ? 'Save changes' : 'Save booking'}</button>`}</div></div>`;
   refresh();
 }
-const fmtMin = m => m % 60 ? (m >= 60 ? Math.floor(m / 60) + 'h ' : '') + (m % 60) + 'm' : (m / 60) + 'h';
-
-// Update computed bits without re-rendering inputs
 function refresh() {
-  if (!E) return;
+  if (!E || E._quick) return;
   const c = calc(E), bl = $('#billLines');
   if (bl) bl.innerHTML = `<div class="ln"><span>${c.isEv ? (E.type === 'party' ? 'Party fee' : 'Event fee') : E.charge.mode === 'player' ? `Court · ${inr(c.perPerson)} × ${Math.max(E.players.length, 1)} players` : 'Court charge' + (E.charge.override !== '' && E.charge.override != null ? ' (overridden)' : '')}</span><b>${inr(c.court)}</b></div>
     ${CATS.map(([k, l]) => c.ex[k] ? `<div class="ln"><span>${l}</span><b>${inr(c.ex[k])}</b></div>` : '').join('')}
     ${c.fills ? `<div class="ln minus"><span>D&S fill-in · ${c.fills} player${c.fills > 1 ? 's' : ''} × ${inr(c.share)} not charged</span><b>−${inr(c.fillLoss)}</b></div>` : ''}
     <div class="ln total"><span>Amount due</span><b>${inr(c.due)}</b></div>`;
+  const bw = $('#balWrap'); if (bw) bw.innerHTML = balanceTable(E, c, true);
   const rem = c.remaining, cls = Math.abs(rem) < 1 ? 'zero' : rem < 0 ? 'over' : '';
   const t = $('#tot');
   if (t) t.innerHTML = `<div>Bill<b>${inr(c.bill)}</b></div>${c.fillLoss ? `<div>Due<b>${inr(c.due)}</b></div>` : ''}<div>Paid<b>${inr(c.paid)}</b></div>
     <div class="rem ${cls}">${rem < 0 ? 'Overpaid' : 'Remaining'}<b>${Math.abs(rem) < 1 ? '✓ 0' : inr(Math.abs(rem))}</b></div>`;
 }
 
+/* ── Games & scores (padel): a whole session with rotating partners ── */
+function gamePool(e) {
+  const pool = e.players.filter(p => p.id).map(p => ({ key: p.key, name: p.name, from: '' }));
+  if (e.type === 'open_play') for (const x of Object.values(ENTRIES)) {
+    if (!x || x.id === e.id || x.date !== e.date || x.type !== 'open_play' || x.sport !== 'padel' || x.status === 'cancelled') continue;
+    if (!(x.start < e.start + e.minutes && e.start < x.start + x.minutes)) continue;
+    for (const p of x.players || []) if (p.id && !pool.some(q => q.key === p.key)) pool.push({ key: p.key, name: p.name, from: (x.courts || []).join('+') });
+  }
+  return pool;
+}
+function gamesSection(e) {
+  const pool = gamePool(e), dis = EDIT_LOCK ? 'disabled' : '';
+  const opts = sel => `<option value="">—</option>` + pool.map(p => `<option value="${esc(p.key)}" ${sel === p.key ? 'selected' : ''}>${esc(p.name)}${p.from ? ' (' + p.from + ')' : ''}</option>`).join('');
+  let h = `<div class="sec"><h4>Games & scores <small>every game this session · saved to Smash Ratings${e.type === 'open_play' ? " and the day's open play" : ''} when you save</small></h4>`;
+  if (pool.length < 4) return h + `<div class="msg info">Add at least 4 member players to record games${e.type === 'open_play' ? ' (players on other open-play courts at the same time count too)' : ''}.</div></div>`;
+  if (pool.some(p => p.from)) h += `<div class="sub" style="margin-bottom:8px">Includes players from the other open-play court running at the same time, so rotations across courts can be scored here.</div>`;
+  h += `<div class="gwrap"><table class="gtable"><tbody>${e.games.map((g, i) => {
+    const st = g.matchId ? (g._saved === JSON.stringify([g.a1, g.a2, g.b1, g.b2, g.score]) ? '<span class="chip ok">Saved</span>' : '<span class="chip warn">Changed</span>') : '<span class="chip info">New</span>';
+    return `<tr data-g="${g.lid}"><td class="num">${i + 1}</td><td><select data-gk="a1" ${dis}>${opts(g.a1)}</select></td><td><select data-gk="a2" ${dis}>${opts(g.a2)}</select></td><td class="vs">vs</td>
+      <td><select data-gk="b1" ${dis}>${opts(g.b1)}</select></td><td><select data-gk="b2" ${dis}>${opts(g.b2)}</select></td>
+      <td class="sc"><input data-gk="score" value="${esc(g.score)}" placeholder="6-4" ${dis}></td><td class="st">${st}</td>
+      <td>${EDIT_LOCK ? '' : `<button class="x" data-rmg="${g.lid}" aria-label="Remove game">✕</button>`}</td></tr>`; }).join('')}</tbody></table></div>
+    ${EDIT_LOCK ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-act="addgame">+ Add game</button>
+      <button class="btn btn-sm" data-act="rotate">Suggest rotation (${pool.length} players)</button></div>
+      <div class="sub" style="margin-top:8px">Score per game like 6-4, or sets like 6-3, 4-6, 10-8. Rows left completely empty are ignored.</div>`}</div>`;
+  return h;
+}
+// 4 players: every partner pairing once. More players: spread games evenly and avoid repeating partners.
+function suggestRotation(keys, count) {
+  if (keys.length === 4) { const [a, b, c, d] = keys; return [[a, b, c, d], [a, c, b, d], [a, d, b, c]]; }
+  const played = Object.fromEntries(keys.map(k => [k, 0])), partner = {}, opp = {}, pk = (x, y) => [x, y].sort().join('|'), combos = [];
+  for (let i = 0; i < keys.length; i++) for (let j = i + 1; j < keys.length; j++) for (let k = j + 1; k < keys.length; k++) for (let l = k + 1; l < keys.length; l++) {
+    const q = [keys[i], keys[j], keys[k], keys[l]]; combos.push([q[0], q[1], q[2], q[3]], [q[0], q[2], q[1], q[3]], [q[0], q[3], q[1], q[2]]);
+  }
+  const n = count || Math.max(3, Math.round(keys.length * 3 / 2)), games = [];
+  for (let g = 0; g < n; g++) {
+    let best = null, bs = Infinity;
+    for (const m of combos) {
+      const s = sum(m, k => played[k]) * 10 + ((partner[pk(m[0], m[1])] || 0) + (partner[pk(m[2], m[3])] || 0)) * 30
+        + [[0, 2], [0, 3], [1, 2], [1, 3]].reduce((a, [x, y]) => a + (opp[pk(m[x], m[y])] || 0), 0) * 4 + Math.random();
+      if (s < bs) { bs = s; best = m; }
+    }
+    games.push(best); best.forEach(k => played[k]++);
+    partner[pk(best[0], best[1])] = (partner[pk(best[0], best[1])] || 0) + 1; partner[pk(best[2], best[3])] = (partner[pk(best[2], best[3])] || 0) + 1;
+    for (const [x, y] of [[0, 2], [0, 3], [1, 2], [1, 3]]) opp[pk(best[x], best[y])] = (opp[pk(best[x], best[y])] || 0) + 1;
+  }
+  return games;
+}
+function parseScore(s) {
+  const sets = String(s || '').split(/[,;]/).map(x => x.trim()).filter(Boolean);
+  if (!sets.length || !sets.every(x => /^\d{1,2}\s*-\s*\d{1,2}$/.test(x))) return null;
+  const pairs = sets.map(x => x.split('-').map(y => +y.trim()));
+  return { a: sum(pairs, p => p[0]), b: sum(pairs, p => p[1]), score: sets.map(x => x.replace(/\s/g, '')).join(', '), sets: sets.length };
+}
+function gameProblems(e) {
+  const errs = [];
+  e.games.forEach((g, i) => {
+    const ks = [g.a1, g.a2, g.b1, g.b2];
+    if (!ks.some(Boolean) && !g.score) return;
+    if (ks.some(k => !k)) errs.push(`Game ${i + 1}: pick all four players.`);
+    else if (new Set(ks).size < 4) errs.push(`Game ${i + 1}: a player is listed twice.`);
+    else if (!g.score) { if (!g.matchId) return; errs.push(`Game ${i + 1}: score missing.`); }
+    else if (!parseScore(g.score)) errs.push(`Game ${i + 1}: score like 6-4.`);
+  });
+  return errs;
+}
+async function writeGames(e, id) {
+  const pool = gamePool(e), nameOf = k => (pool.find(p => p.key === k) || e.players.find(p => p.key === k) || {}).name || (MEMBERS[k] || {}).name || k;
+  const now = new Date().toISOString(); let wrote = 0;
+  for (const mid of e._removedGames || []) await remove(ref(clubDb, `openPlayMatches/${mid}`)).catch(() => {});
+  e._removedGames = [];
+  for (const g of e.games) {
+    const ks = [g.a1, g.a2, g.b1, g.b2]; if (ks.some(k => !k) || !g.score) continue;
+    const sig = JSON.stringify(ks.concat(g.score));
+    if (g.matchId && g._saved === sig) continue;
+    const sc = parseScore(g.score); if (!sc) continue;
+    const matchId = g.matchId || `${e.date}-desk-${uid()}`;
+    const teamA = [nameOf(g.a1), nameOf(g.a2)], teamB = [nameOf(g.b1), nameOf(g.b2)];
+    await set(ref(clubDb, `openPlayMatches/${matchId}`), { date: e.date, format: 'openplay', teamA, teamB, a: sc.a, b: sc.b, score: sc.score, sets: sc.sets,
+      status: 'confirmed', enteredAt: now, note: `Desk — ${teamA.join(' & ')} vs ${teamB.join(' & ')}`, source: 'desk', bookingId: id, court: e.courts.join(','), session: e.type === 'open_play' ? 'desk-' + id : '' });
+    g.matchId = matchId; g._saved = sig; wrote++;
+  }
+  return wrote;
+}
+
+/* ── Validation & save ── */
 function validate() {
   const e = E, c = calc(e), cf = conflicts(e), errs = [];
   if (!e.date) errs.push('Pick a date.');
@@ -643,13 +963,50 @@ function validate() {
   if (!e.players.length) errs.push('Add who booked.');
   if (!c.isEv && e.charge.mode !== 'player' && e.charge.override !== '' && e.charge.override != null && !e.charge.overrideReason) errs.push('Give a reason for the overridden charge.');
   if (c.isEv && !(+e.charge.eventFee > 0)) errs.push('Enter the event fee.');
+  if (e.sport === 'padel') errs.push(...gameProblems(e));
   return errs;
 }
+async function save() {
+  if (SAVING) return;
+  const errs = validate(); $('#saveErr').textContent = errs.join(' ');
+  if (errs.length) return;
+  SAVING = true; $('#saveBtn').disabled = true; $('#saveBtn').textContent = 'Saving…';
+  const e = E, isNew = !e.id;
+  try {
+    if (!e.id) e.id = push(ref(db, 'entries')).key;
+    let games = 0;
+    if (e.sport === 'padel') { try { games = await writeGames(e, e.id); } catch (err) { toast('Games couldn\'t be saved to ratings: ' + err.message, 5000); } }
+    await commit(e);
+    toast((isNew ? 'Booking saved' : 'Changes saved') + (games ? ` · ${games} game${games > 1 ? 's' : ''} sent to ratings` : ''));
+    if (e.date !== DAYISO) setDay(e.date);
+    closeEditor();
+  } catch (err) {
+    $('#saveErr').textContent = /permission/i.test(err.message) ? 'Not allowed: bookings older than yesterday can only be changed by an owner.' : 'Couldn\'t save: ' + err.message;
+  } finally { SAVING = false; const b = $('#saveBtn'); if (b) { b.disabled = false; b.textContent = isNew ? 'Save booking' : 'Save changes'; } }
+}
 
-// Event delegation for the editor
-$('#sheet').addEventListener('click', ev => {
+/* ── Events: editor and quick screens share #sheet ── */
+function addItem(owner, k, d) {
+  E.items ||= {}; const m = (E.items[owner] ||= {});
+  m[k] = Math.max(0, (m[k] || 0) + d); if (!m[k]) delete m[k]; if (!Object.keys(m).length) delete E.items[owner];
+}
+const redraw = () => E._quick ? E._redraw() : renderEditor();
+$('#sheet').addEventListener('click', async ev => {
   const t = ev.target.closest('button'); if (!t || !E || t.disabled) return;
   const d = t.dataset;
+  if (d.qx === 'close') return closeEditor();
+  if (d.add) { addItem(E._owner, d.add, 1); return redraw(); }
+  if (d.sub) { addItem(d.o, d.sub, -1); return redraw(); }
+  if (d.pm) { E._pay.method = d.pm; const a = $('#payAmt'); if (a) E._pay.amount = a.value === '' ? null : +a.value; return redraw(); }
+  if (d.act === 'recordpay') {
+    const amt = +($('#payAmt') || {}).value || 0; if (!(amt > 0)) return toast('Enter an amount.');
+    E.pays.push({ id: uid(), method: E._pay.method, amount: amt, payers: calc(E).per.length ? E._pay.payers.slice() : [], at: new Date().toISOString(), by: USER });
+    E._pay = null;
+    if (E._quick) { try { await commit(E, 'payment'); toast(`${inr(amt)} recorded`); closeEditor(); } catch (err) { toast('Couldn\'t save: ' + err.message, 4000); } return; }
+    return renderEditor();
+  }
+  if (d.act === 'cancelpay') { E._pay = null; return renderEditor(); }
+  if (E._quick) return;
   if (d.act === 'close') return closeEditor();
   if (d.dur) { E.minutes = +d.dur; return renderEditor(); }
   if (d.sport) { if (E.sport !== d.sport) { E.sport = d.sport; E.courts = [COURTS[d.sport].find(ct => !conflicts(E)[ct]) || COURTS[d.sport][0]]; } return renderEditor(); }
@@ -658,48 +1015,56 @@ $('#sheet').addEventListener('click', ev => {
   if (d.source) { E.source = d.source; return renderEditor(); }
   if (d.status) { E.status = d.status; return renderEditor(); }
   if (d.cmode) { E.charge.mode = d.cmode; return renderEditor(); }
-  if (d.pmode) { E.payMode = d.pmode; return renderEditor(); }
-  if (d.q) { const k = d.q; E.extras[k] = Math.max(0, (E.extras[k] || 0) + +d.d); if (!E.extras[k]) delete E.extras[k]; return renderEditor(); }
-  if (d.rest) { const c = calc(E); const cur = +E.payments[d.rest] || 0; E.payments[d.rest] = Math.max(0, cur + c.remaining); return renderEditor(); }
+  if (d.owner) { E._owner = d.owner; return renderEditor(); }
+  if (d.payfor) { const c = calc(E); E._pay = { payers: d.payfor === '*' ? c.per.map(p => p.key) : [d.payfor], method: 'upi', amount: null }; return renderEditor(); }
+  if (d.act === 'prepaid') { const c = calc(E); if (c.courtDue > 0) E.pays.push({ id: uid(), method: E.source, amount: Math.round(c.courtDue), payers: [], at: new Date().toISOString(), by: USER }); return renderEditor(); }
+  if (d.rmpay != null) { E.pays.splice(+d.rmpay, 1); return renderEditor(); }
   if (d.booker != null) { E.players.forEach((p, i) => p.booker = i === +d.booker); return renderEditor(); }
   if (d.rmp != null) { const [p] = E.players.splice(+d.rmp, 1); if (p && p.booker && E.players[0]) E.players[0].booker = true; return renderEditor(); }
-  if (d.act === 'fill') { const n = E.players.filter(p => p.fill).length + 1; addPlayer({ key: 'fill-' + Date.now(), id: '', name: 'D&S fill-in' + (n > 1 ? ' ' + n : ''), fill: true }); return; }
+  if (d.act === 'fill') { const n = E.players.filter(p => p.fill).length + 1; addPlayer({ key: 'fill-' + uid(), id: '', name: 'D&S fill-in' + (n > 1 ? ' ' + n : ''), fill: true }); return; }
   if (d.act === 'newmember') return newMemberForm();
   if (d.act === 'createmember') return createMember();
   if (d.pick) { const m = MEMBERS[d.pick]; if (m) addPlayer({ key: m.id, id: m.id, name: m.name }); return; }
-  if (d.typed) { addPlayer({ key: 'guest-' + Date.now(), id: '', name: d.typed }); return; }
-  if (d.act === 'addgame') return addGame();
-  if (d.rmg != null) { const [g] = E.games.splice(+d.rmg, 1); if (g && g.matchId) (E._removedGames ||= []).push(g.matchId); return renderEditor(); }
+  if (d.typed) { addPlayer({ key: 'guest-' + uid(), id: '', name: d.typed }); return; }
+  if (d.act === 'addgame') { E.games.push({ lid: uid(), a1: '', a2: '', b1: '', b2: '', score: '' }); return renderEditor(); }
+  if (d.act === 'rotate') {
+    const pool = gamePool(E).map(p => p.key);
+    E.games = E.games.filter(g => g.matchId || [g.a1, g.a2, g.b1, g.b2, g.score].some(Boolean));
+    for (const m of suggestRotation(pool)) E.games.push({ lid: uid(), a1: m[0], a2: m[1], b1: m[2], b2: m[3], score: '' });
+    toast('Rotation added. Fill in scores as games finish; delete any that weren\'t played.'); return renderEditor();
+  }
+  if (d.rmg) { const i = E.games.findIndex(g => g.lid === d.rmg); if (i >= 0) { const [g] = E.games.splice(i, 1); if (g.matchId) E._removedGames.push(g.matchId); } return renderEditor(); }
 });
-$('#footHost').addEventListener('click', ev => { const t = ev.target.closest('button'); if (!t) return; if (t.dataset.act === 'close') closeEditor(); if (t.dataset.act === 'save') save(); });
+$('#footHost').addEventListener('click', async ev => {
+  const t = ev.target.closest('button'); if (!t || !E) return;
+  if (t.dataset.act === 'close' || t.dataset.qx === 'close') return closeEditor();
+  if (t.dataset.act === 'save') return save();
+  if (t.dataset.qx === 'save') { t.disabled = true; try { await commit(E, 'items'); toast('Saved to the tab'); closeEditor(); } catch (err) { t.disabled = false; toast('Couldn\'t save: ' + err.message, 4000); } }
+});
 $('#sheet').addEventListener('input', ev => {
   const t = ev.target; if (!E) return;
   if (t.id === 'pq') return searchMembers(t.value);
+  if (t.id === 'payAmt') { E._pay.amount = t.value === '' ? null : +t.value; return; }
+  if (t.dataset.gk) { const g = E.games.find(x => x.lid === t.closest('tr').dataset.g); if (g) g[t.dataset.gk] = t.value; return; }
   if (t.dataset.f) {
     const f = t.dataset.f;
-    if (['override', 'perPerson', 'eventFee', 'overrideReason'].includes(f)) E.charge[f] = t.value;
-    else if (f === 'notes') E.notes = t.value;
-    else return;
+    if (['override', 'perPerson', 'eventFee'].includes(f)) E.charge[f] = t.value;
+    else if (f === 'notes') E.notes = t.value; else return;
     return refresh();
   }
-  if (t.dataset.pay) { E.payments[t.dataset.pay] = t.value; return refresh(); }
-  if (t.dataset.sp && t.dataset.k === 'amount') { (E.split[t.dataset.sp] ||= {}).amount = t.value; return refresh(); }
 });
 $('#sheet').addEventListener('change', ev => {
   const t = ev.target; if (!E) return;
+  if (t.dataset.pp) { const k = t.dataset.pp; if (t.checked) { if (!E._pay.payers.includes(k)) E._pay.payers.push(k); } else E._pay.payers = E._pay.payers.filter(x => x !== k); E._pay.amount = null; return redraw(); }
+  if (t.dataset.gk) { const g = E.games.find(x => x.lid === t.closest('tr').dataset.g); if (g) g[t.dataset.gk] = t.value; if (t.tagName === 'INPUT') return; return renderEditor(); }
   const f = t.dataset.f;
   if (f === 'date' && t.value) { E.date = t.value; return renderEditor(); }
   if (f === 'start') { E.start = +t.value; return renderEditor(); }
   if (f === 'minutes' && t.value) { E.minutes = +t.value; return renderEditor(); }
   if (f === 'overrideReason') { E.charge.overrideReason = t.value; return renderEditor(); }
-  if (f === 'override') return renderEditor();
-  if (t.dataset.sp) {
-    const s = (E.split[t.dataset.sp] ||= {}), c = calc(E), row = splitRows(E, c).find(r => r.key === t.dataset.sp);
-    if (row && s.amount == null) s.amount = row.amount;
-    if (t.dataset.k === 'method') { if (t.value.startsWith('by:')) { s.paidBy = t.value.slice(3); } else { s.method = t.value; s.paidBy = ''; } }
-    if (t.dataset.k === 'paid') s.paid = t.checked;
-    return refresh();
-  }
+  if (f === 'level') { E.level = t.value; return; }
+  if (f === 'group') { E.group = t.value; return; }
+  if (['override', 'perPerson', 'eventFee'].includes(f)) return renderEditor();
 });
 $('#sheet').addEventListener('keydown', ev => {
   if (ev.target.id !== 'pq') return;
@@ -720,105 +1085,52 @@ function searchMembers(q) {
     ((m.name || '').toLowerCase().includes(q) || (m.fullName || '').toLowerCase().includes(q) || (qd.length >= 4 && String(m.phone || '').replace(/\D/g, '').includes(qd))))
     .sort((a, b) => ((a.name || '').toLowerCase().startsWith(q) ? 0 : 1) - ((b.name || '').toLowerCase().startsWith(q) ? 0 : 1) || (a.name || '').localeCompare(b.name || '')).slice(0, 8);
   const raw = $('#pq').value.trim();
-  dd.innerHTML = hits.map((m, i) => `<button data-pick="${esc(m.id)}" class="${i === 0 ? 'hl' : ''}"><span>${esc(m.name)}${m.fullName && m.fullName !== m.name ? ` <small>${esc(m.fullName)}</small>` : ''}</span><small>${esc(m.levelOverride || m.membership || '')}${m.phone ? ' · ' + esc(String(m.phone).slice(-4).padStart(String(m.phone).length > 4 ? 6 : 0, '•')) : ''}</small></button>`).join('')
+  dd.innerHTML = hits.map((m, i) => `<button data-pick="${esc(m.id)}" class="${i === 0 ? 'hl' : ''}"><span>${esc(m.name)}${m.fullName && m.fullName !== m.name ? ` <small>${esc(m.fullName)}</small>` : ''}</span><small>${esc(m.levelOverride || m.membership || '')}</small></button>`).join('')
     + `<button data-act="newmember"><span>+ Add "${esc(raw)}" as a new member</span><small>recommended</small></button>`
     + `<button data-typed="${esc(raw)}"><span>Use "${esc(raw)}" without a member record</span><small>guest</small></button>`;
   dd.classList.remove('hidden');
 }
 function addPlayer(p) {
   if (!E.players.some(x => x.booker)) p.booker = true;
-  E.players.push(p); renderEditor();
+  E.players.push(p);
+  if (!p.fill && E._owner === 'shared' && !Object.keys(E.items || {}).length) E._owner = p.key;
+  renderEditor();
   const q = $('#pq'); if (q) q.focus();
 }
 function newMemberForm() {
   const typed = ($('#pq') || {}).value || '';
-  $('#nmForm').innerHTML = `<div class="gameform" style="margin-top:12px"><div class="t">New member · saved to the members list</div>
-    <input id="nmName" placeholder="Name as players know them" value="${esc(typed.trim())}"><input id="nmFull" placeholder="Full name (optional)">
-    <input id="nmPhone" inputmode="tel" placeholder="Phone"><select id="nmLevel"><option value="">Level (if known)</option>${['Beginner', 'Beginner+', 'Intermediate', 'Intermediate+', 'Advanced', 'Advanced High', 'Elite'].map(l => `<option>${l}</option>`).join('')}</select>
-    <button class="btn btn-sm btn-primary" data-act="createmember">Add member & player</button><div id="nmErr" class="sub" style="color:#ffb3b3"></div></div>`;
+  $('#nmForm').innerHTML = `<div class="payform" style="margin-top:12px"><div class="cat" style="margin:0">New member · saved to the members list</div>
+    <div class="row" style="margin:0"><input id="nmName" placeholder="Name as players know them" value="${esc(typed.trim())}"><input id="nmFull" placeholder="Full name (optional)"></div>
+    <div class="row" style="margin:0"><input id="nmPhone" inputmode="tel" placeholder="Phone"><select id="nmLevel"><option value="">Level (if known)</option>${['Beginner', 'Beginner+', 'Intermediate', 'Intermediate+', 'Advanced', 'Advanced High', 'Elite'].map(l => `<option>${l}</option>`).join('')}</select></div>
+    <div><button class="btn btn-sm btn-primary" data-act="createmember">Add member & player</button></div><div id="nmErr" class="sub" style="color:#ffb3b3"></div></div>`;
   const dd = $('#pdd'); if (dd) dd.classList.add('hidden');
   $('#nmName').focus();
 }
 async function createMember() {
   const name = $('#nmName').value.trim(), phone = $('#nmPhone').value.trim();
   if (!name) { $('#nmErr').textContent = 'Name is required.'; return; }
-  const dupe = Object.values(MEMBERS).find(m => m && ((m.name || '').toLowerCase() === name.toLowerCase() || (phone && String(m.phone || '').replace(/\D/g, '').endsWith(phone.replace(/\D/g, '').slice(-10)) && phone.replace(/\D/g, '').length >= 10)));
+  const dupe = Object.values(MEMBERS).find(m => m && ((m.name || '').toLowerCase() === name.toLowerCase() || (phone && phone.replace(/\D/g, '').length >= 10 && String(m.phone || '').replace(/\D/g, '').endsWith(phone.replace(/\D/g, '').slice(-10)))));
   if (dupe) { $('#nmErr').innerHTML = `Looks like <b>${esc(dupe.name)}</b> already exists. <button class="btn btn-sm" data-pick="${esc(dupe.id)}">Use ${esc(dupe.name)}</button>`; return; }
   let id = slug(name) || 'member', n = 2; while (MEMBERS[id]) id = slug(name) + '-' + n++;
   const now = new Date().toISOString();
   const m = { id, name, fullName: $('#nmFull').value.trim(), phone, email: '', levelOverride: $('#nmLevel').value, membership: '', notes: 'Added at the front desk',
     ratingOverride: '', source: 'desk', sport: E.sport === 'padel' ? 'Padel' : 'Pickleball', whatsappName: '', createdAt: now, updatedAt: now, active: true };
-  try { await set(ref(clubDb, `members/${id}`), m); }
-  catch (err) { $('#nmErr').textContent = 'Couldn\'t save to the members list: ' + err.message; return; }
+  try { await set(ref(clubDb, `members/${id}`), m); } catch (err) { $('#nmErr').textContent = 'Couldn\'t save to the members list: ' + err.message; return; }
   MEMBERS[id] = m; toast(`${name} added to members`);
   addPlayer({ key: id, id, name });
 }
 
-/* ── Games ── */
-function addGame() {
-  const v = id => $(id).value, keys = [v('#ga1'), v('#ga2'), v('#gb1'), v('#gb2')], err = $('#gerr');
-  if (keys.some(k => !k)) { err.textContent = 'Pick all four players.'; return; }
-  if (new Set(keys).size < 4) { err.textContent = 'Each player can only appear once.'; return; }
-  const sc = v('#gscore').trim(), sets = sc.split(/[,;]/).map(s => s.trim()).filter(Boolean);
-  if (!sets.length || !sets.every(s => /^\d{1,2}\s*-\s*\d{1,2}$/.test(s))) { err.textContent = 'Score like 6-4, or 6-3, 4-6, 10-8.'; return; }
-  const pairs = sets.map(s => s.split('-').map(x => +x.trim()));
-  const nameOf = k => (E.players.find(p => p.key === k) || {}).name;
-  E.games.push({ teamA: [nameOf(keys[0]), nameOf(keys[1])], teamB: [nameOf(keys[2]), nameOf(keys[3])], ids: keys, a: pairs.reduce((s, p) => s + p[0], 0), b: pairs.reduce((s, p) => s + p[1], 0), score: sets.map(s => s.replace(/\s/g, '')).join(', '), sets: sets.length });
-  renderEditor();
-}
-
-/* ── Save ── */
-async function save() {
-  if (SAVING) return;
-  const errs = validate(); $('#saveErr').textContent = errs.join(' ');
-  if (errs.length) return;
-  SAVING = true; $('#saveBtn').disabled = true; $('#saveBtn').textContent = 'Saving…';
-  const e = E, c = calc(e), isNew = !e.id, now = new Date().toISOString();
-  const id = e.id || push(ref(db, 'entries')).key;
-  const pt = payTotals(e, c);
-  // Ratings: write new games, drop removed ones (club database, existing members-portal format)
-  const games = [];
-  try {
-    for (const g of e.games) {
-      if (g.matchId) { games.push(g); continue; }
-      const matchId = `${e.date}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-      await set(ref(clubDb, `openPlayMatches/${matchId}`), { date: e.date, format: 'openplay', teamA: g.teamA, teamB: g.teamB, a: g.a, b: g.b, score: g.score, sets: g.sets,
-        status: 'confirmed', enteredAt: now, note: `Desk — ${g.teamA.join(' & ')} vs ${g.teamB.join(' & ')}`, source: 'desk', bookingId: id, court: e.courts.join(',') });
-      games.push({ ...g, matchId });
-    }
-    for (const mid of e._removedGames || []) await remove(ref(clubDb, `openPlayMatches/${mid}`)).catch(() => {});
-  } catch (err) { toast('Games couldn\'t be saved to ratings: ' + err.message, 5000); games.push(...e.games.filter(g => !g.matchId && !games.includes(g))); }
-
-  const extrasDetail = Object.entries(e.extras).filter(([, q]) => q > 0).map(([k, q]) => { const it = CFG.items[k] || {}; return { k, label: it.label || k, cat: it.cat || 'other', price: it.price || 0, qty: q }; });
-  const doc = {
-    id, date: e.date, dateMs: dateMsIST(e.date), start: e.start, minutes: e.minutes, startTime: hm24(e.start), endTime: hm24(e.start + e.minutes),
-    sport: e.sport, courts: e.courts, type: e.type, source: e.source,
-    players: e.players.map(p => ({ key: p.key, id: p.id || '', name: p.name, fill: !!p.fill, booker: !!p.booker })),
-    charge: { mode: c.isEv ? 'event' : e.charge.mode || 'court', rateCard: c.auto, peakMin: c.cc.peak, offMin: c.cc.off, override: e.charge.override === '' ? null : e.charge.override ?? null,
-      overrideReason: e.charge.overrideReason || '', perPerson: c.perPerson, eventFee: c.isEv ? +e.charge.eventFee || 0 : null },
-    extras: e.extras, extrasDetail,
-    totals: { court: c.court, racquet: c.ex.racquet, balls: c.ex.balls, beverage: c.ex.beverage, other: c.ex.other, bill: c.bill, fills: c.fills, fillLoss: c.fillLoss, share: Math.round(c.share), due: c.due },
-    payMode: e.payMode, payments: pt, split: e.payMode === 'split' ? Object.fromEntries(splitRows(e, c).map(r => [r.key, { amount: r.amount, method: r.method, paidBy: r.paidBy, paid: r.paid }])) : null,
-    paid: c.paid, status: e.status, notes: e.notes || '', games,
-    createdBy: e.createdBy || USER, createdAt: e.createdAt || now, updatedBy: USER, updatedAt: now
-  };
-  try {
-    await set(ref(db, `entries/${id}`), doc);
-    await push(ref(db, `entryLog/${id}`), { at: now, by: USER, action: isNew ? 'create' : 'update', summary: `${doc.startTime} ${doc.courts.join(',')} · due ${doc.totals.due} · paid ${doc.paid} · ${doc.status}` }).catch(() => {});
-    // Visit record on the members side: who played, when, where (no money)
-    const mids = doc.players.filter(p => p.id).map(p => p.id);
-    set(ref(clubDb, `visits/${id}`), { bookingId: id, date: doc.date, start: doc.startTime, end: doc.endTime, minutes: doc.minutes, sport: doc.sport, courts: doc.courts, type: doc.type,
-      status: doc.status, players: mids, names: doc.players.map(p => p.name), updatedAt: now }).catch(() => {});
-    toast(isNew ? 'Booking saved' : 'Changes saved');
-    if (e.date !== DAYISO) setDay(e.date);
-    closeEditor();
-  } catch (err) {
-    $('#saveErr').textContent = /permission/i.test(err.message) ? 'Not allowed: bookings older than yesterday can only be changed by an owner.' : 'Couldn\'t save: ' + err.message;
-  } finally { SAVING = false; const b = $('#saveBtn'); if (b) { b.disabled = false; b.textContent = isNew ? 'Save booking' : 'Save changes'; } }
-}
-
-/* ── Owner settings: prices, items, sources ── */
+/* ── Owner settings: rates, items (with photos), sources ── */
 $('#settingsBtn').onclick = () => openSettings();
+function resizeImage(file, size = 160) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => { const c = document.createElement('canvas'); c.width = c.height = size; const x = c.getContext('2d');
+      const s = Math.min(img.width, img.height); x.fillStyle = '#fff'; x.fillRect(0, 0, size, size);
+      x.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .82)); };
+    img.onerror = rej; img.src = url;
+  });
+}
 function openSettings() {
   const S = clone(CFG);
   const draw = () => {
@@ -826,36 +1138,39 @@ function openSettings() {
     <div class="sec"><h4>Court rates <small>per court per hour</small></h4><table class="modal-table"><tr><th></th><th>Off-peak</th><th>Peak</th></tr>
       ${['padel', 'pickle'].map(s => `<tr><td>${SPORT[s]}</td><td><input type="number" data-rate="${s}.off" value="${S.rates[s].off}"></td><td><input type="number" data-rate="${s}.peak" value="${S.rates[s].peak}"></td></tr>`).join('')}</table>
       <div class="sub" style="margin-top:8px">Peak: weekdays 5–11pm · weekends 6–11am & 4–11pm.</div></div>
-    <div class="sec"><h4>Items for sale</h4><div class="tbl-wrap" style="overflow-x:auto"><table class="modal-table"><tr><th>Item</th><th>Type</th><th>Sport</th><th>Price</th><th>On sale</th></tr>
-      ${Object.entries(S.items).sort((a, b) => (a[1].order || 0) - (b[1].order || 0)).map(([k, it]) => `<tr><td><input data-it="${k}" data-k="label" value="${esc(it.label)}"></td>
+    <div class="sec"><h4>Items for sale <small>tap a picture to upload a photo of the real product</small></h4><div style="overflow-x:auto"><table class="modal-table"><tr><th>Picture</th><th>Item</th><th>Type</th><th>Sport</th><th>Price</th><th>On sale</th></tr>
+      ${Object.entries(S.items).sort((a, b) => (a[1].order || 0) - (b[1].order || 0)).map(([k, it]) => `<tr>
+        <td><label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px"><span class="pic">${itemPic(k, it)}</span><input type="file" accept="image/*" data-img="${k}" style="display:none"><span class="sub" style="font-size:11px">${it.img ? 'Change' : 'Upload'}</span></label>${it.img ? `<button class="btn btn-sm btn-ghost" data-noimg="${k}" style="min-height:26px;padding:2px 8px;font-size:12px">Use drawing</button>` : ''}</td>
+        <td><input data-it="${k}" data-k="label" value="${esc(it.label)}"></td>
         <td><select data-it="${k}" data-k="cat">${CATS.map(([ck, cl]) => `<option value="${ck}" ${it.cat === ck ? 'selected' : ''}>${cl}</option>`).join('')}</select></td>
         <td><select data-it="${k}" data-k="sport">${[['any', 'Any'], ['padel', 'Padel'], ['pickle', 'Pickleball']].map(([sk, sl]) => `<option value="${sk}" ${it.sport === sk ? 'selected' : ''}>${sl}</option>`).join('')}</select></td>
         <td style="width:100px"><input type="number" data-it="${k}" data-k="price" value="${it.price}"></td><td><input type="checkbox" data-it="${k}" data-k="active" ${it.active !== false ? 'checked' : ''} style="width:22px;height:22px"></td></tr>`).join('')}
       </table></div><button class="btn btn-sm" data-sx="additem" style="margin-top:10px">+ Add item</button></div>
     <div class="sec"><h4>Booking sources <small>aggregators also appear as a payment method</small></h4><table class="modal-table"><tr><th>Source</th><th>Aggregator</th><th>In use</th></tr>
       ${Object.entries(S.sources).sort((a, b) => (a[1].order || 0) - (b[1].order || 0)).map(([k, s]) => `<tr><td><input data-src="${k}" data-k="label" value="${esc(s.label)}"></td><td><input type="checkbox" data-src="${k}" data-k="aggregator" ${s.aggregator ? 'checked' : ''} style="width:22px;height:22px"></td><td><input type="checkbox" data-src="${k}" data-k="active" ${s.active !== false ? 'checked' : ''} style="width:22px;height:22px"></td></tr>`).join('')}
-      </table><button class="btn btn-sm" data-sx="addsrc" style="margin-top:10px">+ Add source</button></div>
+      </table><div class="row" style="margin-top:10px"><input id="newSrc" placeholder="New source, e.g. Playo"><button class="btn btn-sm" data-sx="addsrc">+ Add source</button></div></div>
     <div class="sec"><button class="btn btn-primary" data-sx="save">Save settings</button> <span class="sub" id="sxMsg"></span></div></div>`;
   };
-  draw(); $('#sheet').classList.remove('hidden'); document.body.style.overflow = 'hidden';
+  draw(); openSheet(); $('#footHost').innerHTML = '';
   const sh = $('#sheet');
-  sh.oninput = sh.onchange = ev => {
-    const t = ev.target, val = t.type === 'checkbox' ? t.checked : t.type === 'number' ? +t.value : t.value;
+  const onChange = async ev => {
+    const t = ev.target;
+    if (t.dataset.img) { if (ev.type !== 'change' || !t.files || !t.files[0]) return; try { S.items[t.dataset.img].img = await resizeImage(t.files[0]); draw(); } catch { toast('Couldn\'t read that image.'); } return; }
+    const val = t.type === 'checkbox' ? t.checked : t.type === 'number' ? +t.value : t.value;
     if (t.dataset.rate) { const [s, k] = t.dataset.rate.split('.'); S.rates[s][k] = +t.value; }
     if (t.dataset.it) S.items[t.dataset.it][t.dataset.k] = val;
     if (t.dataset.src) S.sources[t.dataset.src][t.dataset.k] = val;
   };
-  sh.onclick = async ev => {
-    const b = ev.target.closest('[data-sx]'); if (!b) return;
+  const onClick = async ev => {
+    const b = ev.target.closest('[data-sx],[data-noimg]'); if (!b) return;
+    if (b.dataset.noimg) { delete S.items[b.dataset.noimg].img; return draw(); }
     const a = b.dataset.sx;
-    if (a === 'close') { sh.oninput = sh.onchange = sh.onclick = null; closeEditor(); }
-    if (a === 'additem') { S.items['item_' + Date.now().toString(36)] = { label: 'New item', cat: 'beverage', sport: 'any', price: 0, order: 99, active: true }; draw(); }
-    if (a === 'addsrc') { const label = prompt('Name of the new booking source (e.g. Playo)'); if (label) { S.sources[slug(label).replace(/-/g, '') || 'src' + Date.now()] = { label, aggregator: true, order: 50, active: true }; draw(); } }
-    if (a === 'save') {
-      try { await set(ref(db, 'config'), S); CFG = clone(S); $('#sxMsg').textContent = 'Saved.'; toast('Settings saved'); }
-      catch (err) { $('#sxMsg').textContent = 'Couldn\'t save: ' + err.message; }
-    }
+    if (a === 'close') { sh.removeEventListener('change', onChange); sh.removeEventListener('input', onChange); sh.removeEventListener('click', onClick); closeEditor(); }
+    if (a === 'additem') { S.items['item_' + uid()] = { label: 'New item', cat: 'beverage', sport: 'any', price: 0, order: 99, active: true }; draw(); }
+    if (a === 'addsrc') { const label = ($('#newSrc').value || '').trim(); if (label) { S.sources[slug(label).replace(/-/g, '') || 'src' + uid()] = { label, aggregator: true, order: 50, active: true }; draw(); } }
+    if (a === 'save') { try { await set(ref(db, 'config'), S); CFG = clone(S); $('#sxMsg').textContent = 'Saved.'; toast('Settings saved'); } catch (err) { $('#sxMsg').textContent = 'Couldn\'t save: ' + err.message; } }
   };
+  sh.addEventListener('change', onChange); sh.addEventListener('input', onChange); sh.addEventListener('click', onClick);
 }
 </script>
 </body>
