@@ -3,13 +3,13 @@
 // nothing about club operations exists in this database).
 
 export const firebaseConfig = {
-  apiKey: "REPLACE_ME",
+  apiKey: "AIzaSyCkSF-LHDGJ5NOtuAKJ6i-9Q1hImySBvJs",
   authDomain: "deuceandsmash-bazaar.firebaseapp.com",
   databaseURL: "https://deuceandsmash-bazaar-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "deuceandsmash-bazaar",
   storageBucket: "deuceandsmash-bazaar.firebasestorage.app",
-  messagingSenderId: "REPLACE_ME",
-  appId: "REPLACE_ME"
+  messagingSenderId: "295732821207",
+  appId: "1:295732821207:web:0d539a55c2bf48fd6f8492"
 };
 
 // Display-side allowlist. The real lock is the database rules (bazaar/firebase-rules.json).
