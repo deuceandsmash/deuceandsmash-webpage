@@ -417,7 +417,7 @@ function iconSVG(code) {
 const PHOTOS = new Set(['wb', 'go_s', 'gb_s', 'gl_s', 'go_b', 'gb_b', 'gl_b', 'pocari', 'racq_int', 'racq_adv', 'racq_pro', 'paddle',
   'ball_bpnp', 'ball_bpn', 'ball_hpro', 'ball_wil', 'ball_bab', 'ball_dun', 'ball_hteam', 'ball_frank']);
 const itemPic = (k, it) => it && it.img ? `<img src="${esc(it.img)}" alt="" loading="lazy">`
-  : PHOTOS.has(k) ? `<img src="/ops/entry/img/${k}.jpg?v=1" alt="" loading="lazy">` : iconSVG(inferIcon(k, it || {}));
+  : PHOTOS.has(k) ? `<img src="/ops/entry/img/${k}.jpg?v=2" alt="" loading="lazy">` : iconSVG(inferIcon(k, it || {}));
 
 /* ── State ── */
 let USER = null, IS_OWNER = false, CFG = clone(DEFAULT_CONFIG), MEMBERS = {}, DAYISO = todayISO(), ENTRIES = {}, unsub = null;
