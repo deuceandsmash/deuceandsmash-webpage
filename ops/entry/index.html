@@ -162,11 +162,11 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 .own.on{border-color:var(--yellow);background:rgba(245,214,40,.12)}
 .own.on small{color:var(--yellow)}
 .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;margin-bottom:12px}
-.th-item{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-height:132px}
+.th-item{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-height:146px}
 .th-item:hover{border-color:var(--axis)}
 .th-item:active{transform:scale(.97)}
-.th-item .pic{width:60px;height:60px;display:flex;align-items:center;justify-content:center}
-.th-item .pic img{width:60px;height:60px;object-fit:cover;border-radius:10px}
+.th-item .pic{width:72px;height:72px;display:flex;align-items:center;justify-content:center}
+.th-item .pic img{width:72px;height:72px;object-fit:cover;border-radius:12px;background:#fff}
 .th-item .pic svg{width:56px;height:56px}
 .th-item .lb{font-size:14.5px;font-weight:600;line-height:1.1}
 .th-item .pr{font-family:var(--ui);font-size:12.5px;color:var(--muted)}
@@ -413,7 +413,11 @@ function iconSVG(code) {
     return S(`<rect x="17" y="6" width="30" height="54" rx="6" fill="${c}"/><ellipse cx="32" cy="8" rx="15" ry="4" fill="#cfd2dc"/><g fill="#dff03b" stroke="#a6b51a" stroke-width="1"><circle cx="32" cy="20" r="7"/><circle cx="32" cy="34" r="7"/><circle cx="32" cy="48" r="7"/></g>`); }
   return S(`<path d="M10 30L30 10h22v22L32 52z" fill="#3a3a6a"/><circle cx="44" cy="18" r="4" fill="#B9B9D3"/>`);
 }
-const itemPic = (k, it) => it && it.img ? `<img src="${esc(it.img)}" alt="">` : iconSVG(inferIcon(k, it || {}));
+// Product photos shipped with the site (ops/entry/img/<key>.jpg); an owner-uploaded photo in Settings takes priority
+const PHOTOS = new Set(['wb', 'go_s', 'gb_s', 'gl_s', 'go_b', 'gb_b', 'gl_b', 'pocari', 'racq_int', 'racq_adv', 'racq_pro', 'paddle',
+  'ball_bpnp', 'ball_bpn', 'ball_hpro', 'ball_wil', 'ball_bab', 'ball_dun', 'ball_hteam', 'ball_frank']);
+const itemPic = (k, it) => it && it.img ? `<img src="${esc(it.img)}" alt="" loading="lazy">`
+  : PHOTOS.has(k) ? `<img src="/ops/entry/img/${k}.jpg?v=1" alt="" loading="lazy">` : iconSVG(inferIcon(k, it || {}));
 
 /* ── State ── */
 let USER = null, IS_OWNER = false, CFG = clone(DEFAULT_CONFIG), MEMBERS = {}, DAYISO = todayISO(), ENTRIES = {}, unsub = null;
@@ -1142,9 +1146,9 @@ function openSettings() {
     <div class="sec"><h4>Court rates <small>per court per hour</small></h4><table class="modal-table"><tr><th></th><th>Off-peak</th><th>Peak</th></tr>
       ${['padel', 'pickle'].map(s => `<tr><td>${SPORT[s]}</td><td><input type="number" data-rate="${s}.off" value="${S.rates[s].off}"></td><td><input type="number" data-rate="${s}.peak" value="${S.rates[s].peak}"></td></tr>`).join('')}</table>
       <div class="sub" style="margin-top:8px">Peak: weekdays 5–11pm · weekends 6–11am & 4–11pm.</div></div>
-    <div class="sec"><h4>Items for sale <small>tap a picture to upload a photo of the real product</small></h4><div style="overflow-x:auto"><table class="modal-table"><tr><th>Picture</th><th>Item</th><th>Type</th><th>Sport</th><th>Price</th><th>On sale</th></tr>
+    <div class="sec"><h4>Items for sale <small>tap a picture to replace it with your own photo</small></h4><div style="overflow-x:auto"><table class="modal-table"><tr><th>Picture</th><th>Item</th><th>Type</th><th>Sport</th><th>Price</th><th>On sale</th></tr>
       ${Object.entries(S.items).sort((a, b) => (a[1].order || 0) - (b[1].order || 0)).map(([k, it]) => `<tr>
-        <td><label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px"><span class="pic">${itemPic(k, it)}</span><input type="file" accept="image/*" data-img="${k}" style="display:none"><span class="sub" style="font-size:11px">${it.img ? 'Change' : 'Upload'}</span></label>${it.img ? `<button class="btn btn-sm btn-ghost" data-noimg="${k}" style="min-height:26px;padding:2px 8px;font-size:12px">Use drawing</button>` : ''}</td>
+        <td><label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px"><span class="pic">${itemPic(k, it)}</span><input type="file" accept="image/*" data-img="${k}" style="display:none"><span class="sub" style="font-size:11px">${it.img ? 'Change' : 'Upload'}</span></label>${it.img ? `<button class="btn btn-sm btn-ghost" data-noimg="${k}" style="min-height:26px;padding:2px 8px;font-size:12px">Use standard photo</button>` : ''}</td>
         <td><input data-it="${k}" data-k="label" value="${esc(it.label)}"></td>
         <td><select data-it="${k}" data-k="cat">${CATS.map(([ck, cl]) => `<option value="${ck}" ${it.cat === ck ? 'selected' : ''}>${cl}</option>`).join('')}</select></td>
         <td><select data-it="${k}" data-k="sport">${[['any', 'Any'], ['padel', 'Padel'], ['pickle', 'Pickleball']].map(([sk, sl]) => `<option value="${sk}" ${it.sport === sk ? 'selected' : ''}>${sl}</option>`).join('')}</select></td>
