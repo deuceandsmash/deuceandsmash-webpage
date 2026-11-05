@@ -1,0 +1,86 @@
+{
+ "kind": "product",
+ "id": "nox-womens-fit-pro-shorts-red",
+ "rev": 1,
+ "data": {
+  "brand": "NOX",
+  "model": "Women's Fit Pro Shorts · Red",
+  "categoryId": "apparel",
+  "sport": "both",
+  "variants": {
+   "xs": {
+    "size": "XS",
+    "color": "Red",
+    "stock": 0
+   },
+   "s": {
+    "size": "S",
+    "color": "Red",
+    "stock": 0
+   },
+   "m": {
+    "size": "M",
+    "color": "Red",
+    "stock": 0
+   },
+   "l": {
+    "size": "L",
+    "color": "Red",
+    "stock": 0
+   }
+  },
+  "hook": "Double-layer NOX Fit Pro shorts in bold red, with a secure back pocket.",
+  "why": [
+   "Double-layer design with a built-in inner short",
+   "Breathable fabric for intense rallies",
+   "High waistband with a zipped back pocket for keys or a card"
+  ],
+  "specs": [
+   {
+    "k": "Type",
+    "v": "Padel shorts, double layer"
+   },
+   {
+    "k": "Line",
+    "v": "NOX Fit Pro"
+   },
+   {
+    "k": "Gender",
+    "v": "Women"
+   },
+   {
+    "k": "Colour",
+    "v": "Red"
+   }
+  ],
+  "summary": "NOX Fit Pro shorts for women, ideal for padel: breathable, with a double-layer design and a high, supportive waistband.",
+  "faq": [
+   {
+    "q": "Can I try the shorts on before buying?",
+    "a": "Yes. Tap \"Keep it ready for me to see\" and we'll have your size at the front desk to try on."
+   },
+   {
+    "q": "How do I pay?",
+    "a": "At the club front desk, the same way you pay for court bookings. There is no online payment."
+   }
+  ],
+  "tags": [
+   "NOX",
+   "Apparel",
+   "Women",
+   "Shorts",
+   "Double layer"
+  ],
+  "clubTake": "Brand new. A great match-day short.",
+  "images": [
+   "/bazaar/img/nox-womens-fit-pro-shorts-red/1.webp",
+   "/bazaar/img/nox-womens-fit-pro-shorts-red/2.webp",
+   "/bazaar/img/nox-womens-fit-pro-shorts-red/3.webp",
+   "/bazaar/img/nox-womens-fit-pro-shorts-red/4.webp",
+   "/bazaar/img/nox-womens-fit-pro-shorts-red/5.webp"
+  ]
+ },
+ "sources": [
+  "https://www.decathlon.ch/en/p/mp/women-s-red-nox-fit-pro-shorts/f91025f9-9a25-4d83-904d-dd4238afd3d9/c14"
+ ]
+}

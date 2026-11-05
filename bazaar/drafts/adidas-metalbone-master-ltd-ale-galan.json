@@ -1,0 +1,152 @@
+{
+ "kind": "product",
+ "id": "adidas-metalbone-master-ltd-ale-galan",
+ "rev": 1,
+ "data": {
+  "brand": "adidas",
+  "model": "Metalbone Master LTD · Ale Galán",
+  "year": "2022",
+  "categoryId": "padel-rackets",
+  "sport": "padel",
+  "stock": 1,
+  "featured": true,
+  "hook": "Ale Galán's own limited-edition Metalbone, in black and gold, in its collector's box.",
+  "why": [
+   "Limited edition made with and for world No. 1 Ale Galán",
+   "Weight & Balance System: tune balance with screw-in weights and the included key",
+   "Diamond shape and high balance for maximum smash power",
+   "Octagonal Structure frame and 100% carbon build for rigidity",
+   "Comes in the exclusive premium presentation box"
+  ],
+  "levels": [
+   "Intermediate+",
+   "Advanced"
+  ],
+  "playStyle": "Advanced attacking players, and collectors who want a piece of Ale Galán history.",
+  "scores": {
+   "power": 9.2,
+   "control": 8.0,
+   "sweetSpot": 7.8,
+   "manoeuvrability": 7.6,
+   "comfort": 7.6
+  },
+  "specs": [
+   {
+    "k": "Shape",
+    "v": "Diamond"
+   },
+   {
+    "k": "Weight",
+    "v": "Approx. 360 g"
+   },
+   {
+    "k": "Balance",
+    "v": "High, adjustable"
+   },
+   {
+    "k": "Frame",
+    "v": "100% carbon"
+   },
+   {
+    "k": "Face",
+    "v": "Aluminized carbon"
+   },
+   {
+    "k": "Core",
+    "v": "EVA Soft Energy"
+   },
+   {
+    "k": "Profile",
+    "v": "38 mm"
+   },
+   {
+    "k": "Hitting surface",
+    "v": "485 cm²"
+   },
+   {
+    "k": "Player",
+    "v": "Ale Galán"
+   },
+   {
+    "k": "Colour",
+    "v": "Black / gold"
+   },
+   {
+    "k": "Level",
+    "v": "Advanced"
+   },
+   {
+    "k": "Edition",
+    "v": "Limited, with presentation box"
+   }
+  ],
+  "summary": "The Metalbone Master LTD is the exclusive, limited-edition racket made with the essence that took Ale Galán to world No. 1. It combines a diamond power shape, adjustable balance and a premium carbon build, delivered in a special collector's box.",
+  "description": "This is the racket adidas made for the best: a limited run built around Ale Galán's game. The diamond mould and high balance deliver the punch of one of the most powerful arms on tour, while the adjustable Weight & Balance System lets you shift the feel from all-out power towards more control.\n\nThe Octagonal Structure stiffens the frame at impact, and the soft EVA core keeps contact comfortable. The black-and-gold design and exclusive packaging make it as much a collector's piece as a match racket.",
+  "tech": [
+   {
+    "name": "Weight & Balance System",
+    "text": "Screw-in weights in the heart of the racket, adjusted with the included key, to move balance towards the head or the handle."
+   },
+   {
+    "name": "Octagonal Structure",
+    "text": "Octagonal-section frame for more rigidity and power at impact."
+   },
+   {
+    "name": "Diamond mould",
+    "text": "Head shape and high balance designed for maximum power."
+   },
+   {
+    "name": "Aluminized carbon",
+    "text": "Carbon face treated for a lively, powerful response."
+   },
+   {
+    "name": "EVA Soft Energy",
+    "text": "Softer EVA core that cushions contact."
+   }
+  ],
+  "faq": [
+   {
+    "q": "Is this the racket Ale Galán used?",
+    "a": "It is adidas's limited-edition Metalbone Master made for Ale Galán, in the black-and-gold colourway."
+   },
+   {
+    "q": "Can I adjust the balance?",
+    "a": "Yes. The Weight & Balance System uses screw-in weights and a key to move balance."
+   },
+   {
+    "q": "Is it suitable for intermediate players?",
+    "a": "Strong intermediate+ players can handle it, but it is built for advanced players."
+   },
+   {
+    "q": "Does it come with the box?",
+    "a": "Yes, it comes in the exclusive Metalbone Master presentation box."
+   }
+  ],
+  "tags": [
+   "adidas",
+   "Padel racket",
+   "Limited edition",
+   "Ale Galán",
+   "Shape: Diamond",
+   "Balance: Adjustable",
+   "Power",
+   "Collector"
+  ],
+  "clubTake": "Brand new, unused, boxed. A rare one in Pune. Ask us to open the box at the desk if you want to see it in hand.",
+  "images": [
+   "/bazaar/img/adidas-metalbone-master-ltd-ale-galan/1.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-ale-galan/2.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-ale-galan/3.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-ale-galan/4.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-ale-galan/5.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-ale-galan/6.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-ale-galan/7.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-ale-galan/8.webp"
+  ]
+ },
+ "sources": [
+  "https://racketshop.ae/adidas-padel-racket-metalbone-master-limited-edition-the-racket-of-alejandro-galan/",
+  "https://www.zonadepadel.com/adidas-padel/7333-adidas-metalbone-master.html",
+  "https://padelproshop.com/en-la/blogs/blog/review-of-the-new-metalbone-master-ltd-and-adipower-master-ltd"
+ ]
+}

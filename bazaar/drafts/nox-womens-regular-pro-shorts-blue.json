@@ -1,0 +1,86 @@
+{
+ "kind": "product",
+ "id": "nox-womens-regular-pro-shorts-blue",
+ "rev": 1,
+ "data": {
+  "brand": "NOX",
+  "model": "Women's Regular Pro Shorts · Navy",
+  "categoryId": "apparel",
+  "sport": "both",
+  "variants": {
+   "s": {
+    "size": "S",
+    "color": "Navy",
+    "stock": 0
+   },
+   "m": {
+    "size": "M",
+    "color": "Navy",
+    "stock": 0
+   },
+   "l": {
+    "size": "L",
+    "color": "Navy",
+    "stock": 0
+   },
+   "xl": {
+    "size": "XL",
+    "color": "Navy",
+    "stock": 0
+   }
+  },
+  "hook": "Navy NOX Pro shorts with a red side flash: a regular fit that works on and off court.",
+  "why": [
+   "Regular fit with a comfortable elastic waist",
+   "Lightweight technical fabric",
+   "Navy with a red side detail and NOX logo"
+  ],
+  "specs": [
+   {
+    "k": "Type",
+    "v": "Padel shorts"
+   },
+   {
+    "k": "Line",
+    "v": "NOX Pro"
+   },
+   {
+    "k": "Fit",
+    "v": "Regular"
+   },
+   {
+    "k": "Gender",
+    "v": "Women"
+   },
+   {
+    "k": "Colour",
+    "v": "Navy / red"
+   }
+  ],
+  "summary": "NOX Regular Pro women's shorts in navy with a red side accent. A versatile, regular-fit short for training and match play.",
+  "faq": [
+   {
+    "q": "Can I try the shorts on before buying?",
+    "a": "Yes. Tap \"Keep it ready for me to see\" and we'll have your size at the front desk to try on."
+   },
+   {
+    "q": "How do I pay?",
+    "a": "At the club front desk, the same way you pay for court bookings. There is no online payment."
+   }
+  ],
+  "tags": [
+   "NOX",
+   "Apparel",
+   "Women",
+   "Shorts",
+   "Pro line"
+  ],
+  "clubTake": "Brand new. Limited sizes in stock.",
+  "images": [
+   "/bazaar/img/nox-womens-regular-pro-shorts-blue/1.webp"
+  ]
+ },
+ "sources": [
+  "https://www.padeloutlet.ae/products/short-mujer-regular-pro-azul-talla"
+ ]
+}

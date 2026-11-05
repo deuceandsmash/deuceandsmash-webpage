@@ -1,0 +1,165 @@
+{
+ "kind": "product",
+ "id": "adidas-metalbone-carbon-3-3",
+ "rev": 1,
+ "data": {
+  "brand": "adidas",
+  "model": "Metalbone Carbon 3.3",
+  "categoryId": "padel-rackets",
+  "sport": "padel",
+  "stock": 1,
+  "hook": "Metalbone attack in an oversize diamond, with a spin-gripping face and a softer core.",
+  "why": [
+   "Oversize diamond lifts the sweet spot for big, clean smashes",
+   "6K carbon face and frame with the Octagonal Structure for stiffness and durability",
+   "Spin Blade textured surface grips the ball for heavy spin",
+   "Soft Performance EVA core keeps vibration down in long sessions",
+   "Power balance designed for advanced, attacking players"
+  ],
+  "levels": [
+   "Intermediate+",
+   "Advanced"
+  ],
+  "playStyle": "Aggressive players who live at the net and want to finish points with bandejas, viboras and flat smashes.",
+  "scores": {
+   "power": 9.0,
+   "control": 7.6,
+   "sweetSpot": 7.4,
+   "manoeuvrability": 7.4,
+   "comfort": 7.8
+  },
+  "specs": [
+   {
+    "k": "Shape",
+    "v": "Diamond oversize"
+   },
+   {
+    "k": "Weight",
+    "v": "345–375 g (+0–12 g)"
+   },
+   {
+    "k": "Frame",
+    "v": "6K carbon fibre"
+   },
+   {
+    "k": "Face",
+    "v": "6K carbon fibre"
+   },
+   {
+    "k": "Core",
+    "v": "EVA Soft Performance"
+   },
+   {
+    "k": "Surface texture",
+    "v": "Spin Blade"
+   },
+   {
+    "k": "Balance",
+    "v": "Power (head-heavy)"
+   },
+   {
+    "k": "Length",
+    "v": "455 mm"
+   },
+   {
+    "k": "Hitting surface",
+    "v": "485 cm²"
+   },
+   {
+    "k": "Colour",
+    "v": "Red / black"
+   },
+   {
+    "k": "Level",
+    "v": "Advanced / pro"
+   },
+   {
+    "k": "Gender",
+    "v": "Unisex"
+   }
+  ],
+  "summary": "The Metalbone Carbon 3.3 brings adidas's flagship attacking shape to a 6K carbon build. The oversize diamond and power balance give explosive smashes, the Spin Blade surface adds bite, and the Soft Performance EVA core keeps it comfortable.",
+  "description": "This is a high-performance racket for advanced players who want to dictate from the net. The oversize diamond head raises the sweet spot, so contact up high on smashes and decisive volleys pays off with maximum power.\n\nA 6K carbon frame and face with adidas's Octagonal Structure keep the racket stiff and durable, and perimeter reinforcements help it stand up to hard play. The soft, low-density EVA core reduces arm fatigue, while the new Spin Blade relief helps you load the ball with spin.",
+  "tech": [
+   {
+    "name": "Octagonal Structure",
+    "text": "Octagonal-section tubular frame for extra rigidity at impact."
+   },
+   {
+    "name": "Structural Reinforcement",
+    "text": "Perimeter reinforcements that resist the stress of hard matches."
+   },
+   {
+    "name": "Soft Performance",
+    "text": "Low-density EVA rubber for good ball reaction and comfort."
+   },
+   {
+    "name": "Spin Blade",
+    "text": "Raised face texture that adds control and spin."
+   },
+   {
+    "name": "Carbon Fiber 6K",
+    "text": "Carbon weave that keeps the build light while reinforcing key points."
+   },
+   {
+    "name": "Metalbone Protector Tape",
+    "text": "Light, durable 3M edge protector made for Metalbone rackets."
+   }
+  ],
+  "faq": [
+   {
+    "q": "What type of player is it designed for?",
+    "a": "Advanced adult players with an aggressive, attacking style."
+   },
+   {
+    "q": "What are the main materials?",
+    "a": "6K carbon fibre frame and face, with a Soft Performance EVA core."
+   },
+   {
+    "q": "Is it suitable for both men and women?",
+    "a": "Yes. It is a unisex racket."
+   },
+   {
+    "q": "What is the weight?",
+    "a": "345–375 g, with a possible variance of 0–12 g."
+   },
+   {
+    "q": "Does it help with spin?",
+    "a": "Yes. The Spin Blade surface grips the ball for more spin."
+   },
+   {
+    "q": "Is it good for a power game?",
+    "a": "Yes. The power balance and oversize diamond are built to maximise force on smashes."
+   },
+   {
+    "q": "Is it suitable for beginners?",
+    "a": "No. It is built for advanced and pro-level players, and the head-heavy balance can be hard to control early on."
+   },
+   {
+    "q": "How does it compare to the Metalbone Superlight?",
+    "a": "The Carbon 3.3 is the sturdier 6K carbon build for power. The Superlight is lighter for faster handling."
+   }
+  ],
+  "tags": [
+   "adidas",
+   "Padel racket",
+   "Balance: Power",
+   "Shape: Diamond",
+   "Colour: Red",
+   "Unisex",
+   "Level: Advanced"
+  ],
+  "clubTake": "Brand new, unused. Metalbone power at a friendlier price point than the HRD and Ale Galán editions.",
+  "images": [
+   "/bazaar/img/adidas-metalbone-carbon-3-3/1.webp",
+   "/bazaar/img/adidas-metalbone-carbon-3-3/2.webp",
+   "/bazaar/img/adidas-metalbone-carbon-3-3/3.webp",
+   "/bazaar/img/adidas-metalbone-carbon-3-3/4.webp",
+   "/bazaar/img/adidas-metalbone-carbon-3-3/5.webp",
+   "/bazaar/img/adidas-metalbone-carbon-3-3/6.webp"
+  ]
+ },
+ "sources": [
+  "https://www.tradeinn.com/smashinn/en/adidas-metalbone-carbon-3.3-padel-racket/140427155/p"
+ ]
+}

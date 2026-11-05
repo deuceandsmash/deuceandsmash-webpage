@@ -1,0 +1,144 @@
+{
+ "kind": "product",
+ "id": "joola-perseus-pro-iv-summer-daze",
+ "rev": 1,
+ "data": {
+  "brand": "JOOLA",
+  "model": "Perseus Pro IV 16mm · Summer Daze",
+  "categoryId": "pickleball-paddles",
+  "sport": "pickleball",
+  "stock": 1,
+  "featured": true,
+  "hook": "Ben Johns' Perseus Pro IV power paddle, in a limited-edition sunset colourway.",
+  "why": [
+   "Tech Flex foam adds power and widens the sweet spot",
+   "Honeycomb Propulsion core for dwell time and a soft, controlled feel",
+   "Hyper-Foam edge wall for an edge-to-edge sweet spot",
+   "Textured carbon face for spin and low dinks",
+   "Limited-edition Summer Daze design: gradient orange-to-teal edge"
+  ],
+  "levels": [
+   "Intermediate",
+   "Intermediate+",
+   "Advanced"
+  ],
+  "playStyle": "All-court players who want pop on drives and put-aways with enough touch for the kitchen.",
+  "scores": {
+   "power": 8.8,
+   "control": 8.3,
+   "sweetSpot": 8.5,
+   "manoeuvrability": 8.0
+  },
+  "specs": [
+   {
+    "k": "Core thickness",
+    "v": "16 mm"
+   },
+   {
+    "k": "Weight",
+    "v": "7.9–8.3 oz (avg 8.1 oz)"
+   },
+   {
+    "k": "Length",
+    "v": "16.5 in"
+   },
+   {
+    "k": "Width",
+    "v": "7.5 in"
+   },
+   {
+    "k": "Handle length",
+    "v": "5.5 in"
+   },
+   {
+    "k": "Grip circumference",
+    "v": "4¼ in"
+   },
+   {
+    "k": "Core",
+    "v": "Honeycomb Propulsion + Hyper-Foam edge wall"
+   },
+   {
+    "k": "Face",
+    "v": "Textured carbon fibre"
+   },
+   {
+    "k": "Edge guard",
+    "v": "Yes"
+   },
+   {
+    "k": "Approvals",
+    "v": "USAP, UPA-A"
+   },
+   {
+    "k": "Edition",
+    "v": "Limited (Summer Daze)"
+   }
+  ],
+  "summary": "The Summer Daze is a limited-edition colourway of the JOOLA Perseus Pro IV 16mm, the paddle Ben Johns helped build. It pairs the Pro IV's power-forgiveness tech with a vivid gradient design.",
+  "description": "The Perseus Pro IV keeps the classic Perseus shape but adds Tech Flex: foam outside the frame, under the edge guard, that enlarges the sweet spot and adds power. The Propulsion core and Hyper-Foam edge wall give a soft, stable feel with plenty of dwell time.\n\nA 5.5\" handle leaves room for two-handed backhands, and the textured carbon face helps you shape drives and keep dinks low. The Summer Daze finish is a limited run.",
+  "tech": [
+   {
+    "name": "Tech Flex",
+    "text": "Foam outside the frame, under the edge guard, for a larger sweet spot and more power."
+   },
+   {
+    "name": "Propulsion Core",
+    "text": "Honeycomb core that adds dwell time and a soft feel."
+   },
+   {
+    "name": "Hyper-Foam Edge Wall",
+    "text": "Widens the sweet spot and steadies weight and balance."
+   },
+   {
+    "name": "Textured carbon face",
+    "text": "Durable texture for spin and precise placement."
+   },
+   {
+    "name": "5.5\" handle",
+    "text": "Room for two-handed backhands and fast swing speed."
+   }
+  ],
+  "faq": [
+   {
+    "q": "Is the Summer Daze different from the regular Perseus Pro IV?",
+    "a": "Performance is the same Perseus Pro IV 16mm. The difference is the limited-edition design."
+   },
+   {
+    "q": "Is it tournament approved?",
+    "a": "Yes, USA Pickleball and UPA-A approved."
+   },
+   {
+    "q": "Power or control?",
+    "a": "It leans to power, but the 16 mm core and foam edge keep it controllable at the kitchen."
+   }
+  ],
+  "tags": [
+   "JOOLA",
+   "Pickleball paddle",
+   "16 mm",
+   "Carbon face",
+   "Power",
+   "Limited edition",
+   "Ben Johns line",
+   "USAP approved"
+  ],
+  "clubTake": "Brand new, unused. A pro-level paddle that also looks great. Ask to hit with it on court before you decide.",
+  "images": [
+   "/bazaar/img/joola-perseus-pro-iv-summer-daze/1.webp",
+   "/bazaar/img/joola-perseus-pro-iv-summer-daze/2.webp",
+   "/bazaar/img/joola-perseus-pro-iv-summer-daze/3.webp",
+   "/bazaar/img/joola-perseus-pro-iv-summer-daze/4.webp",
+   "/bazaar/img/joola-perseus-pro-iv-summer-daze/5.webp",
+   "/bazaar/img/joola-perseus-pro-iv-summer-daze/6.webp",
+   "/bazaar/img/joola-perseus-pro-iv-summer-daze/7.webp",
+   "/bazaar/img/joola-perseus-pro-iv-summer-daze/8.webp",
+   "/bazaar/img/joola-perseus-pro-iv-summer-daze/9.webp",
+   "/bazaar/img/joola-perseus-pro-iv-summer-daze/10.webp"
+  ]
+ },
+ "sources": [
+  "https://pickleplayglobal.com/products/vot-pickleball-joola-summer-daze-perseus-pro-iv-limited-edition",
+  "https://pickleballcentral.com/joola-ben-johns-perseus-pro-iv-16mm-pickleball-paddle/"
+ ]
+}

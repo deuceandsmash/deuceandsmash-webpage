@@ -1,0 +1,140 @@
+{
+ "kind": "product",
+ "id": "adidas-metalbone-master-ltd-2023",
+ "rev": 1,
+ "data": {
+  "brand": "adidas",
+  "model": "Metalbone Master LTD",
+  "year": "2023",
+  "categoryId": "padel-rackets",
+  "sport": "padel",
+  "stock": null,
+  "hook": "The 2023 limited edition Ale Galán used to rule the tour: diamond power, adjustable balance.",
+  "why": [
+   "Limited edition built around world No. 1 Ale Galán",
+   "Weight & Balance System to tune the feel from power to control",
+   "Aluminized carbon faces for a lively, powerful response",
+   "EVA Soft Performance core for comfort and manoeuvrability",
+   "Structural reinforcement and Octagonal Structure for a solid, stable frame"
+  ],
+  "levels": [
+   "Intermediate+",
+   "Advanced"
+  ],
+  "playStyle": "Power-seeking, offensive players who like to finish points at the net.",
+  "scores": {
+   "power": 9.1,
+   "control": 8.3,
+   "sweetSpot": 8.1,
+   "manoeuvrability": 7.9
+  },
+  "specs": [
+   {
+    "k": "Shape",
+    "v": "Diamond"
+   },
+   {
+    "k": "Weight",
+    "v": "345–360 g"
+   },
+   {
+    "k": "Balance",
+    "v": "High, adjustable"
+   },
+   {
+    "k": "Frame",
+    "v": "Carbon fibre"
+   },
+   {
+    "k": "Face",
+    "v": "Aluminized carbon"
+   },
+   {
+    "k": "Core",
+    "v": "EVA Soft Performance"
+   },
+   {
+    "k": "Profile",
+    "v": "38 mm"
+   },
+   {
+    "k": "Player",
+    "v": "Ale Galán"
+   },
+   {
+    "k": "Colour",
+    "v": "White / blue / black"
+   },
+   {
+    "k": "Level",
+    "v": "Advanced"
+   },
+   {
+    "k": "Season",
+    "v": "2023"
+   }
+  ],
+  "summary": "Get a feeling of what it's like to be number one. The Metalbone Master LTD 2023 is the exclusive, limited-edition racket made with the essence of Ale Galán's game: diamond power, adjustable balance and a premium carbon build.",
+  "description": "A racket made for the best. The diamond shape keeps the weight high for punch on smashes, while the Weight & Balance System lets you move it towards the handle for more control.\n\nAluminized carbon faces and a soft EVA core give a powerful, comfortable hit. It came in exclusive packaging made for this limited edition, and Ale Galán used it on tour that season.",
+  "tech": [
+   {
+    "name": "Weight & Balance System",
+    "text": "Adjustable weights in the heart of the racket to fine-tune balance."
+   },
+   {
+    "name": "Octagonal Structure",
+    "text": "Octagonal-section frame for rigidity at impact."
+   },
+   {
+    "name": "Structural Reinforcement",
+    "text": "Reinforced zones that add stability and durability."
+   },
+   {
+    "name": "Aluminized carbon",
+    "text": "Face material that balances power and control."
+   },
+   {
+    "name": "EVA Soft Performance",
+    "text": "Soft core for comfort and manoeuvrability."
+   }
+  ],
+  "faq": [
+   {
+    "q": "What type of player is it for?",
+    "a": "Advanced, attacking players who want maximum power with some control."
+   },
+   {
+    "q": "What do the ratings say?",
+    "a": "Independent testers rate it very high for power and rebound, with good control for a diamond."
+   },
+   {
+    "q": "Can I change the balance?",
+    "a": "Yes, with the Weight & Balance System."
+   }
+  ],
+  "tags": [
+   "adidas",
+   "Padel racket",
+   "Limited edition",
+   "Ale Galán",
+   "Shape: Diamond",
+   "Power",
+   "2023"
+  ],
+  "clubTake": "Pre-owned unit in excellent condition. Ale Galán-level spec at a fraction of the new price.",
+  "images": [
+   "/bazaar/img/adidas-metalbone-master-ltd-2023/1.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-2023/2.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-2023/3.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-2023/4.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-2023/5.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-2023/6.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-2023/7.webp",
+   "/bazaar/img/adidas-metalbone-master-ltd-2023/8.webp"
+  ]
+ },
+ "sources": [
+  "https://racketshop.ae/adidas-padel-racket-metalbone-master-limited-edition-2023-by-ale-galan/",
+  "https://www.padelful.com/en/rackets/adidas-metalbone-master-ltd-2023"
+ ]
+}

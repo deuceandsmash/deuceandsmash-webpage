@@ -1,0 +1,77 @@
+{
+ "kind": "product",
+ "id": "nox-womens-pro-shorts-grey-dawn",
+ "rev": 1,
+ "data": {
+  "brand": "NOX",
+  "model": "Women's Pro Shorts · Grey Dawn",
+  "categoryId": "apparel",
+  "sport": "both",
+  "variants": {
+   "s": {
+    "size": "S",
+    "color": "Grey Dawn",
+    "stock": 0
+   },
+   "m": {
+    "size": "M",
+    "color": "Grey Dawn",
+    "stock": 0
+   },
+   "xl": {
+    "size": "XL",
+    "color": "Grey Dawn",
+    "stock": 0
+   }
+  },
+  "hook": "Light, breathable NOX Pro shorts in a soft grey-lilac.",
+  "why": [
+   "Lightweight, stretchy technical fabric",
+   "Breathable for hot afternoon sessions",
+   "Relaxed, flattering cut with a curved hem"
+  ],
+  "specs": [
+   {
+    "k": "Type",
+    "v": "Padel shorts"
+   },
+   {
+    "k": "Line",
+    "v": "NOX Pro"
+   },
+   {
+    "k": "Gender",
+    "v": "Women"
+   },
+   {
+    "k": "Colour",
+    "v": "Grey Dawn"
+   }
+  ],
+  "summary": "Part of NOX's Pro women's collection, these lightweight shorts are made for movement, with a breathable feel and a clean, sporty cut.",
+  "faq": [
+   {
+    "q": "Can I try the shorts on before buying?",
+    "a": "Yes. Tap \"Keep it ready for me to see\" and we'll have your size at the front desk to try on."
+   },
+   {
+    "q": "How do I pay?",
+    "a": "At the club front desk, the same way you pay for court bookings. There is no online payment."
+   }
+  ],
+  "tags": [
+   "NOX",
+   "Apparel",
+   "Women",
+   "Shorts",
+   "Pro line"
+  ],
+  "clubTake": "Brand new. Limited sizes in stock.",
+  "images": [
+   "/bazaar/img/nox-womens-pro-shorts-grey-dawn/1.webp"
+  ]
+ },
+ "sources": [
+  "https://www.padeloutlet.ae/products/nox-womens-shorts-pro-grey-dawn"
+ ]
+}

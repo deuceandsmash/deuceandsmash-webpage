@@ -1,0 +1,82 @@
+{
+ "kind": "product",
+ "id": "siux-mens-sweatshirt-ovni",
+ "rev": 1,
+ "data": {
+  "brand": "Siux",
+  "model": "Men's Sweatshirt Ovni",
+  "categoryId": "apparel",
+  "sport": "both",
+  "variants": {
+   "s": {
+    "size": "S",
+    "color": "Navy",
+    "stock": 0
+   },
+   "m": {
+    "size": "M",
+    "color": "Navy",
+    "stock": 0
+   },
+   "l": {
+    "size": "L",
+    "color": "Navy",
+    "stock": 0
+   },
+   "xl": {
+    "size": "XL",
+    "color": "Navy",
+    "stock": 0
+   }
+  },
+  "hook": "A clean navy Siux crew-neck for the walk to court and the chill after.",
+  "why": [
+   "Classic crew-neck cut in navy",
+   "Siux chest logo in contrast blue",
+   "Easy layer for early-morning and late-night sessions"
+  ],
+  "specs": [
+   {
+    "k": "Type",
+    "v": "Crew-neck sweatshirt"
+   },
+   {
+    "k": "Gender",
+    "v": "Men"
+   },
+   {
+    "k": "Colour",
+    "v": "Navy"
+   },
+   {
+    "k": "Model",
+    "v": "Ovni"
+   }
+  ],
+  "summary": "The Siux Ovni is a simple, comfortable crew-neck sweatshirt with the Siux logo across the chest. A good warm-up and travel layer.",
+  "faq": [
+   {
+    "q": "Can I try the sweatshirt on before buying?",
+    "a": "Yes. Tap \"Keep it ready for me to see\" and we'll have your size at the front desk to try on."
+   },
+   {
+    "q": "How do I pay?",
+    "a": "At the club front desk, the same way you pay for court bookings. There is no online payment."
+   }
+  ],
+  "tags": [
+   "Siux",
+   "Apparel",
+   "Sweatshirt",
+   "Men",
+   "Navy"
+  ],
+  "clubTake": "Brand new. Sizes are limited, so ask us to keep yours ready.",
+  "images": [
+   "/bazaar/img/siux-mens-sweatshirt-ovni/1.webp"
+  ]
+ },
+ "sources": [
+  "https://www.noon.com/uae-en/siux-mens-sweatshirt-ovni/Z8AF176936AE6B61D8B94Z/p/"
+ ]
+}

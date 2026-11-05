@@ -1,0 +1,120 @@
+{
+ "kind": "product",
+ "id": "adidas-essnova-carbon-attack",
+ "rev": 1,
+ "data": {
+  "brand": "adidas",
+  "model": "Essnova Carbon Attack",
+  "categoryId": "padel-rackets",
+  "sport": "padel",
+  "stock": 1,
+  "hook": "A carbon diamond built for smashes, with a soft core that forgives.",
+  "why": [
+   "Diamond head and high balance for maximum power and a high sweet spot",
+   "6K carbon face with a rough finish for spin",
+   "Dual Exoskeleton frame with carbon-reinforced ribs for stability",
+   "EVA Soft Performance core for a comfortable, forgiving hit"
+  ],
+  "levels": [
+   "Intermediate+",
+   "Advanced"
+  ],
+  "playStyle": "Offensive players who want an affordable carbon power racket for smashes and volleys.",
+  "scores": {
+   "power": 8.6,
+   "control": 7.4,
+   "sweetSpot": 7.2,
+   "manoeuvrability": 7.4,
+   "comfort": 7.8
+  },
+  "specs": [
+   {
+    "k": "Shape",
+    "v": "Diamond"
+   },
+   {
+    "k": "Weight",
+    "v": "360–375 g"
+   },
+   {
+    "k": "Balance",
+    "v": "High (head-heavy)"
+   },
+   {
+    "k": "Face",
+    "v": "6K carbon"
+   },
+   {
+    "k": "Surface",
+    "v": "Rough"
+   },
+   {
+    "k": "Core",
+    "v": "EVA Soft Performance"
+   },
+   {
+    "k": "Frame",
+    "v": "Dual Exoskeleton, carbon-reinforced"
+   },
+   {
+    "k": "Level",
+    "v": "Intermediate+ / advanced"
+   }
+  ],
+  "summary": "The Essnova Carbon Attack is adidas's attacking take on the Essnova line: a diamond shape with high balance, a rough 6K carbon face for spin and a soft EVA core for comfort.",
+  "description": "Designed for players who like to take the net and finish the point, the Essnova Carbon Attack puts the weight high in the head for powerful smashes and punchy volleys.\n\nThe Dual Exoskeleton frame adds stability and reduces shock, while the soft EVA core keeps the feel forgiving. It's a solid carbon power option without the price of the Metalbone range.",
+  "tech": [
+   {
+    "name": "Dual Exoskeleton",
+    "text": "Frame with carbon-reinforced ribs for strength, stability and shock reduction."
+   },
+   {
+    "name": "Molded Structure",
+    "text": "Moulded frame construction for added durability."
+   },
+   {
+    "name": "Smart Holes",
+    "text": "Hole layout placed to improve shot durability and ball exit."
+   },
+   {
+    "name": "EVA Soft Performance",
+    "text": "Soft EVA core for comfort and an easier ball exit."
+   },
+   {
+    "name": "6K Carbon",
+    "text": "Carbon face for a responsive, powerful hit."
+   }
+  ],
+  "faq": [
+   {
+    "q": "Is the Essnova Carbon Attack a power or control racket?",
+    "a": "Power. The diamond shape and high balance are built for attacking play."
+   },
+   {
+    "q": "Is it suitable for beginners?",
+    "a": "It is better suited to intermediate and advanced players. The head-heavy balance needs some technique."
+   },
+   {
+    "q": "What does the rough surface do?",
+    "a": "It grips the ball more, helping you add spin to bandejas, viboras and serves."
+   }
+  ],
+  "tags": [
+   "adidas",
+   "Padel racket",
+   "Shape: Diamond",
+   "Balance: High",
+   "Power",
+   "Carbon"
+  ],
+  "clubTake": "Brand new, unused. A sensible carbon diamond for players ready to move up from a round or teardrop racket.",
+  "images": [
+   "/bazaar/img/adidas-essnova-carbon-attack/1.webp",
+   "/bazaar/img/adidas-essnova-carbon-attack/2.webp"
+  ]
+ },
+ "sources": [
+  "https://www.amazon.com.be/-/en/adidas-Essnova-Carbon-Attack-Racket/dp/B0BC5X84C5",
+  "https://www.tennisnuts.com/adidas-essnova-carbon-attack-padel-racket-1672295.html"
+ ]
+}

@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Bazaar Admin — Deuce &amp; Smash</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#0E0E2C; --card:#16163C; --card2:#1D1D4A; --line:#2B2B5C; --well:#F4F4F7;
+  --text:#F2F2F7; --text2:#C2C2DA; --muted:#8C8CB0;
+  --yellow:#F5D628; --blue:#1A6FD4; --blueText:#5aa2f5; --green:#7DC515; --orange:#E05A00; --red:#ff8a7a;
+  --head:'Bebas Neue', Impact, sans-serif;
+  --body:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
+  --ui:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--text);font-family:var(--ui);font-size:14.5px;line-height:1.4;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--blueText)}
+.hidden{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+
+/* gate */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.gate-box{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 24px;max-width:380px;width:100%;text-align:center}
+.gate-box img{width:220px;margin:0 auto 6px;display:block}
+.gate-box h1{font-family:var(--head);font-size:40px;letter-spacing:.05em;color:var(--yellow);line-height:1}
+.gate-box p{color:var(--text2);margin:8px 0 18px}
+.gate-msg{margin-top:12px;font-size:14px;color:var(--text2)}
+.gate-msg.err{color:var(--red)}
+.spinner{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--yellow);border-radius:50%;animation:sp .8s linear infinite;margin:6px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* top */
+header.top{position:sticky;top:0;z-index:20;background:rgba(14,14,44,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+.top-row{display:flex;align-items:center;gap:10px;padding:10px 0;flex-wrap:wrap}
+.brand{font-family:var(--head);font-size:28px;letter-spacing:.05em;line-height:1}
+.brand b{color:var(--yellow);font-weight:400}
+.who{color:var(--muted);font-size:13px;margin-left:auto}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.tabs a{flex:none;text-decoration:none;color:var(--text2);font-family:var(--body);font-weight:600;font-size:16px;letter-spacing:.03em;text-transform:uppercase;padding:6px 13px;border-radius:999px}
+.tabs a.on{background:var(--yellow);color:var(--page)}
+.tabs .n{display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;border-radius:9px;background:var(--orange);color:#fff;font-size:12px;text-align:center;line-height:18px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:8px 13px;font-family:var(--body);font-weight:700;font-size:15px;letter-spacing:.03em;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:#44448a}
+.btn.pri{background:var(--yellow);border-color:var(--yellow);color:var(--page)}
+.btn.wa{background:#25D366;border-color:#25D366;color:#06311a}
+.btn.danger{border-color:#7a2f2f;color:var(--red)}
+.btn.sm{padding:5px 10px;font-size:14px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:default}
+
+main{padding:16px 0 80px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar h2{font-family:var(--head);font-size:30px;letter-spacing:.04em;margin-right:auto}
+input.in,select.in,textarea.in{background:var(--page);border:1px solid var(--line);border-radius:9px;padding:8px 10px;outline:none;width:100%}
+input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--blueText)}
+.toolbar input.in,.toolbar select.in{width:auto;min-width:150px}
+.hint{color:var(--muted);font-size:13px}
+
+/* rows */
+.rows{display:flex;flex-direction:column;gap:8px}
+.r{display:grid;grid-template-columns:56px minmax(160px,1.6fr) repeat(3,minmax(80px,.6fr)) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.r.off{opacity:.62}
+.r img,.r .ni{width:56px;height:56px;border-radius:8px;object-fit:contain;background:var(--well)}
+.r .ni{display:flex;align-items:center;justify-content:center;color:#999;font-size:11px}
+.r .t{min-width:0}
+.r .t b{display:block;font-family:var(--body);font-size:17px;line-height:1.1}
+.r .t span{color:var(--muted);font-size:12.5px}
+.r label.f{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--muted)}
+.r label.f input{padding:6px 8px}
+.r .acts{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+@media (max-width:760px){
+  .r{grid-template-columns:56px 1fr 1fr 1fr;}
+  .r .t{grid-column:2 / -1}
+  .r label.f:nth-of-type(1){grid-column:1 / 3}
+  .r .acts{grid-column:1 / -1;justify-content:flex-start}
+}
+.vsum{font-size:12.5px;color:var(--text2)}
+.pill{display:inline-block;font-family:var(--body);font-weight:700;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:6px;background:var(--card2);color:var(--text2)}
+.pill.y{background:var(--yellow);color:var(--page)} .pill.g{background:var(--green);color:var(--page)} .pill.o{background:var(--orange);color:#fff} .pill.b{background:var(--blue);color:#fff} .pill.red{background:#5a1d1d;color:var(--red)}
+.sw{position:relative;display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer;user-select:none}
+.sw input{appearance:none;width:36px;height:20px;border-radius:99px;background:#3a3a66;position:relative;transition:.15s;cursor:pointer;flex:none}
+.sw input:before{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s}
+.sw input:checked{background:var(--green)}
+.sw input:checked:before{left:18px}
+.star{background:none;border:0;font-size:20px;color:#55557f;padding:2px 4px}
+.star.on{color:var(--yellow)}
+
+/* request cards */
+.req{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.req.new{border-left:4px solid var(--yellow)}
+.req .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.req .h b{font-family:var(--body);font-size:18px}
+.req .h time{margin-left:auto;color:var(--muted);font-size:12.5px}
+.req .d{color:var(--text2)}
+.req .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.flag{background:rgba(125,197,21,.12);border:1px solid rgba(125,197,21,.4);color:var(--green);border-radius:8px;padding:5px 9px;font-size:13px;font-weight:600}
+
+/* import */
+.draft{display:grid;grid-template-columns:90px 1fr auto;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.draft img{width:90px;height:90px;object-fit:contain;background:var(--well);border-radius:9px}
+.draft .hook{color:var(--text2);font-size:13.5px;margin-top:3px}
+@media (max-width:600px){.draft{grid-template-columns:70px 1fr}.draft img{width:70px;height:70px}.draft .acts{grid-column:1/-1}}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(5,5,20,.75);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px}
+.modal.open{display:flex}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:18px;width:100%;max-width:760px;padding:20px}
+.sheet.narrow{max-width:420px;margin-top:12vh}
+.sheet h3{font-family:var(--head);font-size:32px;letter-spacing:.04em;line-height:1;margin-bottom:12px}
+.fg{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px 12px}
+.fg .c2{grid-column:span 2}.fg .c3{grid-column:span 3}.fg .c4{grid-column:span 4}.fg .c6{grid-column:span 6}
+@media (max-width:640px){.fg .c2,.fg .c3,.fg .c4{grid-column:span 6}}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld>label{font-family:var(--body);font-weight:600;font-size:14.5px;color:var(--text2)}
+.fld textarea.in{min-height:64px;resize:vertical}
+.legend{grid-column:span 6;font-family:var(--head);font-size:20px;letter-spacing:.06em;color:var(--yellow);margin-top:8px;border-top:1px solid var(--line);padding-top:10px}
+.checks{display:flex;gap:6px;flex-wrap:wrap}
+.checks label{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13.5px;cursor:pointer}
+.checks input{accent-color:var(--yellow)}
+.imgprev{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.imgprev img{width:54px;height:54px;object-fit:cover;border-radius:7px;background:var(--well)}
+.sheet .foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+.sheet .foot .left{margin-right:auto}
+.ferr{color:var(--red);font-size:13.5px;margin-top:8px;min-height:18px}
+.empty{text-align:center;color:var(--text2);padding:50px 16px;background:var(--card);border:1px dashed var(--line);border-radius:14px}
+.empty h3{font-family:var(--head);font-size:28px;letter-spacing:.04em;color:var(--text)}
+
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);opacity:0;background:var(--green);color:var(--page);font-weight:700;padding:10px 18px;border-radius:10px;transition:.2s;z-index:80;pointer-events:none;font-family:var(--body);font-size:16px}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{background:#e05555;color:#fff}
+</style>
+</head>
+<body>
+
+<section class="gate" id="gate">
+  <div class="gate-box">
+    <img src="/bazaar/img/logo.webp" alt="Deuce & Smash">
+    <h1>Bazaar Admin</h1>
+    <p>Owners only. Sign in with your Google account.</p>
+    <div id="gateBody"><div class="spinner"></div></div>
+    <div class="gate-msg" id="gateMsg"></div>
+  </div>
+</section>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="wrap">
+      <div class="top-row">
+        <div class="brand">D<b>&amp;</b>S BAZAAR</div>
+        <a class="btn sm" href="/bazaar/" target="_blank" rel="noopener">View shop ↗</a>
+        <span class="who" id="who"></span>
+        <button class="btn sm" id="signOutBtn">Sign out</button>
+      </div>
+      <nav class="tabs" id="tabs">
+        <a href="#inventory" data-tab="inventory">Inventory</a>
+        <a href="#used" data-tab="used">Pre-owned</a>
+        <a href="#requests" data-tab="requests">Requests<span class="n hidden" id="nReq"></span></a>
+        <a href="#import" data-tab="import">Import<span class="n hidden" id="nImp"></span></a>
+        <a href="#categories" data-tab="categories">Categories</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap" id="view"></main>
+</div>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, onValue, get, set, update, remove, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { firebaseConfig, OWNERS, WHATSAPP, LEVELS, GRADES, CATEGORY_TYPES, STARTER_CATEGORIES, esc, inr, discount, slug, list, newStock, stockLabel, usedShown, productTitle } from "../config.js";
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getDatabase(fbApp);
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+let C = { categories: {}, products: {}, used: {} };
+let R = {};          // requests
+let D = [];          // drafts from the repo
+let tab = 'inventory';
+const UI = { invQ: '', invCat: '', reqF: 'open', usedF: 'available' };
+const unsubs = [];
+
+/* ───────── toast & confirm ───────── */
+let tt;
+function toast(msg, err) { const t = $('#toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : ''); clearTimeout(tt); tt = setTimeout(() => t.className = '', 1800); }
+function openModal(html, narrow) { $('#sheet').className = 'sheet' + (narrow ? ' narrow' : ''); $('#sheet').innerHTML = html; $('#modal').classList.add('open'); }
+function closeModal() { $('#modal').classList.remove('open'); }
+function confirmBox(title, text, okLabel = 'Delete') {
+  return new Promise(res => {
+    openModal(`<h3>${esc(title)}</h3><p style="color:var(--text2)">${text}</p>
+      <div class="foot"><button class="btn" id="cNo">Cancel</button><button class="btn danger" id="cYes">${esc(okLabel)}</button></div>`, true);
+    $('#cNo').onclick = () => { closeModal(); res(false); };
+    $('#cYes').onclick = () => { closeModal(); res(true); };
+  });
+}
+async function save(path, val, msg = 'Saved') {
+  try { await update(ref(db, path), val); toast(msg); return true; }
+  catch (e) { console.error(e); toast('Not saved: ' + (e.code || e.message), true); return false; }
+}
+
+/* ───────── auth gate ───────── */
+function gate(html, msg, err) {
+  $('#app').classList.add('hidden'); $('#gate').classList.remove('hidden');
+  $('#gateBody').innerHTML = html;
+  $('#gateMsg').textContent = msg || ''; $('#gateMsg').className = 'gate-msg' + (err ? ' err' : '');
+  const si = $('#gateSignIn'); if (si) si.onclick = doSignIn;
+  const so = $('#gateSignOut'); if (so) so.onclick = () => signOut(auth);
+}
+async function doSignIn() {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  try { await signInWithPopup(auth, provider); }
+  catch (err) {
+    if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(err.code)) return signInWithRedirect(auth, provider);
+    if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') { $('#gateMsg').textContent = 'Sign-in failed: ' + (err.message || err.code); $('#gateMsg').className = 'gate-msg err'; }
+  }
+}
+getRedirectResult(auth).catch(err => { $('#gateMsg').textContent = 'Sign-in failed: ' + (err.message || err.code); $('#gateMsg').className = 'gate-msg err'; });
+$('#signOutBtn').onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, user => {
+  unsubs.splice(0).forEach(u => u());
+  if (!user) return gate(`<button class="btn pri" id="gateSignIn" style="width:100%;padding:12px">Sign in with Google</button>`);
+  const email = (user.email || '').toLowerCase();
+  if (!OWNERS.includes(email)) return gate(`<button class="btn" id="gateSignOut">Sign out</button>`, `${email} doesn't have access to the Bazaar admin.`, true);
+  $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden');
+  $('#who').textContent = email;
+  start();
+});
+
+function start() {
+  unsubs.push(onValue(ref(db, 'catalog'), s => { const v = s.val() || {}; C = { categories: v.categories || {}, products: v.products || {}, used: v.used || {} }; badges(); render(); },
+    e => toast('Catalog: ' + (e.code || e.message), true)));
+  unsubs.push(onValue(ref(db, 'requests'), s => { R = s.val() || {}; badges(); if (tab === 'requests') render(); },
+    e => toast('Requests: ' + (e.code || e.message), true)));
+  loadDrafts();
+  route();
+}
+
+/* ───────── routing ───────── */
+function route() {
+  tab = (location.hash.slice(1) || 'inventory');
+  if (!['inventory', 'used', 'requests', 'import', 'categories'].includes(tab)) tab = 'inventory';
+  $$('#tabs a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
+  render();
+}
+addEventListener('hashchange', route);
+
+function badges() {
+  const n = Object.values(R).filter(r => r.status === 'new').length;
+  $('#nReq').textContent = n; $('#nReq').classList.toggle('hidden', !n);
+  const m = D.filter(d => draftState(d) !== 'done').length;
+  $('#nImp').textContent = m; $('#nImp').classList.toggle('hidden', !m);
+}
+
+function render() {
+  const v = $('#view');
+  if (tab === 'inventory') v.innerHTML = invHTML(), wireInv();
+  else if (tab === 'used') v.innerHTML = usedHTML(), wireUsed();
+  else if (tab === 'requests') v.innerHTML = reqHTML(), wireReq();
+  else if (tab === 'import') v.innerHTML = impHTML(), wireImp();
+  else v.innerHTML = catHTML(), wireCat();
+}
+
+/* ───────── helpers ───────── */
+const catName = id => (C.categories[id] || {}).name || '—';
+const catType = id => (C.categories[id] || {}).type || 'accessory';
+const thumb = src => src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<div class="ni">no photo</div>`;
+const num = v => { if (v === '' || v === null || v === undefined) return null; const n = Number(String(v).replace(/[^\d.]/g, '')); return isNaN(n) ? null : n; };
+const ago = t => { const s = (Date.now() - t) / 1000; if (s < 3600) return Math.max(1, Math.round(s / 60)) + ' min ago'; if (s < 86400) return Math.round(s / 3600) + ' h ago'; if (s < 86400 * 7) return Math.round(s / 86400) + ' d ago'; return new Date(t).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); };
+const catOptions = (sel) => Object.entries(C.categories).sort((a, b) => (a[1].order ?? 99) - (b[1].order ?? 99)).map(([id, c]) => `<option value="${esc(id)}" ${id === sel ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+const vSummary = p => list(p.variants).map(v => `${esc([v.size, v.color].filter(Boolean).join(' '))}: <b>${Number(v.stock) || 0}</b>`).join(' · ');
+
+/* ───────── INVENTORY ───────── */
+function invHTML() {
+  const q = UI.invQ.toLowerCase();
+  const ps = Object.entries(C.products)
+    .filter(([, p]) => (!UI.invCat || p.categoryId === UI.invCat) && (!q || productTitle(p).toLowerCase().includes(q)))
+    .sort((a, b) => (a[1].categoryId || '').localeCompare(b[1].categoryId || '') || productTitle(a[1]).localeCompare(productTitle(b[1])));
+  const noCats = !Object.keys(C.categories).length;
+  return `<div class="toolbar"><h2>Inventory</h2>
+      <input class="in" id="invQ" placeholder="Search" value="${esc(UI.invQ)}">
+      <select class="in" id="invCat"><option value="">All categories</option>${catOptions(UI.invCat)}</select>
+      <button class="btn pri" id="addProd" ${noCats ? 'disabled' : ''}>+ Add product</button></div>
+    ${noCats ? `<div class="empty"><h3>Set up categories first</h3><p>Go to <a href="#categories">Categories</a> and add the starter set.</p></div>` :
+      !ps.length ? `<div class="empty"><h3>No products yet</h3><p>Products I research for you arrive in the <a href="#import">Import</a> tab. You can also add one by hand.</p></div>` :
+      `<p class="hint" style="margin-bottom:10px">Edit price and stock right here; changes save when you leave the box. Hidden items don't show on the shop.</p>
+      <div class="rows">${ps.map(([id, p]) => invRow(id, p)).join('')}</div>`}`;
+}
+function invRow(id, p) {
+  const hasVar = p.variants && Object.keys(p.variants).length;
+  const n = newStock(p), s = stockLabel(n), usedN = Object.values(C.used).filter(u => u.productId === id && u.status !== 'sold').length;
+  const d = discount(p.mrp, p.price);
+  return `<div class="r ${p.visible ? '' : 'off'}" data-id="${esc(id)}">
+    ${thumb(list(p.images)[0])}
+    <div class="t"><b>${esc(productTitle(p))}</b><span>${esc(catName(p.categoryId))}${usedN ? ` · ${usedN} pre-owned` : ''}${s ? ` · ${s.text}` : ' · not sold new'}${d ? ` · ${d}% off` : ''}</span></div>
+    <label class="f">MRP ₹<input class="in" data-f="mrp" inputmode="numeric" value="${p.mrp ?? ''}"></label>
+    <label class="f">Club price ₹<input class="in" data-f="price" inputmode="numeric" value="${p.price ?? ''}"></label>
+    ${hasVar ? `<div class="f vsum">${vSummary(p)}<br><button class="btn sm" data-act="sizes" style="margin-top:4px">Sizes &amp; stock</button></div>`
+             : `<label class="f">New stock<input class="in" data-f="stock" inputmode="numeric" placeholder="not sold new" value="${p.stock ?? ''}"></label>`}
+    <div class="acts">
+      <button class="star ${p.featured ? 'on' : ''}" data-act="feat" title="Feature at the top">★</button>
+      <label class="sw"><input type="checkbox" data-act="vis" ${p.visible ? 'checked' : ''}>${p.visible ? 'Live' : 'Hidden'}</label>
+      <button class="btn sm" data-act="edit">Edit</button>
+    </div></div>`;
+}
+function wireInv() {
+  const q = $('#invQ'); if (q) q.oninput = e => { UI.invQ = e.target.value; const pos = e.target.selectionStart; render(); const n = $('#invQ'); n.focus(); n.setSelectionRange(pos, pos); };
+  const c = $('#invCat'); if (c) c.onchange = e => { UI.invCat = e.target.value; render(); };
+  const a = $('#addProd'); if (a) a.onclick = () => editProduct(null);
+  $$('.r[data-id]').forEach(row => {
+    const id = row.dataset.id;
+    row.querySelectorAll('input[data-f]').forEach(inp => inp.addEventListener('change', () => {
+      const f = inp.dataset.f, v = num(inp.value);
+      if (f !== 'stock' && v === null && inp.value.trim()) return toast('Numbers only', true);
+      save(`catalog/products/${id}`, { [f]: v, updatedAt: Date.now() });
+    }));
+    row.querySelector('[data-act="vis"]').onchange = e => {
+      const p = C.products[id];
+      if (e.target.checked && !(p.price > 0) && newStock(p) !== null) toast('Tip: set a club price before going live');
+      save(`catalog/products/${id}`, { visible: e.target.checked, updatedAt: Date.now() }, e.target.checked ? 'Live on the shop' : 'Hidden');
+    };
+    row.querySelector('[data-act="feat"]').onclick = () => save(`catalog/products/${id}`, { featured: !C.products[id].featured });
+    row.querySelector('[data-act="edit"]').onclick = () => editProduct(id);
+    const sz = row.querySelector('[data-act="sizes"]'); if (sz) sz.onclick = () => editSizes(id);
+  });
+}
+function editSizes(id) {
+  const p = C.products[id], vs = Object.entries(p.variants || {});
+  openModal(`<h3>Sizes &amp; stock</h3><p class="hint" style="margin-bottom:10px">${esc(productTitle(p))}</p>
+    <div class="rows" id="vs">${vs.map(([k, v]) => `<div class="fg" data-k="${esc(k)}" style="align-items:end"><div class="fld c2"><label>Size</label><input class="in" data-f="size" value="${esc(v.size || '')}"></div><div class="fld c2"><label>Colour</label><input class="in" data-f="color" value="${esc(v.color || '')}"></div><div class="fld c2"><label>Stock</label><input class="in" data-f="stock" inputmode="numeric" value="${v.stock ?? 0}"></div></div>`).join('')}</div>
+    <div class="foot"><button class="btn" id="vCancel">Close</button><button class="btn pri" id="vSave">Save stock</button></div>`, true);
+  $('#vCancel').onclick = closeModal;
+  $('#vSave').onclick = async () => {
+    const out = {};
+    $$('#vs [data-k]').forEach(r => { out[r.dataset.k] = { size: r.querySelector('[data-f="size"]').value.trim(), color: r.querySelector('[data-f="color"]').value.trim(), stock: num(r.querySelector('[data-f="stock"]').value) || 0 }; });
+    if (await save(`catalog/products/${id}`, { variants: out, updatedAt: Date.now() })) closeModal();
+  };
+}
+
+/* ───────── PRODUCT EDITOR ───────── */
+function editProduct(id) {
+  const p = id ? C.products[id] : { categoryId: UI.invCat || Object.keys(C.categories)[0], visible: false };
+  const t = catType(p.categoryId);
+  const why = list(p.why), sc = p.scores || {}, lv = list(p.levels);
+  const specs = list(p.specs).map(s => `${s.k}: ${s.v}`).join('\n');
+  const vars = list(p.variants).map(v => [v.size || '', v.color || '', Number(v.stock) || 0].join(' | ')).join('\n');
+  openModal(`<h3>${id ? 'Edit product' : 'Add product'}</h3>
+  <form id="pf" class="fg" autocomplete="off">
+    <div class="fld c2"><label>Brand</label><input class="in" name="brand" value="${esc(p.brand || '')}" required></div>
+    <div class="fld c3"><label>Model</label><input class="in" name="model" value="${esc(p.model || '')}" required></div>
+    <div class="fld" style="grid-column:span 1"><label>Year</label><input class="in" name="year" value="${esc(p.year || '')}"></div>
+    <div class="fld c3"><label>Category</label><select class="in" name="categoryId" id="pfCat">${catOptions(p.categoryId)}</select></div>
+    <div class="fld c3"><label>Sport</label><select class="in" name="sport"><option value="">Same as category</option>${['padel', 'pickleball', 'both'].map(s => `<option ${p.sport === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+
+    <div class="legend">Price &amp; stock</div>
+    <div class="fld c2"><label>MRP ₹</label><input class="in" name="mrp" inputmode="numeric" value="${p.mrp ?? ''}"></div>
+    <div class="fld c2"><label>Club price ₹</label><input class="in" name="price" inputmode="numeric" value="${p.price ?? ''}"></div>
+    <div class="fld c2" id="stockFld"><label>New stock (blank = not sold new)</label><input class="in" name="stock" inputmode="numeric" value="${p.stock ?? ''}"></div>
+    <div class="fld c6" id="varFld"><label>Sizes, one per line: Size | Colour | Stock</label><textarea class="in" name="variants" placeholder="M | Black | 3&#10;L | Black | 2">${esc(vars)}</textarea><span class="hint">If you fill this in, stock is counted per size and the single stock box is ignored.</span></div>
+
+    <div class="legend">Photos</div>
+    <div class="fld c6"><label>Image paths, one per line (first is the cover)</label><textarea class="in" name="images" id="pfImgs" placeholder="/bazaar/img/product-id/1.webp">${esc(list(p.images).join('\n'))}</textarea><div class="imgprev" id="pfPrev"></div></div>
+
+    <div class="legend">Description</div>
+    <div class="fld c6"><label>Hook (one line)</label><input class="in" name="hook" maxlength="160" value="${esc(p.hook || '')}"></div>
+    ${[0, 1, 2, 3, 4].map(i => `<div class="fld c6"><label>Key differentiator #${i + 1}</label><input class="in" name="why${i}" maxlength="200" value="${esc(why[i] || '')}"></div>`).join('')}
+    <div class="fld c6"><label>Who it's for</label><div class="checks">${LEVELS.map(l => `<label><input type="checkbox" name="lv" value="${esc(l)}" ${lv.includes(l) ? 'checked' : ''}>${esc(l)}</label>`).join('')}</div></div>
+    <div class="fld c6"><label>Play style</label><input class="in" name="playStyle" maxlength="200" value="${esc(p.playStyle || '')}"></div>
+    <div class="fld c6" id="scoreFld"><label>How it plays (0–10, blank to hide)</label><div class="fg">${[['power', 'Power'], ['control', 'Control'], ['sweetSpot', 'Sweet spot'], ['manoeuvrability', 'Manoeuvrability'], ['comfort', 'Comfort']].map(([k, l]) => `<div class="fld" style="grid-column:span 2"><label style="font-size:13px">${l}</label><input class="in" name="sc_${k}" inputmode="decimal" value="${sc[k] ?? ''}"></div>`).join('')}</div></div>
+    <div class="fld c6"><label>Key specs, one per line: Label: Value</label><textarea class="in" name="specs" style="min-height:110px" placeholder="Weight: 360–375 g&#10;Shape: Diamond">${esc(specs)}</textarea></div>
+    <div class="fld c6"><label>Club take</label><textarea class="in" name="clubTake" maxlength="300">${esc(p.clubTake || '')}</textarea></div>
+    <div class="legend">Deep dive (shown below the photos)</div>
+    <div class="fld c6"><label>Description summary (2–3 sentences)</label><textarea class="in" name="summary" maxlength="600">${esc(p.summary || '')}</textarea></div>
+    <div class="fld c6"><label>Description (blank line between paragraphs)</label><textarea class="in" name="description" style="min-height:120px">${esc(p.description || '')}</textarea></div>
+    <div class="fld c6"><label>Technologies, one per line: Name: what it does</label><textarea class="in" name="tech" style="min-height:110px">${esc(list(p.tech).map(t => `${t.name}: ${t.text || ''}`).join('\n'))}</textarea></div>
+    <div class="fld c6"><label>Questions &amp; answers, one per line: Question? | Answer</label><textarea class="in" name="faq" style="min-height:110px">${esc(list(p.faq).map(f => `${f.q} | ${f.a || ''}`).join('\n'))}</textarea></div>
+    <div class="fld c6"><label>Feature chips, comma separated</label><input class="in" name="tags" value="${esc(list(p.tags).join(', '))}"></div>
+    <div class="fld c6"><label class="sw"><input type="checkbox" name="visible" ${p.visible ? 'checked' : ''}>Live on the shop</label></div>
+  </form>
+  <div class="ferr" id="pfErr"></div>
+  <div class="foot">${id ? `<button class="btn danger left" id="pfDel">Delete</button>` : ''}<button class="btn" id="pfCancel">Cancel</button><button class="btn pri" id="pfSave">Save</button></div>`);
+  const typeUI = () => { const ty = catType($('#pfCat').value); $('#varFld').classList.toggle('hidden', ty !== 'apparel' && !vars); $('#scoreFld').classList.toggle('hidden', ty !== 'racket'); };
+  $('#pfCat').onchange = typeUI; typeUI();
+  const prev = () => $('#pfPrev').innerHTML = $('#pfImgs').value.split('\n').map(s => s.trim()).filter(Boolean).map(s => `<img src="${esc(s)}" alt="">`).join('');
+  $('#pfImgs').oninput = prev; prev();
+  $('#pfCancel').onclick = closeModal;
+  if (id) $('#pfDel').onclick = async () => {
+    const units = Object.values(C.used).filter(u => u.productId === id).length;
+    if (units) return toast(`Remove its ${units} pre-owned unit(s) first`, true);
+    if (await confirmBox('Delete product?', `<b>${esc(productTitle(p))}</b> will be removed from the shop and admin. This can't be undone. To take it off the shop for now, use the Live switch instead.`)) {
+      try { await remove(ref(db, `catalog/products/${id}`)); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); }
+    }
+  };
+  $('#pfSave').onclick = async () => {
+    const f = new FormData($('#pf')), g = k => (f.get(k) || '').toString().trim();
+    if (!g('brand') || !g('model')) return ($('#pfErr').textContent = 'Brand and model are needed.');
+    const variants = {};
+    g('variants').split('\n').map(l => l.split('|').map(x => x.trim())).filter(a => a[0] || a[1]).forEach(([size, color, stock]) => { variants[slug([size, color].filter(Boolean).join('-')) || 'v' + Object.keys(variants).length] = { size: size || '', color: color || '', stock: num(stock) || 0 }; });
+    const specsArr = g('specs').split('\n').map(l => { const i = l.indexOf(':'); return i > 0 ? { k: l.slice(0, i).trim(), v: l.slice(i + 1).trim() } : null; }).filter(Boolean);
+    const scores = {}; ['power', 'control', 'sweetSpot', 'manoeuvrability', 'comfort'].forEach(k => { const v = num(g('sc_' + k)); if (v !== null) scores[k] = Math.min(10, v); });
+    const data = {
+      brand: g('brand'), model: g('model'), year: g('year') || null, categoryId: g('categoryId'), sport: g('sport') || null,
+      mrp: num(g('mrp')), price: num(g('price')),
+      stock: Object.keys(variants).length ? null : num(g('stock')),
+      variants: Object.keys(variants).length ? variants : null,
+      images: g('images').split('\n').map(s => s.trim()).filter(Boolean),
+      hook: g('hook') || null, why: [0, 1, 2, 3, 4].map(i => g('why' + i)).filter(Boolean),
+      summary: g('summary') || null, description: g('description') || null,
+      tech: g('tech').split('\n').map(l => { const i = l.indexOf(':'); return i > 0 ? { name: l.slice(0, i).trim(), text: l.slice(i + 1).trim() } : (l.trim() ? { name: l.trim(), text: '' } : null); }).filter(Boolean),
+      faq: g('faq').split('\n').map(l => { const i = l.indexOf('|'); return i > 0 ? { q: l.slice(0, i).trim(), a: l.slice(i + 1).trim() } : null; }).filter(Boolean),
+      tags: g('tags').split(',').map(s => s.trim()).filter(Boolean),
+      levels: f.getAll('lv'), playStyle: g('playStyle') || null,
+      scores: Object.keys(scores).length ? scores : null, specs: specsArr, clubTake: g('clubTake') || null,
+      visible: !!f.get('visible'), updatedAt: Date.now()
+    };
+    let pid = id;
+    if (!pid) { pid = slug(`${data.brand} ${data.model} ${data.year || ''}`); if (C.products[pid]) pid += '-' + Date.now().toString(36).slice(-4); data.createdAt = Date.now(); }
+    if (await save(`catalog/products/${pid}`, data)) closeModal();
+  };
+}
+
+/* ───────── PRE-OWNED ───────── */
+function usedHTML() {
+  const us = Object.entries(C.used).filter(([, u]) => UI.usedF === 'all' || (UI.usedF === 'sold' ? u.status === 'sold' : u.status !== 'sold'))
+    .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+  const rackets = Object.keys(C.products).length;
+  return `<div class="toolbar"><h2>Pre-owned</h2>
+    <select class="in" id="usedF">${[['available', 'Available'], ['sold', 'Sold'], ['all', 'All']].map(([v, l]) => `<option value="${v}" ${UI.usedF === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+    <button class="btn pri" id="addUsed" ${rackets ? '' : 'disabled'}>+ Add pre-owned unit</button></div>
+    <p class="hint" style="margin-bottom:10px">Each unit is one physical racket. It links to its model's product page for the description. Sold units show a "Sold" badge on the shop for 14 days, then drop off.</p>
+    ${!us.length ? `<div class="empty"><h3>Nothing here</h3><p>${rackets ? 'Add a pre-owned unit, or send me its photos and details in chat.' : 'Add the model as a product first.'}</p></div>` :
+    `<div class="rows">${us.map(([id, u]) => {
+      const p = C.products[u.productId] || {}, g = GRADES[u.grade], sold = u.status === 'sold';
+      const shown = usedShown(u) && p.visible;
+      return `<div class="r ${shown ? '' : 'off'}" data-id="${esc(id)}">
+        ${thumb(list(u.images)[0] || list(p.images)[0])}
+        <div class="t"><b>${esc(productTitle(p) || u.productId)}</b><span>${g ? `<span class="pill" style="background:${g.color};color:#0E0E2C">${g.label}</span> ` : ''}${u.monthsUsed ? u.monthsUsed + ' mo used · ' : ''}${list(u.images).length} photo${list(u.images).length === 1 ? '' : 's'}${sold ? ` · sold ${ago(u.soldAt)}` : ''}${!p.visible ? ' · model hidden' : ''}</span></div>
+        <label class="f">MRP ₹<input class="in" data-f="mrp" inputmode="numeric" value="${u.mrp ?? ''}"></label>
+        <label class="f">Asking ₹<input class="in" data-f="price" inputmode="numeric" value="${u.price ?? ''}"></label>
+        <div class="f">${sold ? '<span class="pill red">Sold</span>' : '<span class="pill g">Available</span>'}</div>
+        <div class="acts">
+          <button class="btn sm ${sold ? '' : 'pri'}" data-act="sold">${sold ? 'Mark available' : 'Mark sold'}</button>
+          <label class="sw"><input type="checkbox" data-act="vis" ${u.visible !== false ? 'checked' : ''}>Show</label>
+          <button class="btn sm" data-act="edit">Edit</button>
+        </div></div>`;
+    }).join('')}</div>`}`;
+}
+function wireUsed() {
+  $('#usedF').onchange = e => { UI.usedF = e.target.value; render(); };
+  const a = $('#addUsed'); if (a) a.onclick = () => editUsed(null);
+  $$('.r[data-id]').forEach(row => {
+    const id = row.dataset.id;
+    row.querySelectorAll('input[data-f]').forEach(inp => inp.addEventListener('change', () => save(`catalog/used/${id}`, { [inp.dataset.f]: num(inp.value) })));
+    row.querySelector('[data-act="sold"]').onclick = () => {
+      const sold = C.used[id].status === 'sold';
+      save(`catalog/used/${id}`, sold ? { status: 'available', soldAt: null } : { status: 'sold', soldAt: Date.now() }, sold ? 'Back to available' : 'Marked sold');
+    };
+    row.querySelector('[data-act="vis"]').onchange = e => save(`catalog/used/${id}`, { visible: e.target.checked });
+    row.querySelector('[data-act="edit"]').onclick = () => editUsed(id);
+  });
+}
+function editUsed(id) {
+  const u = id ? C.used[id] : { grade: 'excellent', status: 'available', visible: true };
+  const prods = Object.entries(C.products).sort((a, b) => productTitle(a[1]).localeCompare(productTitle(b[1])));
+  const dm = u.damage || {};
+  openModal(`<h3>${id ? 'Edit pre-owned unit' : 'Add pre-owned unit'}</h3>
+  <form id="uf" class="fg" autocomplete="off">
+    <div class="fld c6"><label>Model</label><select class="in" name="productId" id="ufProd">${prods.map(([pid, p]) => `<option value="${esc(pid)}" ${pid === u.productId ? 'selected' : ''}>${esc(productTitle(p))}</option>`).join('')}</select></div>
+    <div class="fld c2"><label>Condition</label><select class="in" name="grade">${Object.entries(GRADES).map(([k, g]) => `<option value="${k}" ${u.grade === k ? 'selected' : ''}>${g.label}</option>`).join('')}</select></div>
+    <div class="fld c2"><label>Months used</label><input class="in" name="monthsUsed" inputmode="numeric" value="${u.monthsUsed ?? ''}"></div>
+    <div class="fld c2"><label>Grip</label><select class="in" name="gripReplaced"><option value="">Original</option><option value="1" ${u.gripReplaced ? 'selected' : ''}>Replaced</option></select></div>
+    <div class="fld c3"><label>Original MRP ₹</label><input class="in" name="mrp" id="ufMrp" inputmode="numeric" value="${u.mrp ?? ''}"></div>
+    <div class="fld c3"><label>Asking price ₹</label><input class="in" name="price" inputmode="numeric" value="${u.price ?? ''}"></div>
+    <div class="legend">Condition notes</div>
+    ${[['frame', 'Frame'], ['face', 'Face'], ['edge', 'Edge guard'], ['grip', 'Grip']].map(([k, l]) => `<div class="fld c3"><label>${l}</label><input class="in" name="d_${k}" maxlength="160" value="${esc(dm[k] || '')}" placeholder="e.g. no cracks, light scuffs"></div>`).join('')}
+    <div class="fld c6"><label>Other notes</label><textarea class="in" name="notes" maxlength="300">${esc(u.notes || '')}</textarea></div>
+    <div class="legend">Photos of this exact racket</div>
+    <div class="fld c6"><label>Image paths, one per line (front, back, edges, any damage)</label><textarea class="in" name="images" id="ufImgs">${esc(list(u.images).join('\n'))}</textarea><div class="imgprev" id="ufPrev"></div>
+    <span class="hint">Send me the photos in chat and I'll add them. Without its own photos, the listing shows the model photos and says so.</span></div>
+  </form>
+  <div class="ferr" id="ufErr"></div>
+  <div class="foot">${id ? `<button class="btn danger left" id="ufDel">Delete</button>` : ''}<button class="btn" id="ufCancel">Cancel</button><button class="btn pri" id="ufSave">Save</button></div>`);
+  const fillMrp = () => { if (!$('#ufMrp').value) { const p = C.products[$('#ufProd').value]; if (p && p.mrp) $('#ufMrp').value = p.mrp; } };
+  $('#ufProd').onchange = fillMrp; if (!id) fillMrp();
+  const prev = () => $('#ufPrev').innerHTML = $('#ufImgs').value.split('\n').map(s => s.trim()).filter(Boolean).map(s => `<img src="${esc(s)}" alt="">`).join('');
+  $('#ufImgs').oninput = prev; prev();
+  $('#ufCancel').onclick = closeModal;
+  if (id) $('#ufDel').onclick = async () => {
+    if (await confirmBox('Delete this unit?', `It will disappear from the shop straight away. To record a sale, use <b>Mark sold</b> instead so it shows the Sold badge.`)) {
+      try { await remove(ref(db, `catalog/used/${id}`)); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); }
+    }
+  };
+  $('#ufSave').onclick = async () => {
+    const f = new FormData($('#uf')), g = k => (f.get(k) || '').toString().trim();
+    if (!g('price')) return ($('#ufErr').textContent = 'Add an asking price.');
+    const data = {
+      productId: g('productId'), grade: g('grade'), monthsUsed: num(g('monthsUsed')), gripReplaced: !!g('gripReplaced'),
+      mrp: num(g('mrp')), price: num(g('price')),
+      damage: { frame: g('d_frame') || null, face: g('d_face') || null, edge: g('d_edge') || null, grip: g('d_grip') || null },
+      notes: g('notes') || null, images: g('images').split('\n').map(s => s.trim()).filter(Boolean), updatedAt: Date.now()
+    };
+    let uid = id;
+    if (!uid) { uid = 'u-' + slug(data.productId).slice(0, 40) + '-' + Date.now().toString(36); data.createdAt = Date.now(); data.status = 'available'; data.visible = true; }
+    if (await save(`catalog/used/${uid}`, data)) closeModal();
+  };
+}
+
+/* ───────── REQUESTS ───────── */
+function reqItem(r) {
+  const p = C.products[r.productId];
+  if (!p) return { title: r.productId + ' (removed)', p: null };
+  if (r.usedId) { const u = C.used[r.usedId]; const g = u && GRADES[u.grade]; return { title: `Pre-owned ${productTitle(p)}${g ? ' · ' + g.label : ''}${u ? ' · ' + inr(u.price) : ''}`, p, u }; }
+  const v = r.variant && p.variants && p.variants[r.variant];
+  return { title: productTitle(p) + (v ? ` · ${[v.size, v.color].filter(Boolean).join(' ')}` : ''), p, v };
+}
+function backInStock(r, it) {
+  if (r.type !== 'notify' || !it.p) return false;
+  if (it.v) return Number(it.v.stock) > 0;
+  const n = newStock(it.p); return n !== null && n > 0;
+}
+function reqHTML() {
+  const rs = Object.entries(R).filter(([, r]) => UI.reqF === 'all' || (UI.reqF === 'open' ? r.status !== 'done' : r.status === 'done'))
+    .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+  return `<div class="toolbar"><h2>Requests</h2>
+    <select class="in" id="reqF">${[['open', 'Open'], ['done', 'Done'], ['all', 'All']].map(([v, l]) => `<option value="${v}" ${UI.reqF === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+    ${!rs.length ? `<div class="empty"><h3>All clear</h3><p>When members tap "Keep it ready for me" or "Notify me", they appear here.</p></div>` :
+    `<div class="rows">${rs.map(([id, r]) => {
+      const it = reqItem(r), back = backInStock(r, it), first = (r.name || '').split(' ')[0];
+      const msg = r.type === 'see'
+        ? `Hi ${first}, this is Deuce & Smash. Thanks for your interest in the ${it.title}! We'll keep it ready at the front desk for you${r.visit ? ` (${r.visit})` : ''}. See you at the club!`
+        : `Hi ${first}, good news from Deuce & Smash: the ${it.title} is back in stock. Drop by the front desk to see it, first come first served!`;
+      return `<div class="req ${r.status === 'new' ? 'new' : ''}" data-id="${esc(id)}">
+        <div class="h"><span class="pill ${r.type === 'see' ? 'y' : 'b'}">${r.type === 'see' ? 'Keep ready' : 'Notify me'}</span><b>${esc(it.title)}</b>${r.status === 'contacted' ? '<span class="pill g">Contacted</span>' : ''}${r.status === 'done' ? '<span class="pill">Done</span>' : ''}<time>${ago(r.createdAt)}</time></div>
+        <div class="d"><b style="color:var(--text)">${esc(r.name)}</b> · <a href="tel:${esc(r.phone.replace(/\s/g, ''))}">${esc(r.phone)}</a>${r.visit ? ` · visiting: ${esc(r.visit)}` : ''}</div>
+        ${r.note ? `<div class="d">“${esc(r.note)}”</div>` : ''}
+        ${back && r.status !== 'done' ? `<div class="flag">Back in stock now. Let them know.</div>` : ''}
+        ${r.type === 'notify' && !back && r.status !== 'done' ? `<div class="hint">Still out of stock.</div>` : ''}
+        <div class="acts">
+          <a class="btn sm wa" target="_blank" rel="noopener" data-act="wa" href="https://wa.me/${esc(waNum(r.phone))}?text=${encodeURIComponent(msg)}">WhatsApp ${esc(first)}</a>
+          ${r.status === 'new' ? `<button class="btn sm" data-act="contacted">Mark contacted</button>` : ''}
+          ${r.status !== 'done' ? `<button class="btn sm" data-act="done">Done</button>` : `<button class="btn sm" data-act="reopen">Reopen</button>`}
+          <button class="btn sm danger" data-act="del">Delete</button>
+        </div></div>`;
+    }).join('')}</div>`}`;
+}
+function waNum(ph) { let d = String(ph || '').replace(/\D/g, ''); if (d.length === 10) d = '91' + d; return d; }
+function wireReq() {
+  $('#reqF').onchange = e => { UI.reqF = e.target.value; render(); };
+  $$('.req[data-id]').forEach(card => {
+    const id = card.dataset.id;
+    const act = (a, fn) => { const b = card.querySelector(`[data-act="${a}"]`); if (b) b.addEventListener('click', fn); };
+    act('wa', () => { if (R[id].status === 'new') save(`requests/${id}`, { status: 'contacted' }, 'Marked contacted'); });
+    act('contacted', () => save(`requests/${id}`, { status: 'contacted' }));
+    act('done', () => save(`requests/${id}`, { status: 'done', doneAt: Date.now() }, 'Done'));
+    act('reopen', () => save(`requests/${id}`, { status: 'contacted', doneAt: null }));
+    act('del', async () => { if (await confirmBox('Delete request?', `${esc(R[id].name)}'s request will be removed permanently.`)) { try { await remove(ref(db, `requests/${id}`)); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); } } });
+  });
+}
+
+/* ───────── IMPORT (drafts researched in chat, committed to the repo) ───────── */
+async function loadDrafts() {
+  try {
+    const idx = await (await fetch('/bazaar/drafts/index.json?t=' + Date.now(), { cache: 'no-store' })).json();
+    const files = list(idx.drafts);
+    D = (await Promise.all(files.map(f => fetch('/bazaar/drafts/' + f + '?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null)))).filter(Boolean);
+  } catch (e) { console.warn('No drafts index', e); D = []; }
+  badges(); if (tab === 'import') render();
+}
+function draftState(d) {
+  const cur = d.kind === 'used' ? C.used[d.id] : C.products[d.id];
+  if (!cur) return 'new';
+  return (cur.rev || 0) < (d.rev || 1) ? 'update' : 'done';
+}
+function impHTML() {
+  const order = { new: 0, update: 1, done: 2 };
+  const ds = [...D].sort((a, b) => order[draftState(a)] - order[draftState(b)] || (a.kind === 'used') - (b.kind === 'used'));
+  const pending = D.filter(d => draftState(d) !== 'done').length;
+  const missingCats = [...new Set(D.filter(d => d.kind !== 'used' && !C.categories[d.data.categoryId]).map(d => d.data.categoryId))];
+  return `<div class="toolbar"><h2>Import</h2><button class="btn" id="impReload">Check again</button>${pending ? `<button class="btn pri" id="impAll">Import all ${pending}</button>` : ''}</div>
+    <p class="hint" style="margin-bottom:10px">Items we research together in chat land here. Import brings one into the inventory <b>hidden</b>, so you can check it, set price and stock, then switch it Live. Re-importing an update refreshes the description and photos, but keeps your price, stock and Live setting.</p>
+    ${missingCats.filter(c => !STARTER_IDS[c]).length ? `<div class="flag" style="margin-bottom:10px;color:var(--yellow);border-color:rgba(245,214,40,.4);background:rgba(245,214,40,.08)">Some drafts use categories you don't have yet (${missingCats.filter(c => !STARTER_IDS[c]).map(esc).join(', ')}). Add them in the <a href="#categories">Categories</a> tab first.</div>` : ''}
+    ${!ds.length ? `<div class="empty"><h3>Nothing to import</h3><p>Send me the next product and its links in chat.</p></div>` :
+    `<div class="rows">${ds.map(d => {
+      const st = draftState(d), x = d.data || {}, p = d.kind === 'used' ? (C.products[x.productId] || {}) : x;
+      return `<div class="draft" data-id="${esc(d.id)}">
+        ${thumb(list(x.images)[0] || list(p.images)[0])}
+        <div><span class="pill ${st === 'new' ? 'y' : st === 'update' ? 'b' : ''}">${st === 'new' ? 'New' : st === 'update' ? 'Update' : 'Imported'}</span> ${d.kind === 'used' ? '<span class="pill">Pre-owned unit</span>' : ''}
+          <div style="font-family:var(--body);font-size:18px;font-weight:700;margin-top:4px">${esc(productTitle(p) || d.id)}</div>
+          <div class="hook">${esc(d.kind === 'used' ? `${(GRADES[x.grade] || {}).label || ''} · ${inr(x.price)}` : (x.hook || ''))}</div>
+          ${list(d.sources).length ? `<div class="hint" style="margin-top:4px">Sources: ${list(d.sources).map((s, i) => `<a href="${esc(s)}" target="_blank" rel="noopener">${i + 1}</a>`).join(' ')}</div>` : ''}</div>
+        <div class="acts">${st === 'done' ? `<button class="btn sm" data-act="go">Open</button>` : `<button class="btn ${st === 'new' ? 'pri' : ''}" data-act="imp">${st === 'new' ? 'Import' : 'Apply update'}</button>`}</div>
+      </div>`;
+    }).join('')}</div>`}`;
+}
+function wireImp() {
+  $('#impReload').onclick = () => { toast('Checking…'); loadDrafts(); };
+  const all = $('#impAll'); if (all) all.onclick = async () => {
+    all.disabled = true; all.textContent = 'Importing…';
+    const todo = D.filter(d => draftState(d) !== 'done').sort((a, b) => (a.kind === 'used') - (b.kind === 'used'));
+    let ok = 0; for (const d of todo) { if (await importDraft(d, true)) ok++; }
+    toast(`Imported ${ok} of ${todo.length}. They're hidden until you switch them Live.`);
+  };
+  $$('.draft[data-id]').forEach(row => {
+    const d = D.find(x => x.id === row.dataset.id);
+    const go = row.querySelector('[data-act="go"]'); if (go) go.onclick = () => { if (d.kind === 'used') location.hash = 'used'; else { UI.invQ = d.data.model || ''; location.hash = 'inventory'; } };
+    const imp = row.querySelector('[data-act="imp"]'); if (imp) imp.onclick = () => importDraft(d);
+  });
+}
+const OWNER_FIELDS = ['mrp', 'price', 'stock', 'variants', 'visible', 'featured', 'status', 'soldAt'];
+const STARTER_IDS = Object.fromEntries(STARTER_CATEGORIES.map((c, i) => [slug(c.name), { ...c, order: (i + 1) * 10 }]));
+async function importDraft(d, quiet) {
+  const x = d.data || {};
+  if (d.kind === 'used' && !C.products[x.productId]) { toast('Import its model first', true); return false; }
+  const catUpd = {};
+  if (d.kind !== 'used' && !C.categories[x.categoryId]) {
+    if (!STARTER_IDS[x.categoryId]) { toast(`Category "${x.categoryId}" is missing`, true); return false; }
+    catUpd[`catalog/categories/${x.categoryId}`] = STARTER_IDS[x.categoryId];
+  }
+  const path = d.kind === 'used' ? `catalog/used/${d.id}` : `catalog/products/${d.id}`;
+  const cur = d.kind === 'used' ? C.used[d.id] : C.products[d.id];
+  const data = { ...x, rev: d.rev || 1, updatedAt: Date.now() };
+  if (cur) { OWNER_FIELDS.forEach(k => { if (k in cur) data[k] = cur[k]; else delete data[k]; }); data.createdAt = cur.createdAt || Date.now(); }
+  else { data.createdAt = Date.now(); if (d.kind === 'used') { data.status = 'available'; data.visible = x.visible ?? true; } else data.visible = false; }
+  const upd = { ...catUpd, [path]: data };
+  if (list(d.sources).length) upd[`private/sources/${d.id}`] = list(d.sources);
+  try {
+    await update(ref(db), upd);
+    if (d.kind !== 'used') C.products[d.id] = data; else C.used[d.id] = data;
+    Object.entries(catUpd).forEach(([k, v]) => C.categories[k.split('/').pop()] = v);
+    if (!quiet) toast(cur ? 'Updated' : (d.kind === 'used' ? 'Imported' : 'Imported (hidden)'));
+    return true;
+  } catch (e) { console.error(e); toast('Import failed: ' + (e.code || e.message), true); return false; }
+}
+
+/* ───────── CATEGORIES ───────── */
+function catHTML() {
+  const cs = Object.entries(C.categories).sort((a, b) => (a[1].order ?? 99) - (b[1].order ?? 99));
+  const used = id => Object.values(C.products).filter(p => p.categoryId === id).length;
+  return `<div class="toolbar"><h2>Categories</h2>${cs.length ? '' : `<button class="btn pri" id="starter">Add starter categories</button>`}</div>
+    <p class="hint" style="margin-bottom:10px">The type decides which fields a product gets: rackets get "How it plays" scores, apparel gets sizes. Order sets the filter order on the shop.</p>
+    ${cs.length ? `<div class="rows">${cs.map(([id, c]) => `<div class="fg" data-id="${esc(id)}" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;align-items:end">
+      <div class="fld c2"><label>Name</label><input class="in" data-f="name" value="${esc(c.name)}"></div>
+      <div class="fld"><label>Sport</label><select class="in" data-f="sport">${['padel', 'pickleball', 'both'].map(s => `<option ${c.sport === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+      <div class="fld"><label>Type</label><select class="in" data-f="type">${Object.entries(CATEGORY_TYPES).map(([k, l]) => `<option value="${k}" ${c.type === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="fld" style="grid-column:span 1"><label>Order</label><input class="in" data-f="order" inputmode="numeric" value="${c.order ?? ''}"></div>
+      <div class="fld" style="grid-column:span 1"><span class="hint">${used(id)} item${used(id) === 1 ? '' : 's'}</span>${used(id) ? '' : `<button class="btn sm danger" data-act="del">Delete</button>`}</div>
+    </div>`).join('')}</div>` : `<div class="empty"><h3>No categories yet</h3><p>Start with the suggested set (padel rackets, pickleball paddles, balls, apparel, shoes, grips, bags, accessories, club merch). You can rename or add more anytime.</p></div>`}
+    <div class="fg" style="margin-top:14px;align-items:end">
+      <div class="fld c2"><label>New category</label><input class="in" id="ncName" placeholder="e.g. Sunglasses"></div>
+      <div class="fld"><label>Sport</label><select class="in" id="ncSport"><option>both</option><option>padel</option><option>pickleball</option></select></div>
+      <div class="fld c2"><label>Type</label><select class="in" id="ncType">${Object.entries(CATEGORY_TYPES).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
+      <div class="fld"><button class="btn pri" id="ncAdd">Add</button></div>
+    </div>`;
+}
+function wireCat() {
+  const st = $('#starter');
+  if (st) st.onclick = async () => {
+    const upd = {}; STARTER_CATEGORIES.forEach((c, i) => upd[`catalog/categories/${slug(c.name)}`] = { ...c, order: (i + 1) * 10 });
+    try { await update(ref(db), upd); toast('Categories added'); } catch (e) { toast(e.code || e.message, true); }
+  };
+  $$('[data-id] [data-f]').forEach(inp => inp.addEventListener('change', () => {
+    const id = inp.closest('[data-id]').dataset.id, f = inp.dataset.f;
+    save(`catalog/categories/${id}`, { [f]: f === 'order' ? num(inp.value) : inp.value.trim() });
+  }));
+  $$('[data-id] [data-act="del"]').forEach(b => b.onclick = async () => {
+    const id = b.closest('[data-id]').dataset.id;
+    if (await confirmBox('Delete category?', `<b>${esc(C.categories[id].name)}</b> has no items, so nothing else changes.`)) { try { await remove(ref(db, `catalog/categories/${id}`)); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); } }
+  });
+  $('#ncAdd').onclick = () => {
+    const name = $('#ncName').value.trim(); if (!name) return toast('Add a name', true);
+    let id = slug(name); if (C.categories[id]) return toast('That category exists', true);
+    const max = Math.max(0, ...Object.values(C.categories).map(c => c.order || 0));
+    save(`catalog/categories/${id}`, { name, sport: $('#ncSport').value, type: $('#ncType').value, order: max + 10 }, 'Category added');
+  };
+}
+
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>

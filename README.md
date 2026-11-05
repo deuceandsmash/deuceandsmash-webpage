@@ -9,6 +9,8 @@ Static site, published by Vercel from this repo. **Every push to `main` goes liv
 | `/tournaments/` | Tournament admin & scoreboards |
 | `/ops/` | Owners-only ops dashboard (Google sign-in) |
 | `/ops/entry/` | Front-desk booking entry (club account + owners) |
+| `/bazaar/` | Bazaar: public listing of gear for sale (new + pre-owned). Firebase project `deuceandsmash-bazaar` |
+| `/bazaar/admin/` | Bazaar owners' admin (Google sign-in, owners only) |
 | `google376c53379fc20b77.html` | Google Search Console verification — keep |
 
 ## Rules that keep the site working
@@ -18,4 +20,4 @@ Static site, published by Vercel from this repo. **Every push to `main` goes liv
    (this happened on 29 Oct 2026).
 2. **Do not add a `vercel.json` with a catch-all route** (`"/(.*)" → "/index.html"`).
    It sends `/members`, `/tournaments` and `/ops` to the landing page.
-3. After a push, check `/`, `/members/`, `/tournaments/`, `/ops/` and `/ops/entry/` all load.
+3. After a push, check `/`, `/members/`, `/tournaments/`, `/ops/`, `/ops/entry/` and `/bazaar/` all load.

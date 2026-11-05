@@ -1,0 +1,84 @@
+{
+ "kind": "product",
+ "id": "franklin-x40-outdoor-pickleballs",
+ "rev": 1,
+ "data": {
+  "brand": "Franklin",
+  "model": "X-40 Outdoor Pickleballs",
+  "categoryId": "pickleball-balls",
+  "sport": "pickleball",
+  "stock": 1,
+  "hook": "The official US Open ball: true flight, tight spin, built to last outdoors.",
+  "why": [
+   "USA Pickleball approved for outdoor tournament play",
+   "Official ball of the US Open Pickleball Championships",
+   "40 precision-drilled holes for a balanced, predictable flight",
+   "Seamless one-piece construction resists cracking",
+   "Official 26 g weight and 74 mm size"
+  ],
+  "playStyle": "Everyone: outdoor practice, open play and competition.",
+  "specs": [
+   {
+    "k": "Use",
+    "v": "Outdoor"
+   },
+   {
+    "k": "Weight",
+    "v": "26 g"
+   },
+   {
+    "k": "Diameter",
+    "v": "74 mm"
+   },
+   {
+    "k": "Holes",
+    "v": "40, machine-drilled"
+   },
+   {
+    "k": "Construction",
+    "v": "Seamless, one-piece"
+   },
+   {
+    "k": "Approval",
+    "v": "USA Pickleball"
+   },
+   {
+    "k": "Colour",
+    "v": "Optic yellow"
+   }
+  ],
+  "summary": "The Franklin X-40 is one of the most-used outdoor pickleballs in the world and the official ball of the US Open. Seamless construction and 40 precision-drilled holes give a consistent bounce and true flight.",
+  "description": "Built to official USA Pickleball standards, the X-40 weighs 26 g with a 74 mm diameter. Its one-piece, no-seam design is stronger and lasts longer, resisting dents and cracks.\n\nForty machine-drilled holes keep the flight balanced and the spin tight, so you get the same response rally after rally.",
+  "faq": [
+   {
+    "q": "Can I use these on our courts?",
+    "a": "Yes. They are made for outdoor courts like ours."
+   },
+   {
+    "q": "Are they tournament approved?",
+    "a": "Yes, USA Pickleball approved for outdoor tournaments."
+   },
+   {
+    "q": "How many balls in a pack?",
+    "a": "Ask at the front desk for the pack sizes we have in stock."
+   }
+  ],
+  "tags": [
+   "Franklin",
+   "Pickleball balls",
+   "Outdoor",
+   "USAP approved",
+   "US Open official ball"
+  ],
+  "clubTake": "The ball we trust for outdoor play. Brand new, sealed.",
+  "images": [
+   "/bazaar/img/franklin-x40-outdoor-pickleballs/1.webp",
+   "/bazaar/img/franklin-x40-outdoor-pickleballs/2.webp",
+   "/bazaar/img/franklin-x40-outdoor-pickleballs/3.webp",
+   "/bazaar/img/franklin-x40-outdoor-pickleballs/4.webp"
+  ]
+ },
+ "sources": [
+  "https://www.amazon.ae/dp/B06XTW1BND"
+ ]
+}

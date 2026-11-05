@@ -1,0 +1,77 @@
+{
+ "kind": "product",
+ "id": "bullpadel-womens-poeta-long-tights-black",
+ "rev": 1,
+ "data": {
+  "brand": "Bullpadel",
+  "model": "Women's Poeta Long Tights · Black",
+  "categoryId": "apparel",
+  "sport": "both",
+  "variants": {
+   "s": {
+    "size": "S",
+    "color": "Black",
+    "stock": 0
+   },
+   "m": {
+    "size": "M",
+    "color": "Black",
+    "stock": 0
+   },
+   "l": {
+    "size": "L",
+    "color": "Black",
+    "stock": 0
+   }
+  },
+  "hook": "High-waisted black Bullpadel tights with pockets and a perforated lower leg.",
+  "why": [
+   "High waistband for support during lunges and splits",
+   "Pockets for a ball or phone",
+   "Perforated detail on the lower leg for ventilation"
+  ],
+  "specs": [
+   {
+    "k": "Type",
+    "v": "Long tights"
+   },
+   {
+    "k": "Gender",
+    "v": "Women"
+   },
+   {
+    "k": "Colour",
+    "v": "Black"
+   },
+   {
+    "k": "Pockets",
+    "v": "Yes"
+   }
+  ],
+  "summary": "Bullpadel Poeta women's long tights in black: a high waist, pockets and breathable perforated detailing.",
+  "faq": [
+   {
+    "q": "Can I try the tights on before buying?",
+    "a": "Yes. Tap \"Keep it ready for me to see\" and we'll have your size at the front desk to try on."
+   },
+   {
+    "q": "How do I pay?",
+    "a": "At the club front desk, the same way you pay for court bookings. There is no online payment."
+   }
+  ],
+  "tags": [
+   "Bullpadel",
+   "Apparel",
+   "Women",
+   "Tights",
+   "Pockets"
+  ],
+  "clubTake": "Brand new. A wardrobe staple for cooler sessions.",
+  "images": [
+   "/bazaar/img/bullpadel-womens-poeta-long-tights-black/1.webp"
+  ]
+ },
+ "sources": [
+  "https://www.padeloutlet.ae/products/bullpadel-poeta-long-tights-black-w-pockets-women"
+ ]
+}

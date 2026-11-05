@@ -1,0 +1,82 @@
+{
+ "kind": "product",
+ "id": "bullpadel-womens-tomin-leggings-caviar",
+ "rev": 1,
+ "data": {
+  "brand": "Bullpadel",
+  "model": "Women's Tomin Leggings · Caviar",
+  "categoryId": "apparel",
+  "sport": "both",
+  "variants": {
+   "xs": {
+    "size": "XS",
+    "color": "Caviar (charcoal)",
+    "stock": 0
+   },
+   "s": {
+    "size": "S",
+    "color": "Caviar (charcoal)",
+    "stock": 0
+   },
+   "m": {
+    "size": "M",
+    "color": "Caviar (charcoal)",
+    "stock": 0
+   },
+   "l": {
+    "size": "L",
+    "color": "Caviar (charcoal)",
+    "stock": 0
+   }
+  },
+  "hook": "Charcoal Bullpadel leggings with side pockets for your spare ball.",
+  "why": [
+   "Side pockets that hold a padel ball or phone",
+   "Stretch fit that moves with you",
+   "Ankle-length, in a dark charcoal \"caviar\" shade"
+  ],
+  "specs": [
+   {
+    "k": "Type",
+    "v": "Leggings"
+   },
+   {
+    "k": "Gender",
+    "v": "Women"
+   },
+   {
+    "k": "Colour",
+    "v": "Caviar (charcoal)"
+   },
+   {
+    "k": "Pockets",
+    "v": "Side pockets"
+   }
+  ],
+  "summary": "Bullpadel Tomin women's leggings in a dark caviar shade, with handy side pockets. Comfortable for cooler mornings on court.",
+  "faq": [
+   {
+    "q": "Can I try the leggings on before buying?",
+    "a": "Yes. Tap \"Keep it ready for me to see\" and we'll have your size at the front desk to try on."
+   },
+   {
+    "q": "How do I pay?",
+    "a": "At the club front desk, the same way you pay for court bookings. There is no online payment."
+   }
+  ],
+  "tags": [
+   "Bullpadel",
+   "Apparel",
+   "Women",
+   "Leggings",
+   "Pockets"
+  ],
+  "clubTake": "Brand new. Perfect for winter mornings.",
+  "images": [
+   "/bazaar/img/bullpadel-womens-tomin-leggings-caviar/1.webp"
+  ]
+ },
+ "sources": [
+  "https://www.padeloutlet.ae/products/bullpadel-womens-tomin-caviar-meshes"
+ ]
+}

@@ -1,0 +1,134 @@
+{
+ "kind": "product",
+ "id": "joola-agassi-pro-16mm",
+ "rev": 1,
+ "data": {
+  "brand": "JOOLA",
+  "model": "Agassi Pro 16mm",
+  "categoryId": "pickleball-paddles",
+  "sport": "pickleball",
+  "stock": 1,
+  "hook": "A tennis-inspired all-court paddle designed with Andre Agassi.",
+  "why": [
+   "Tapered, tennis-style shape for faster swing speed",
+   "Sweet spot extended into the upper edges for forgiveness",
+   "Honeycomb Propulsion core with Hyper-Foam edge wall",
+   "Tech Flex Power for extra pop and consistency",
+   "Textured carbon face for spin and control"
+  ],
+  "levels": [
+   "Intermediate",
+   "Intermediate+",
+   "Advanced"
+  ],
+  "playStyle": "Players from tennis who like a longer, racquet-like feel and two-handed backhands.",
+  "scores": {
+   "power": 8.4,
+   "control": 8.4,
+   "sweetSpot": 8.3,
+   "manoeuvrability": 8.2
+  },
+  "specs": [
+   {
+    "k": "Core thickness",
+    "v": "16 mm"
+   },
+   {
+    "k": "Weight",
+    "v": "7.9–8.3 oz (avg 8.1 oz)"
+   },
+   {
+    "k": "Length",
+    "v": "16.5 in"
+   },
+   {
+    "k": "Width",
+    "v": "7.5 in"
+   },
+   {
+    "k": "Handle length",
+    "v": "5.5 in"
+   },
+   {
+    "k": "Grip circumference",
+    "v": "4¼ in"
+   },
+   {
+    "k": "Shape",
+    "v": "Tapered, elongated all-court"
+   },
+   {
+    "k": "Core",
+    "v": "Honeycomb Propulsion + Hyper-Foam edge wall"
+   },
+   {
+    "k": "Face",
+    "v": "Textured carbon fibre"
+   },
+   {
+    "k": "Approvals",
+    "v": "USAP, UPA-A"
+   }
+  ],
+  "summary": "The JOOLA Agassi Pro is part of JOOLA's line with tennis legends Andre Agassi and Steffi Graf. Its tapered shape, inspired by Agassi's racquets, speeds up your swing, and the sweet spot reaches into the upper edges.",
+  "description": "If you come from tennis, this paddle will feel familiar. The longer, tapered head and 5.5\" handle give a racquet-like swing and room for two-handed backhands.\n\nUnder the textured carbon face, a 16 mm Propulsion core and Hyper-Foam edge wall cushion contact and extend the sweet spot, while Tech Flex adds power and consistency.",
+  "tech": [
+   {
+    "name": "Agassi paddle shape",
+    "text": "Tapered head inspired by Agassi's racquets, with the sweet spot extended into the upper edges."
+   },
+   {
+    "name": "Propulsion Core",
+    "text": "16 mm honeycomb that cushions, rebounds for power and extends dwell time."
+   },
+   {
+    "name": "Hyper-Foam Edge Wall",
+    "text": "Adds cushioning and an edge-to-edge sweet spot."
+   },
+   {
+    "name": "Tech Flex – Power",
+    "text": "Foam outside the frame for a wider sweet spot and extra flex."
+   },
+   {
+    "name": "Textured carbon face",
+    "text": "Grips the ball for spin and helps keep dinks low."
+   }
+  ],
+  "faq": [
+   {
+    "q": "Who is the Agassi Pro for?",
+    "a": "All-court players, especially those coming from tennis."
+   },
+   {
+    "q": "Is it approved for tournaments?",
+    "a": "Yes, USA Pickleball and UPA-A approved."
+   },
+   {
+    "q": "How is it different from the Perseus?",
+    "a": "The Agassi has a more tapered, tennis-like head. The Perseus is squarer at the top."
+   }
+  ],
+  "tags": [
+   "JOOLA",
+   "Pickleball paddle",
+   "16 mm",
+   "Carbon face",
+   "All-court",
+   "Andre Agassi",
+   "USAP approved"
+  ],
+  "clubTake": "Brand new, unused. Our pick for tennis converts. Try it side by side with the Perseus.",
+  "images": [
+   "/bazaar/img/joola-agassi-pro-16mm/1.webp",
+   "/bazaar/img/joola-agassi-pro-16mm/2.webp",
+   "/bazaar/img/joola-agassi-pro-16mm/3.webp",
+   "/bazaar/img/joola-agassi-pro-16mm/4.webp",
+   "/bazaar/img/joola-agassi-pro-16mm/5.webp",
+   "/bazaar/img/joola-agassi-pro-16mm/6.webp"
+  ]
+ },
+ "sources": [
+  "https://www.amazon.ae/dp/B0DQ5YDDPD",
+  "https://pickleballcentral.com/joola-andre-agassi-pro-16mm-pickleball-paddle/"
+ ]
+}

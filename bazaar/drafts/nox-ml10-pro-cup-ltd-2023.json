@@ -1,0 +1,143 @@
+{
+ "kind": "product",
+ "id": "nox-ml10-pro-cup-ltd-2023",
+ "rev": 1,
+ "data": {
+  "brand": "NOX",
+  "model": "ML10 Pro Cup LTD",
+  "year": "2023",
+  "categoryId": "padel-rackets",
+  "sport": "padel",
+  "stock": null,
+  "hook": "Miguel Lamperti's classic control racket, in a limited-edition 18K carbon build.",
+  "why": [
+   "Round shape and low balance for control and a huge sweet spot",
+   "18K carbon faces: the finest NOX weave, stiff yet light",
+   "HR3 high-density core with strong memory for extra punch",
+   "Spin+ double-roughness face grips the ball for spin",
+   "Smartstrap: swap the cord without voiding the warranty"
+  ],
+  "levels": [
+   "Intermediate",
+   "Intermediate+",
+   "Advanced"
+  ],
+  "playStyle": "Control and defence-first players who want precision, a forgiving sweet spot and enough power to finish.",
+  "scores": {
+   "power": 8.5,
+   "control": 8.9,
+   "sweetSpot": 8.8,
+   "manoeuvrability": 8.4
+  },
+  "specs": [
+   {
+    "k": "Shape",
+    "v": "Round"
+   },
+   {
+    "k": "Weight",
+    "v": "360–375 g"
+   },
+   {
+    "k": "Balance",
+    "v": "Low (handle)"
+   },
+   {
+    "k": "Frame",
+    "v": "100% carbon, 38 mm"
+   },
+   {
+    "k": "Face",
+    "v": "18K carbon"
+   },
+   {
+    "k": "Core",
+    "v": "HR3 high-density rubber"
+   },
+   {
+    "k": "Surface",
+    "v": "Spin+ (rough)"
+   },
+   {
+    "k": "Player",
+    "v": "Miguel Lamperti"
+   },
+   {
+    "k": "Level",
+    "v": "Intermediate to advanced"
+   },
+   {
+    "k": "Edition",
+    "v": "Limited, presentation pack"
+   }
+  ],
+  "summary": "The ML10 Pro Cup is one of the best-known control rackets in padel. This limited-edition 2023 version upgrades it with 18K carbon faces and the HR3 core for a solid, comfortable feel with more punch.",
+  "description": "Round shape, low balance and a very wide sweet spot make the ML10 easy to place and forgiving on off-centre hits. It is a favourite for defending from the back and building points.\n\nThe LTD version adds NOX's finest 18K carbon on the faces, a high-memory HR3 core for extra hitting power, and the Spin+ surface for bite. It came as a limited-edition pack in a presentation box.",
+  "tech": [
+   {
+    "name": "Carbon Frame",
+    "text": "Carbon frame for rigidity and durability across the whole racket."
+   },
+   {
+    "name": "DCS (Dynamic Composite Structure)",
+    "text": "Extra material from the frame into the face to even out hardness between frame and face."
+   },
+   {
+    "name": "HR3 Core",
+    "text": "High-density rubber core with strong memory for more hitting power."
+   },
+   {
+    "name": "18K Carbon",
+    "text": "Maximum rigidity while staying light, thanks to the finest carbon micro-filaments."
+   },
+   {
+    "name": "Exclusive Spin+",
+    "text": "Double roughness: a 3D hexagonal texture in the centre and sand finish elsewhere, for control and spin."
+   },
+   {
+    "name": "Smartstrap",
+    "text": "Replace the cord easily without touching the end cap or losing the warranty."
+   }
+  ],
+  "faq": [
+   {
+    "q": "Is the ML10 Pro Cup a control or power racket?",
+    "a": "Control first. The round shape and low balance give precision and a big sweet spot, with enough power to finish."
+   },
+   {
+    "q": "Is it good for beginners?",
+    "a": "Yes for committed beginners and intermediates. It is forgiving, though the 18K carbon makes it firmer than entry rackets."
+   },
+   {
+    "q": "What do players say?",
+    "a": "Players consistently praise its control, especially in defence. Attackers may find it lighter on power than a diamond."
+   }
+  ],
+  "tags": [
+   "NOX",
+   "Padel racket",
+   "Shape: Round",
+   "Balance: Low",
+   "Control",
+   "Miguel Lamperti",
+   "Limited edition",
+   "18K carbon"
+  ],
+  "clubTake": "Pre-owned unit in excellent condition. One of the most forgiving rackets we know, a great pick for building consistency.",
+  "images": [
+   "/bazaar/img/nox-ml10-pro-cup-ltd-2023/1.webp",
+   "/bazaar/img/nox-ml10-pro-cup-ltd-2023/2.webp",
+   "/bazaar/img/nox-ml10-pro-cup-ltd-2023/3.webp",
+   "/bazaar/img/nox-ml10-pro-cup-ltd-2023/4.webp",
+   "/bazaar/img/nox-ml10-pro-cup-ltd-2023/5.webp",
+   "/bazaar/img/nox-ml10-pro-cup-ltd-2023/6.webp",
+   "/bazaar/img/nox-ml10-pro-cup-ltd-2023/7.webp",
+   "/bazaar/img/nox-ml10-pro-cup-ltd-2023/8.webp"
+  ]
+ },
+ "sources": [
+  "https://racketshop.ae/nox-padel-racket-pack-ml10-pro-cup-limited-edition-2023/",
+  "https://www.padelful.com/en/rackets/nox-ml10-pro-cup-ltd-limited-edition-2023",
+  "https://www.racketguide.com/de-en/padel/nox/ml10-pro-cup-ltd-edition-2023/"
+ ]
+}

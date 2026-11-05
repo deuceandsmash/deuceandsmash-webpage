@@ -1,0 +1,67 @@
+{
+ "kind": "product",
+ "id": "siux-fusion-backpack-green",
+ "rev": 1,
+ "data": {
+  "brand": "Siux",
+  "model": "Fusion Backpack · Green",
+  "categoryId": "bags",
+  "sport": "padel",
+  "stock": 1,
+  "hook": "A compact Siux padel backpack with a racket slot and room for your kit.",
+  "why": [
+   "Dedicated racket compartment",
+   "Space for a change of clothes or shoes",
+   "Two side mesh pockets for phone, keys or a bottle",
+   "Padded shoulder straps for comfort"
+  ],
+  "specs": [
+   {
+    "k": "Type",
+    "v": "Padel backpack"
+   },
+   {
+    "k": "Material",
+    "v": "Durable polyester"
+   },
+   {
+    "k": "Compartments",
+    "v": "Racket + clothes/shoes + 2 side mesh pockets"
+   },
+   {
+    "k": "Straps",
+    "v": "Padded"
+   },
+   {
+    "k": "Colour",
+    "v": "Black / green"
+   }
+  ],
+  "summary": "The Siux Fusion is a compact, practical padel backpack. It carries a racket, a change of clothes and your accessories, with side mesh pockets for the essentials.",
+  "description": "Made from durable polyester that helps protect your gear from heat and humidity, the Fusion is sized for everyday training. It suits players with a full kit as well as beginners who only need the basics.",
+  "faq": [
+   {
+    "q": "How many rackets does it fit?",
+    "a": "It has one racket compartment. Ask at the desk to check fit with your racket."
+   },
+   {
+    "q": "Does it have a shoe compartment?",
+    "a": "There is a compartment for a change of clothes or shoes."
+   }
+  ],
+  "tags": [
+   "Siux",
+   "Bag",
+   "Backpack",
+   "Padel"
+  ],
+  "clubTake": "Brand new. A tidy everyday bag for the club.",
+  "images": [
+   "/bazaar/img/siux-fusion-backpack-green/1.webp"
+  ]
+ },
+ "sources": [
+  "https://www.padeloutlet.ae/products/siux-bag-fusion",
+  "https://www.padelnuestro.com/int/backpack-siux-fusion-green-p-27579.html"
+ ]
+}

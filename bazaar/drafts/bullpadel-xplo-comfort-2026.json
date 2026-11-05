@@ -1,0 +1,163 @@
+{
+ "kind": "product",
+ "id": "bullpadel-xplo-comfort-2026",
+ "rev": 1,
+ "data": {
+  "brand": "Bullpadel",
+  "model": "XPLO Comfort",
+  "year": "2026",
+  "categoryId": "padel-rackets",
+  "sport": "padel",
+  "stock": 1,
+  "hook": "Martín Di Nenno's explosive XPLO power, in a softer, arm-friendly package.",
+  "why": [
+   "Geometric head and high balance put real weight behind smashes and vibora",
+   "Ease Vibe and Vibradrive soak up to 49% of vibration, so your elbow stays happy",
+   "Custom Weight lets you add 3, 6 or 9 g to the tip to tune power",
+   "Fibrix face (glass + carbon) over a triple-density Multieva core: soft feel, quick exit",
+   "3D Grain rough finish bites the ball for spin and placement"
+  ],
+  "levels": [
+   "Intermediate",
+   "Intermediate+",
+   "Advanced"
+  ],
+  "playStyle": "Attacking players who want big overheads without having to swing at 100%, or anyone coming off a stiff racket who wants more comfort.",
+  "scores": {
+   "power": 8.8,
+   "control": 7.8,
+   "sweetSpot": 7.6,
+   "manoeuvrability": 7.5,
+   "comfort": 8.8
+  },
+  "specs": [
+   {
+    "k": "Shape",
+    "v": "Geometric (diamond family)"
+   },
+   {
+    "k": "Weight",
+    "v": "360–370 g"
+   },
+   {
+    "k": "Balance",
+    "v": "High, approx. 26.5 cm"
+   },
+   {
+    "k": "Face",
+    "v": "Fibrix (fibreglass + carbon)"
+   },
+   {
+    "k": "Core",
+    "v": "Multieva (triple-density EVA)"
+   },
+   {
+    "k": "Frame",
+    "v": "100% carbon tube"
+   },
+   {
+    "k": "Surface",
+    "v": "3D Grain (rough)"
+   },
+   {
+    "k": "Weight system",
+    "v": "Custom Weight, +3 / 6 / 9 g"
+   },
+   {
+    "k": "Player",
+    "v": "Martín Di Nenno line"
+   },
+   {
+    "k": "Level",
+    "v": "Intermediate to advanced"
+   }
+  ],
+  "summary": "The XPLO Comfort takes the XPLO family's attacking geometry and pairs it with a softer Fibrix face and multi-density core. You get easy, explosive power from the high balance and a much kinder feel on the arm than the hard XPLO.",
+  "description": "Bullpadel built the XPLO Comfort for players who want to finish points overhead but don't want a board-stiff racket. The geometric head and high balance give a lot of inertia, so the ball leaves fast even on a three-quarter swing.\n\nThe Fibrix face mixes fibreglass and carbon for a softer, more forgiving contact, while the Multieva core layers harder EVA on the outside for speed and a softer layer inside for comfort. Ease Vibe dampers and the Vibradrive handle cut vibration, and the Custom Weight system lets you shift balance to suit your game.",
+  "tech": [
+   {
+    "name": "Geometric Shape",
+    "text": "A wider, angular head that adds inertia for more hitting power, especially in the air."
+   },
+   {
+    "name": "Geometric Core",
+    "text": "Diagonal and vertical supports inside the core reduce twisting on off-centre hits."
+   },
+   {
+    "name": "Hexature",
+    "text": "Hexagonal tubular frame for rigidity, stability and energy transfer."
+   },
+   {
+    "name": "Air Power",
+    "text": "A larger channel along the frame for a cleaner, faster swing."
+   },
+   {
+    "name": "Wave System",
+    "text": "Internal structure that balances flex and stiffness to return more energy."
+   },
+   {
+    "name": "Ease Vibe",
+    "text": "Dampers built into the face that absorb up to 49% of vibration."
+   },
+   {
+    "name": "Vibradrive",
+    "text": "Shock-absorbing elastomer in the handle for off-centre hits."
+   },
+   {
+    "name": "Custom Weight",
+    "text": "Add 3, 6 or 9 g at the tip to fine-tune balance and power."
+   },
+   {
+    "name": "Smart Holes",
+    "text": "Reinforced drilling pattern that stiffens the face and lifts ball exit."
+   },
+   {
+    "name": "3D Grain",
+    "text": "Rough face texture for extra spin and grip on the ball."
+   }
+  ],
+  "faq": [
+   {
+    "q": "Who is the XPLO Comfort designed for?",
+    "a": "Attacking intermediate-to-advanced players who want XPLO-level power with a softer, more comfortable feel."
+   },
+   {
+    "q": "How is it different from the regular XPLO?",
+    "a": "The Comfort uses a Fibrix (glass + carbon) face and a multi-density core, so it feels softer and easier on the arm, with a little less raw stiffness."
+   },
+   {
+    "q": "Can I adjust the balance?",
+    "a": "Yes. The Custom Weight system lets you add 3, 6 or 9 g near the tip."
+   },
+   {
+    "q": "Is it good for beginners?",
+    "a": "Not ideal. The high balance takes some technique to control. Beginners are better off with a round, low-balance racket."
+   },
+   {
+    "q": "Is it good for players with elbow trouble?",
+    "a": "It is one of the more comfortable power rackets, thanks to Ease Vibe and Vibradrive, but anyone with an injury should still try it first."
+   }
+  ],
+  "tags": [
+   "Bullpadel",
+   "Padel racket",
+   "Shape: Geometric",
+   "Balance: High",
+   "Power",
+   "Comfort",
+   "Martín Di Nenno",
+   "2026"
+  ],
+  "clubTake": "Brand new, unused. A great step up if you want more punch overhead without the arm buzz of a hard carbon racket.",
+  "images": [
+   "/bazaar/img/bullpadel-xplo-comfort-2026/1.webp",
+   "/bazaar/img/bullpadel-xplo-comfort-2026/2.webp",
+   "/bazaar/img/bullpadel-xplo-comfort-2026/3.webp",
+   "/bazaar/img/bullpadel-xplo-comfort-2026/4.webp"
+  ]
+ },
+ "sources": [
+  "https://www.amazon.ae/dp/B0FPTKMRSS",
+  "https://padelshop.com/en-it/products/bullpadel-xplo-comfort-2026-padel-racket"
+ ]
+}

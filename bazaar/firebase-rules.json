@@ -1,0 +1,37 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "catalog": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email_verified == true && (auth.token.email == '84.ranjith@gmail.com' || auth.token.email == 'rashmi.rajamanickam@gmail.com' || auth.token.email == 'manojnr.07@gmail.com')"
+    },
+
+    "private": {
+      ".read": "auth != null && auth.token.email_verified == true && (auth.token.email == '84.ranjith@gmail.com' || auth.token.email == 'rashmi.rajamanickam@gmail.com' || auth.token.email == 'manojnr.07@gmail.com')",
+      ".write": "auth != null && auth.token.email_verified == true && (auth.token.email == '84.ranjith@gmail.com' || auth.token.email == 'rashmi.rajamanickam@gmail.com' || auth.token.email == 'manojnr.07@gmail.com')"
+    },
+
+    "requests": {
+      ".read": "auth != null && auth.token.email_verified == true && (auth.token.email == '84.ranjith@gmail.com' || auth.token.email == 'rashmi.rajamanickam@gmail.com' || auth.token.email == 'manojnr.07@gmail.com')",
+      ".indexOn": ["createdAt"],
+      "$rid": {
+        ".write": "(auth != null && auth.token.email_verified == true && (auth.token.email == '84.ranjith@gmail.com' || auth.token.email == 'rashmi.rajamanickam@gmail.com' || auth.token.email == 'manojnr.07@gmail.com')) || (!data.exists() && newData.exists())",
+        ".validate": "newData.hasChildren(['type', 'productId', 'name', 'phone', 'createdAt', 'status'])",
+        "type":      { ".validate": "newData.isString() && (newData.val() == 'see' || newData.val() == 'notify')" },
+        "productId": { ".validate": "newData.isString() && newData.val().length <= 80 && root.child('catalog/products/' + newData.val()).exists()" },
+        "usedId":    { ".validate": "newData.isString() && newData.val().length <= 80" },
+        "variant":   { ".validate": "newData.isString() && newData.val().length <= 80" },
+        "name":      { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 60" },
+        "phone":     { ".validate": "newData.isString() && newData.val().matches(/^[+]?[0-9 ]{10,18}$/)" },
+        "visit":     { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "note":      { ".validate": "newData.isString() && newData.val().length <= 300" },
+        "createdAt": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        "status":    { ".validate": "newData.isString() && (newData.val() == 'new' || ((newData.val() == 'done' || newData.val() == 'contacted') && auth != null && auth.token.email_verified == true && (auth.token.email == '84.ranjith@gmail.com' || auth.token.email == 'rashmi.rajamanickam@gmail.com' || auth.token.email == 'manojnr.07@gmail.com')))" },
+        "doneAt":    { ".validate": "newData.isNumber()" },
+        "$other":    { ".validate": false }
+      }
+    }
+  }
+}

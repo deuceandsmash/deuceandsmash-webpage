@@ -1,0 +1,86 @@
+{
+ "kind": "product",
+ "id": "bullpadel-mens-shirt-abres-012-qatar",
+ "rev": 1,
+ "data": {
+  "brand": "Bullpadel",
+  "model": "Men's Shirt Abres 012 · Qatar LTD",
+  "categoryId": "apparel",
+  "sport": "both",
+  "variants": {
+   "m": {
+    "size": "M",
+    "color": "White / red stripes",
+    "stock": 0
+   },
+   "l": {
+    "size": "L",
+    "color": "White / red stripes",
+    "stock": 0
+   },
+   "xl": {
+    "size": "XL",
+    "color": "White / red stripes",
+    "stock": 0
+   }
+  },
+  "hook": "Limited-edition Qatar tee in white / red stripes: quick-dry, light, made to move.",
+  "why": [
+   "Quick-drying fabric keeps you comfortable through long rallies",
+   "Supple, stretchy fabric for full freedom of movement",
+   "Limited Qatar edition design, white with red horizontal stripes, with the Qatar flag"
+  ],
+  "specs": [
+   {
+    "k": "Type",
+    "v": "Short-sleeve padel shirt"
+   },
+   {
+    "k": "Neckline",
+    "v": "Round neck"
+   },
+   {
+    "k": "Gender",
+    "v": "Men"
+   },
+   {
+    "k": "Colour",
+    "v": "White / red stripes"
+   },
+   {
+    "k": "Pattern",
+    "v": "Striped"
+   },
+   {
+    "k": "Edition",
+    "v": "Qatar limited edition"
+   }
+  ],
+  "summary": "A limited-edition Bullpadel playing shirt from the Qatar series, white with red horizontal stripes. Quick-drying, supple fabric gives comfort and freedom of movement on court.",
+  "faq": [
+   {
+    "q": "Can I try the shirt on before buying?",
+    "a": "Yes. Tap \"Keep it ready for me to see\" and we'll have your size at the front desk to try on."
+   },
+   {
+    "q": "How do I pay?",
+    "a": "At the club front desk, the same way you pay for court bookings. There is no online payment."
+   }
+  ],
+  "tags": [
+   "Bullpadel",
+   "Apparel",
+   "Men",
+   "T-shirt",
+   "Limited edition",
+   "Quick-dry"
+  ],
+  "clubTake": "Brand new, limited run. A standout on court.",
+  "images": [
+   "/bazaar/img/bullpadel-mens-shirt-abres-012-qatar/1.webp"
+  ]
+ },
+ "sources": [
+  "https://www.noon.com/uae-en/bullpadel-men-shirt-abres-012-qatar-limited-edition/"
+ ]
+}

@@ -1,0 +1,125 @@
+{
+ "kind": "product",
+ "id": "adidas-arrow-hit-junior-white-pink",
+ "rev": 1,
+ "data": {
+  "brand": "adidas",
+  "model": "Arrow Hit Junior",
+  "year": "2026",
+  "categoryId": "padel-rackets",
+  "sport": "padel",
+  "stock": 1,
+  "hook": "A super-light, round junior racket that makes learning padel easy.",
+  "why": [
+   "Light 310–330 g build for small hands and quick reactions",
+   "Round shape with a central sweet spot for control",
+   "Soft fibreglass face and EVA Soft Performance core for comfort",
+   "Exoskeleton structure for stiffness and durability",
+   "Adjustable cord for a secure fit on smaller wrists"
+  ],
+  "levels": [
+   "Beginner",
+   "Beginner+"
+  ],
+  "playStyle": "Kids and juniors starting out or playing regularly, who need a light, forgiving racket.",
+  "scores": {
+   "power": 6.0,
+   "control": 8.5,
+   "sweetSpot": 8.5,
+   "manoeuvrability": 9.2,
+   "comfort": 8.8
+  },
+  "specs": [
+   {
+    "k": "Shape",
+    "v": "Round"
+   },
+   {
+    "k": "Weight",
+    "v": "310–330 g"
+   },
+   {
+    "k": "Balance",
+    "v": "Medium"
+   },
+   {
+    "k": "Frame",
+    "v": "Fibreglass + carbon, 36 mm"
+   },
+   {
+    "k": "Face",
+    "v": "Fibreglass, smooth"
+   },
+   {
+    "k": "Core",
+    "v": "EVA Soft Performance"
+   },
+   {
+    "k": "Colour",
+    "v": "White / pink"
+   },
+   {
+    "k": "Age group",
+    "v": "Junior"
+   }
+  ],
+  "summary": "The Arrow Hit Junior is made for the youngest players: a super-light round racket with the sweet spot in the centre for control, and a soft fibreglass face that is easy on growing arms.",
+  "description": "Lightweight for quick movements, the Arrow Hit Junior helps kids learn good technique without fighting the racket. The round head keeps the sweet spot central and forgiving, and the soft EVA core and fibreglass face add comfort.\n\nAn exoskeleton structure keeps it stiff and durable, and the adjustable cord gives a better hold on smaller wrists.",
+  "tech": [
+   {
+    "name": "Exoskeleton structure",
+    "text": "Increases stiffness and resistance to twisting."
+   },
+   {
+    "name": "Structural Reinforcement",
+    "text": "Adds stability and precision."
+   },
+   {
+    "name": "Smart Holes Curve",
+    "text": "Hole pattern designed to help generate spin."
+   },
+   {
+    "name": "EVA Soft Performance",
+    "text": "Soft core for comfort and control."
+   },
+   {
+    "name": "Adjustable cord",
+    "text": "Wrist cord that adjusts for a secure grip."
+   }
+  ],
+  "faq": [
+   {
+    "q": "What age is it for?",
+    "a": "Junior players. It suits most kids from around 7–8 up to early teens. Bring your child in to check the size."
+   },
+   {
+    "q": "Can adults use it?",
+    "a": "It is designed and sized for juniors, so adults will find it too light."
+   },
+   {
+    "q": "Does it come in other colours?",
+    "a": "This listing is the white/pink version."
+   }
+  ],
+  "tags": [
+   "adidas",
+   "Padel racket",
+   "Junior",
+   "Shape: Round",
+   "Lightweight",
+   "Control"
+  ],
+  "clubTake": "Brand new. Perfect for our junior sessions. Light enough that kids can swing it properly from day one.",
+  "images": [
+   "/bazaar/img/adidas-arrow-hit-junior-white-pink/1.webp",
+   "/bazaar/img/adidas-arrow-hit-junior-white-pink/2.webp",
+   "/bazaar/img/adidas-arrow-hit-junior-white-pink/3.webp",
+   "/bazaar/img/adidas-arrow-hit-junior-white-pink/4.webp",
+   "/bazaar/img/adidas-arrow-hit-junior-white-pink/5.webp"
+  ]
+ },
+ "sources": [
+  "https://www.amazon.ae/dp/B0FZWX5H1B",
+  "https://www.racketguide.com/us-en/padel/adidas/arrow-hit-junior-blue-2026/"
+ ]
+}
