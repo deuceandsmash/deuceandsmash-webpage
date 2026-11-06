@@ -66,7 +66,7 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--blueText)}
 
 /* rows */
 .rows{display:flex;flex-direction:column;gap:8px}
-.r{display:grid;grid-template-columns:56px minmax(160px,1.6fr) repeat(3,minmax(80px,.6fr)) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.r{display:grid;grid-template-columns:56px minmax(160px,1.6fr) repeat(4,minmax(78px,.55fr)) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
 .r.off{opacity:.62}
 .r img,.r .ni{width:56px;height:56px;border-radius:8px;object-fit:contain;background:var(--well)}
 .r .ni{display:flex;align-items:center;justify-content:center;color:#999;font-size:11px}
@@ -77,9 +77,9 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--blueText)}
 .r label.f input{padding:6px 8px}
 .r .acts{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
 @media (max-width:760px){
-  .r{grid-template-columns:56px 1fr 1fr 1fr;}
+  .r{grid-template-columns:56px 1fr 1fr 1fr 1fr;}
   .r .t{grid-column:2 / -1}
-  .r label.f:nth-of-type(1){grid-column:1 / 3}
+  .r label.f:nth-of-type(1){grid-column:1 / 2}
   .r .acts{grid-column:1 / -1;justify-content:flex-start}
 }
 .vsum{font-size:12.5px;color:var(--text2)}
@@ -133,6 +133,25 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--blueText)}
 .empty{text-align:center;color:var(--text2);padding:50px 16px;background:var(--card);border:1px dashed var(--line);border-radius:14px}
 .empty h3{font-family:var(--head);font-size:28px;letter-spacing:.04em;color:var(--text)}
 
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.tile span{display:block;color:var(--muted);font-family:var(--body);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px}
+.tile b{display:block;font-family:var(--head);font-weight:400;font-size:32px;letter-spacing:.02em;line-height:1.1;margin-top:2px}
+.tile small{color:var(--muted);font-size:12.5px}
+.pos{color:var(--green)} .neg{color:var(--red)!important}
+.mgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 18px}
+@media (max-width:900px){.mgrid{grid-template-columns:minmax(0,1fr)}}
+.mh{font-family:var(--head);font-weight:400;font-size:24px;letter-spacing:.04em;margin:20px 0 8px}
+#view section{overflow-x:auto}
+table.mt{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+table.mt th{font-family:var(--body);font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-size:12.5px;text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.mt td{padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.mt td:nth-child(2){white-space:normal}
+table.mt tr:last-child td{border-bottom:0}
+.pb{position:relative;min-width:110px;height:22px;display:flex;align-items:center}
+.pb span{position:absolute;left:0;top:3px;bottom:3px;background:rgba(125,197,21,.25);border-radius:4px}
+.pb b{position:relative;font-weight:600;padding-left:6px}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);opacity:0;background:var(--green);color:var(--page);font-weight:700;padding:10px 18px;border-radius:10px;transition:.2s;z-index:80;pointer-events:none;font-family:var(--body);font-size:16px}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.err{background:#e05555;color:#fff}
@@ -164,6 +183,7 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--blueText)}
         <a href="#used" data-tab="used">Pre-owned</a>
         <a href="#requests" data-tab="requests">Requests<span class="n hidden" id="nReq"></span></a>
         <a href="#import" data-tab="import">Import<span class="n hidden" id="nImp"></span></a>
+        <a href="#margins" data-tab="margins">Margins</a>
         <a href="#categories" data-tab="categories">Categories</a>
       </nav>
     </div>
@@ -189,8 +209,10 @@ const $$ = s => [...document.querySelectorAll(s)];
 let C = { categories: {}, products: {}, used: {} };
 let R = {};          // requests
 let D = [];          // drafts from the repo
+let K = { products: {}, used: {} };   // buying prices (private, owners only)
+let S = {};          // sales log (private, owners only)
 let tab = 'inventory';
-const UI = { invQ: '', invCat: '', reqF: 'open', usedF: 'available' };
+const UI = { invQ: '', invCat: '', reqF: 'open', usedF: 'available', mPeriod: 'all' };
 const unsubs = [];
 
 /* ───────── toast & confirm ───────── */
@@ -246,6 +268,10 @@ function start() {
     e => toast('Catalog: ' + (e.code || e.message), true)));
   unsubs.push(onValue(ref(db, 'requests'), s => { R = s.val() || {}; badges(); if (tab === 'requests') render(); },
     e => toast('Requests: ' + (e.code || e.message), true)));
+  unsubs.push(onValue(ref(db, 'private/cost'), s => { const v = s.val() || {}; K = { products: v.products || {}, used: v.used || {} }; if (['inventory', 'used', 'margins'].includes(tab)) render(); },
+    e => toast('Buying prices: ' + (e.code || e.message), true)));
+  unsubs.push(onValue(ref(db, 'private/sales'), s => { S = s.val() || {}; if (tab === 'margins') render(); },
+    e => toast('Sales: ' + (e.code || e.message), true)));
   loadDrafts();
   route();
 }
@@ -253,7 +279,7 @@ function start() {
 /* ───────── routing ───────── */
 function route() {
   tab = (location.hash.slice(1) || 'inventory');
-  if (!['inventory', 'used', 'requests', 'import', 'categories'].includes(tab)) tab = 'inventory';
+  if (!['inventory', 'used', 'requests', 'import', 'margins', 'categories'].includes(tab)) tab = 'inventory';
   $$('#tabs a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   render();
 }
@@ -272,6 +298,7 @@ function render() {
   else if (tab === 'used') v.innerHTML = usedHTML(), wireUsed();
   else if (tab === 'requests') v.innerHTML = reqHTML(), wireReq();
   else if (tab === 'import') v.innerHTML = impHTML(), wireImp();
+  else if (tab === 'margins') v.innerHTML = marHTML(), wireMar();
   else v.innerHTML = catHTML(), wireCat();
 }
 
@@ -297,17 +324,20 @@ function invHTML() {
       <button class="btn pri" id="addProd" ${noCats ? 'disabled' : ''}>+ Add product</button></div>
     ${noCats ? `<div class="empty"><h3>Set up categories first</h3><p>Go to <a href="#categories">Categories</a> and add the starter set.</p></div>` :
       !ps.length ? `<div class="empty"><h3>No products yet</h3><p>Products I research for you arrive in the <a href="#import">Import</a> tab. You can also add one by hand.</p></div>` :
-      `<p class="hint" style="margin-bottom:10px">Edit price and stock right here; changes save when you leave the box. Hidden items don't show on the shop.</p>
+      `<p class="hint" style="margin-bottom:10px">Edit prices and stock right here; changes save when you leave the box. Hidden items don't show on the shop. 🔒 Buying price is stored separately and only owners can see it. When you lower stock, you'll be asked whether it was a sale so margins are tracked.</p>
       <div class="rows">${ps.map(([id, p]) => invRow(id, p)).join('')}</div>`}`;
 }
+const marginOf = (price, cost) => (price > 0 && cost > 0) ? { amt: price - cost, pct: Math.round((price - cost) / price * 100) } : null;
+const marginHTML = (price, cost) => { const m = marginOf(price, cost); if (!m) return cost > 0 ? '' : ' · <span style="color:var(--yellow)">no buying price</span>'; return ` · <span style="color:${m.amt >= 0 ? 'var(--green)' : 'var(--red)'}">margin ${inr(m.amt)} (${m.pct}%)</span>`; };
 function invRow(id, p) {
   const hasVar = p.variants && Object.keys(p.variants).length;
   const n = newStock(p), s = stockLabel(n), usedN = Object.values(C.used).filter(u => u.productId === id && u.status !== 'sold').length;
-  const d = discount(p.mrp, p.price);
+  const d = discount(p.mrp, p.price), cost = K.products[id];
   return `<div class="r ${p.visible ? '' : 'off'}" data-id="${esc(id)}">
     ${thumb(list(p.images)[0])}
-    <div class="t"><b>${esc(productTitle(p))}</b><span>${esc(catName(p.categoryId))}${usedN ? ` · ${usedN} pre-owned` : ''}${s ? ` · ${s.text}` : ' · not sold new'}${d ? ` · ${d}% off` : ''}</span></div>
+    <div class="t"><b>${esc(productTitle(p))}</b><span>${esc(catName(p.categoryId))}${usedN ? ` · ${usedN} pre-owned` : ''}${s ? ` · ${s.text}` : ' · not sold new'}${d ? ` · ${d}% off` : ''}${n !== null ? marginHTML(p.price, cost) : ''}</span></div>
     <label class="f">MRP ₹<input class="in" data-f="mrp" inputmode="numeric" value="${p.mrp ?? ''}"></label>
+    <label class="f">Buying ₹ 🔒<input class="in" data-c="1" inputmode="numeric" value="${cost ?? ''}" title="Only owners can see this"></label>
     <label class="f">Club price ₹<input class="in" data-f="price" inputmode="numeric" value="${p.price ?? ''}"></label>
     ${hasVar ? `<div class="f vsum">${vSummary(p)}<br><button class="btn sm" data-act="sizes" style="margin-top:4px">Sizes &amp; stock</button></div>`
              : `<label class="f">New stock<input class="in" data-f="stock" inputmode="numeric" placeholder="not sold new" value="${p.stock ?? ''}"></label>`}
@@ -323,11 +353,15 @@ function wireInv() {
   const a = $('#addProd'); if (a) a.onclick = () => editProduct(null);
   $$('.r[data-id]').forEach(row => {
     const id = row.dataset.id;
-    row.querySelectorAll('input[data-f]').forEach(inp => inp.addEventListener('change', () => {
+    row.querySelectorAll('input[data-f]').forEach(inp => inp.addEventListener('change', async () => {
       const f = inp.dataset.f, v = num(inp.value);
       if (f !== 'stock' && v === null && inp.value.trim()) return toast('Numbers only', true);
-      save(`catalog/products/${id}`, { [f]: v, updatedAt: Date.now() });
+      const before = Number(C.products[id].stock) || 0;
+      if (!(await save(`catalog/products/${id}`, { [f]: v, updatedAt: Date.now() }))) return;
+      if (f === 'stock' && v !== null && v < before) askSale([{ productId: id, qty: before - v }]);
     }));
+    const ci = row.querySelector('input[data-c]');
+    if (ci) ci.addEventListener('change', () => { const v = num(ci.value); if (v === null && ci.value.trim()) return toast('Numbers only', true); saveCost('products', id, v); });
     row.querySelector('[data-act="vis"]').onchange = e => {
       const p = C.products[id];
       if (e.target.checked && !(p.price > 0) && newStock(p) !== null) toast('Tip: set a club price before going live');
@@ -347,7 +381,48 @@ function editSizes(id) {
   $('#vSave').onclick = async () => {
     const out = {};
     $$('#vs [data-k]').forEach(r => { out[r.dataset.k] = { size: r.querySelector('[data-f="size"]').value.trim(), color: r.querySelector('[data-f="color"]').value.trim(), stock: num(r.querySelector('[data-f="stock"]').value) || 0 }; });
-    if (await save(`catalog/products/${id}`, { variants: out, updatedAt: Date.now() })) closeModal();
+    const drops = Object.entries(out).map(([k, v]) => ({ productId: id, variant: k, qty: (Number((p.variants[k] || {}).stock) || 0) - v.stock })).filter(x => x.qty > 0);
+    if (await save(`catalog/products/${id}`, { variants: out, updatedAt: Date.now() })) { closeModal(); if (drops.length) askSale(drops); }
+  };
+}
+
+/* ───────── SALES & BUYING PRICES (private/, owners only) ───────── */
+async function saveCost(kind, id, v) {
+  try { await set(ref(db, `private/cost/${kind}/${id}`), v); toast(v === null ? 'Buying price cleared' : 'Buying price saved 🔒'); return true; }
+  catch (e) { console.error(e); toast('Not saved: ' + (e.code || e.message), true); return false; }
+}
+const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+const dayToTs = d => { const t = new Date(d + 'T12:00:00').getTime(); return isNaN(t) ? Date.now() : t; };
+function varLabel(p, k) { const v = p && p.variants && p.variants[k]; return v ? [v.size, v.color].filter(Boolean).join(' ') : ''; }
+/** items: [{productId, variant?, qty}] for new stock, or [{productId, usedId, qty:1}] for a pre-owned unit */
+function askSale(items, onDone) {
+  const rows = items.map((it, i) => {
+    const p = C.products[it.productId] || {}, u = it.usedId ? C.used[it.usedId] : null;
+    const price = u ? u.price : p.price, cost = u ? K.used[it.usedId] : K.products[it.productId];
+    const label = u ? `Pre-owned ${productTitle(p)}` : productTitle(p) + (it.variant ? ` · ${varLabel(p, it.variant)}` : '');
+    return `<div class="fg" data-i="${i}" style="align-items:end;margin-bottom:8px"><div class="fld c6"><b style="font-family:var(--body);font-size:16px">${esc(label)}</b></div>
+      <div class="fld c2"><label>Qty sold</label><input class="in" data-s="qty" inputmode="numeric" value="${it.qty}" ${u ? 'readonly' : ''}></div>
+      <div class="fld c2"><label>Sold at ₹ (each)</label><input class="in" data-s="price" inputmode="numeric" value="${price ?? ''}"></div>
+      <div class="fld c2"><label>Buying ₹ (each) 🔒</label><input class="in" data-s="cost" inputmode="numeric" value="${cost ?? ''}" placeholder="unknown"></div></div>`;
+  }).join('');
+  openModal(`<h3>Was this a sale?</h3><p class="hint" style="margin-bottom:12px">Recording it as a sale tracks revenue and margin in the Margins tab. If you were just correcting the count, skip it.</p>
+    ${rows}<div class="fg"><div class="fld c2"><label>Sale date</label><input class="in" id="saleDay" type="date" value="${today()}"></div></div>
+    <div class="ferr" id="saleErr"></div>
+    <div class="foot"><button class="btn" id="saleNo">${items[0].usedId ? 'Mark sold without recording' : 'No, just a correction'}</button><button class="btn pri" id="saleYes">Record sale</button></div>`, true);
+  $('#saleNo').onclick = () => { closeModal(); onDone && onDone(false); };
+  $('#saleYes').onclick = async () => {
+    const at = dayToTs($('#saleDay').value), upd = {};
+    for (const [i, it] of items.entries()) {
+      const r = $(`[data-i="${i}"]`), qty = num(r.querySelector('[data-s="qty"]').value), price = num(r.querySelector('[data-s="price"]').value), cost = num(r.querySelector('[data-s="cost"]').value);
+      if (!(qty > 0) || price === null) return ($('#saleErr').textContent = 'Each line needs a quantity and a sold price.');
+      const p = C.products[it.productId] || {};
+      const key = push(ref(db, 'private/sales')).key;
+      upd[`private/sales/${key}`] = { kind: it.usedId ? 'used' : 'new', productId: it.productId, usedId: it.usedId || null, variant: it.variant || null,
+        title: productTitle(p) + (it.variant ? ` · ${varLabel(p, it.variant)}` : '') + (it.usedId ? ' (pre-owned)' : ''), categoryId: p.categoryId || null, qty, price, cost, at, by: (auth.currentUser || {}).email || null };
+      if (cost !== null) upd[`private/cost/${it.usedId ? 'used' : 'products'}/${it.usedId || it.productId}`] = cost;
+    }
+    try { await update(ref(db), upd); closeModal(); toast('Sale recorded'); onDone && onDone(true); }
+    catch (e) { console.error(e); $('#saleErr').textContent = 'Not saved: ' + (e.code || e.message); }
   };
 }
 
@@ -369,6 +444,7 @@ function editProduct(id) {
     <div class="legend">Price &amp; stock</div>
     <div class="fld c2"><label>MRP ₹</label><input class="in" name="mrp" inputmode="numeric" value="${p.mrp ?? ''}"></div>
     <div class="fld c2"><label>Club price ₹</label><input class="in" name="price" inputmode="numeric" value="${p.price ?? ''}"></div>
+    <div class="fld c2"><label>Buying price ₹ 🔒 (owners only)</label><input class="in" name="cost" inputmode="numeric" value="${(id && K.products[id]) ?? ''}"></div>
     <div class="fld c2" id="stockFld"><label>New stock (blank = not sold new)</label><input class="in" name="stock" inputmode="numeric" value="${p.stock ?? ''}"></div>
     <div class="fld c6" id="varFld"><label>Sizes, one per line: Size | Colour | Stock</label><textarea class="in" name="variants" placeholder="M | Black | 3&#10;L | Black | 2">${esc(vars)}</textarea><span class="hint">If you fill this in, stock is counted per size and the single stock box is ignored.</span></div>
 
@@ -429,7 +505,7 @@ function editProduct(id) {
     };
     let pid = id;
     if (!pid) { pid = slug(`${data.brand} ${data.model} ${data.year || ''}`); if (C.products[pid]) pid += '-' + Date.now().toString(36).slice(-4); data.createdAt = Date.now(); }
-    if (await save(`catalog/products/${pid}`, data)) closeModal();
+    if (await save(`catalog/products/${pid}`, data)) { if (num(g('cost')) !== (K.products[pid] ?? null)) await saveCost('products', pid, num(g('cost'))); closeModal(); }
   };
 }
 
@@ -445,11 +521,12 @@ function usedHTML() {
     ${!us.length ? `<div class="empty"><h3>Nothing here</h3><p>${rackets ? 'Add a pre-owned unit, or send me its photos and details in chat.' : 'Add the model as a product first.'}</p></div>` :
     `<div class="rows">${us.map(([id, u]) => {
       const p = C.products[u.productId] || {}, g = GRADES[u.grade], sold = u.status === 'sold';
-      const shown = usedShown(u) && p.visible;
+      const shown = usedShown(u) && p.visible, cost = K.used[id];
       return `<div class="r ${shown ? '' : 'off'}" data-id="${esc(id)}">
         ${thumb(list(u.images)[0] || list(p.images)[0])}
-        <div class="t"><b>${esc(productTitle(p) || u.productId)}</b><span>${g ? `<span class="pill" style="background:${g.color};color:#0E0E2C">${g.label}</span> ` : ''}${u.monthsUsed ? u.monthsUsed + ' mo used · ' : ''}${list(u.images).length} photo${list(u.images).length === 1 ? '' : 's'}${sold ? ` · sold ${ago(u.soldAt)}` : ''}${!p.visible ? ' · model hidden' : ''}</span></div>
+        <div class="t"><b>${esc(productTitle(p) || u.productId)}</b><span>${g ? `<span class="pill" style="background:${g.color};color:#0E0E2C">${g.label}</span> ` : ''}${u.monthsUsed ? u.monthsUsed + ' mo used · ' : ''}${list(u.images).length} photo${list(u.images).length === 1 ? '' : 's'}${sold ? ` · sold ${ago(u.soldAt)}` : ''}${!p.visible ? ' · model hidden' : ''}${marginHTML(u.price, cost)}</span></div>
         <label class="f">MRP ₹<input class="in" data-f="mrp" inputmode="numeric" value="${u.mrp ?? ''}"></label>
+        <label class="f">Bought for ₹ 🔒<input class="in" data-c="1" inputmode="numeric" value="${cost ?? ''}" title="Only owners can see this"></label>
         <label class="f">Asking ₹<input class="in" data-f="price" inputmode="numeric" value="${u.price ?? ''}"></label>
         <div class="f">${sold ? '<span class="pill red">Sold</span>' : '<span class="pill g">Available</span>'}</div>
         <div class="acts">
@@ -465,9 +542,16 @@ function wireUsed() {
   $$('.r[data-id]').forEach(row => {
     const id = row.dataset.id;
     row.querySelectorAll('input[data-f]').forEach(inp => inp.addEventListener('change', () => save(`catalog/used/${id}`, { [inp.dataset.f]: num(inp.value) })));
-    row.querySelector('[data-act="sold"]').onclick = () => {
+    const ci = row.querySelector('input[data-c]');
+    if (ci) ci.addEventListener('change', () => { const v = num(ci.value); if (v === null && ci.value.trim()) return toast('Numbers only', true); saveCost('used', id, v); });
+    row.querySelector('[data-act="sold"]').onclick = async () => {
       const sold = C.used[id].status === 'sold';
-      save(`catalog/used/${id}`, sold ? { status: 'available', soldAt: null } : { status: 'sold', soldAt: Date.now() }, sold ? 'Back to available' : 'Marked sold');
+      if (!sold) return askSale([{ productId: C.used[id].productId, usedId: id, qty: 1 }], rec => save(`catalog/used/${id}`, { status: 'sold', soldAt: Date.now() }, rec ? 'Sold and recorded' : 'Marked sold'));
+      const linked = Object.entries(S).filter(([, x]) => x.usedId === id);
+      if (linked.length && !(await confirmBox('Undo this sale?', `The unit goes back to available and its recorded sale (${inr(linked[0][1].price)}) is removed from Margins.`, 'Undo sale'))) return;
+      const upd = { [`catalog/used/${id}/status`]: 'available', [`catalog/used/${id}/soldAt`]: null };
+      linked.forEach(([k]) => upd[`private/sales/${k}`] = null);
+      try { await update(ref(db), upd); toast('Back to available'); } catch (e) { toast(e.code || e.message, true); }
     };
     row.querySelector('[data-act="vis"]').onchange = e => save(`catalog/used/${id}`, { visible: e.target.checked });
     row.querySelector('[data-act="edit"]').onclick = () => editUsed(id);
@@ -485,6 +569,7 @@ function editUsed(id) {
     <div class="fld c2"><label>Grip</label><select class="in" name="gripReplaced"><option value="">Original</option><option value="1" ${u.gripReplaced ? 'selected' : ''}>Replaced</option></select></div>
     <div class="fld c3"><label>Original MRP ₹</label><input class="in" name="mrp" id="ufMrp" inputmode="numeric" value="${u.mrp ?? ''}"></div>
     <div class="fld c3"><label>Asking price ₹</label><input class="in" name="price" inputmode="numeric" value="${u.price ?? ''}"></div>
+    <div class="fld c3"><label>Bought for ₹ 🔒 (owners only)</label><input class="in" name="cost" inputmode="numeric" value="${(id && K.used[id]) ?? ''}"></div>
     <div class="legend">Condition notes</div>
     ${[['frame', 'Frame'], ['face', 'Face'], ['edge', 'Edge guard'], ['grip', 'Grip']].map(([k, l]) => `<div class="fld c3"><label>${l}</label><input class="in" name="d_${k}" maxlength="160" value="${esc(dm[k] || '')}" placeholder="e.g. no cracks, light scuffs"></div>`).join('')}
     <div class="fld c6"><label>Other notes</label><textarea class="in" name="notes" maxlength="300">${esc(u.notes || '')}</textarea></div>
@@ -515,7 +600,7 @@ function editUsed(id) {
     };
     let uid = id;
     if (!uid) { uid = 'u-' + slug(data.productId).slice(0, 40) + '-' + Date.now().toString(36); data.createdAt = Date.now(); data.status = 'available'; data.visible = true; }
-    if (await save(`catalog/used/${uid}`, data)) closeModal();
+    if (await save(`catalog/used/${uid}`, data)) { if (num(g('cost')) !== (K.used[uid] ?? null)) await saveCost('used', uid, num(g('cost'))); closeModal(); }
   };
 }
 
@@ -644,6 +729,96 @@ async function importDraft(d, quiet) {
     if (!quiet) toast(cur ? 'Updated' : (d.kind === 'used' ? 'Imported' : 'Imported (hidden)'));
     return true;
   } catch (e) { console.error(e); toast('Import failed: ' + (e.code || e.message), true); return false; }
+}
+
+/* ───────── MARGINS (cost vs profit over time) ───────── */
+const PERIODS = [['month', 'This month'], ['3m', 'Last 3 months'], ['year', 'This year'], ['all', 'All time']];
+function periodStart(k) { const d = new Date(); if (k === 'month') return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); if (k === '3m') return new Date(d.getFullYear(), d.getMonth() - 2, 1).getTime(); if (k === 'year') return new Date(d.getFullYear(), 0, 1).getTime(); return 0; }
+const pctTxt = (a, b) => b > 0 ? Math.round(a / b * 100) + '%' : '—';
+function agg(rows) {
+  const o = { units: 0, rev: 0, revC: 0, cost: 0, n: 0, noCost: 0 };
+  rows.forEach(x => { const q = Number(x.qty) || 0, r = q * (Number(x.price) || 0); o.units += q; o.rev += r; o.n++; if (x.cost === null || x.cost === undefined) o.noCost++; else { o.revC += r; o.cost += q * Number(x.cost); } });
+  o.profit = o.revC - o.cost; return o;
+}
+function group(rows, keyFn) { const m = new Map(); rows.forEach(x => { const k = keyFn(x); if (!m.has(k)) m.set(k, []); m.get(k).push(x); }); return [...m.entries()].map(([k, v]) => [k, agg(v)]); }
+function aggTable(head, rows, maxProfit) {
+  return `<table class="mt"><thead><tr><th>${head}</th><th>Units</th><th>Revenue</th><th>Cost</th><th>Profit</th><th>Margin</th></tr></thead><tbody>${rows.map(([k, a]) => `<tr><td>${k}</td><td>${a.units}</td><td>${inr(a.rev)}</td><td>${a.cost ? inr(a.cost) : '—'}</td>
+    <td><div class="pb"><span style="width:${maxProfit > 0 ? Math.max(0, a.profit) / maxProfit * 100 : 0}%"></span><b class="${a.profit < 0 ? 'neg' : ''}">${a.revC ? inr(a.profit) : '—'}</b></div></td><td>${pctTxt(a.profit, a.revC)}${a.noCost ? ` <span class="hint" title="${a.noCost} sale(s) without a buying price">*</span>` : ''}</td></tr>`).join('')}</tbody></table>`;
+}
+function marHTML() {
+  const from = periodStart(UI.mPeriod);
+  const all = Object.entries(S).map(([k, x]) => ({ key: k, ...x })).sort((a, b) => (b.at || 0) - (a.at || 0));
+  const rows = all.filter(x => (x.at || 0) >= from);
+  const t = agg(rows);
+  const mkey = x => { const d = new Date(x.at); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+  const months = group(rows, mkey).sort((a, b) => b[0].localeCompare(a[0])).map(([k, a]) => [new Date(k + '-01T12:00').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }), a]);
+  const cats = group(rows, x => catName(x.categoryId)).sort((a, b) => b[1].profit - a[1].profit || b[1].rev - a[1].rev);
+  const prods = group(rows, x => x.kind === 'used' ? (x.title || '') : (C.products[x.productId] ? productTitle(C.products[x.productId]) : x.title || x.productId)).sort((a, b) => b[1].profit - a[1].profit || b[1].rev - a[1].rev).slice(0, 15);
+  const maxP = arr => Math.max(0, ...arr.map(([, a]) => a.profit));
+  // stock on hand
+  let su = 0, sCost = 0, sRetail = 0, sRetailC = 0, missing = [];
+  Object.entries(C.products).forEach(([id, p]) => { const n = newStock(p); if (!(n > 0)) return; su += n; sRetail += n * (Number(p.price) || 0); const c = K.products[id]; if (c > 0) { sCost += n * c; sRetailC += n * (Number(p.price) || 0); } else missing.push(productTitle(p)); });
+  Object.entries(C.used).forEach(([id, u]) => { if (u.status === 'sold') return; su += 1; sRetail += Number(u.price) || 0; const c = K.used[id]; if (c > 0) { sCost += c; sRetailC += Number(u.price) || 0; } else missing.push('Pre-owned ' + productTitle(C.products[u.productId] || {})); });
+  return `<div class="toolbar"><h2>Margins</h2>
+    <select class="in" id="mPeriod">${PERIODS.map(([k, l]) => `<option value="${k}" ${UI.mPeriod === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+    <button class="btn" id="mSale">+ Record a sale</button><button class="btn" id="mCsv" ${all.length ? '' : 'disabled'}>Download CSV</button></div>
+    <p class="hint" style="margin-bottom:12px">🔒 Owners only. Sales are logged here when you lower stock or mark a pre-owned racket sold, and you choose "Record sale". Zoho POS is still the official record; this is for margin analysis.</p>
+    <div class="tiles">
+      <div class="tile"><span>Revenue</span><b>${inr(t.rev)}</b><small>${t.units} unit${t.units === 1 ? '' : 's'} · ${t.n} sale${t.n === 1 ? '' : 's'}</small></div>
+      <div class="tile"><span>Cost of goods</span><b>${inr(t.cost)}</b><small>${t.noCost ? `${t.noCost} sale${t.noCost === 1 ? '' : 's'} missing buying price` : 'all sales costed'}</small></div>
+      <div class="tile"><span>Gross profit</span><b class="${t.profit < 0 ? 'neg' : 'pos'}">${inr(t.profit)}</b><small>on costed sales</small></div>
+      <div class="tile"><span>Margin</span><b>${pctTxt(t.profit, t.revC)}</b><small>profit ÷ revenue</small></div>
+    </div>
+    ${!rows.length ? `<div class="empty" style="margin-top:14px"><h3>No sales recorded${UI.mPeriod === 'all' ? ' yet' : ' in this period'}</h3><p>When you sell something, lower its stock in Inventory (or tap Mark sold on a pre-owned racket) and choose <b>Record sale</b>.</p></div>` : `
+    <div class="mgrid">
+      <section><h3 class="mh">By month</h3>${aggTable('Month', months, maxP(months))}</section>
+      <section><h3 class="mh">By category</h3>${aggTable('Category', cats, maxP(cats))}</section>
+    </div>
+    <section><h3 class="mh">By product <span class="hint">(top 15 by profit)</span></h3>${aggTable('Product', prods.map(([k, a]) => [esc(k), a]), maxP(prods))}</section>`}
+    <section><h3 class="mh">Stock on hand <span class="hint">(right now)</span></h3>
+      <div class="tiles">
+        <div class="tile"><span>Units in stock</span><b>${su}</b><small>new + pre-owned</small></div>
+        <div class="tile"><span>Value at buying price</span><b>${inr(sCost)}</b><small>what it cost you</small></div>
+        <div class="tile"><span>Value at club price</span><b>${inr(sRetail)}</b><small>if it all sells</small></div>
+        <div class="tile"><span>Potential profit</span><b class="pos">${inr(sRetailC - sCost)}</b><small>${pctTxt(sRetailC - sCost, sRetailC)} margin on costed stock</small></div>
+      </div>
+      ${missing.length ? `<p class="hint" style="margin-top:8px;color:var(--yellow)">No buying price yet for ${missing.length} item${missing.length === 1 ? '' : 's'} in stock: ${missing.slice(0, 8).map(esc).join(', ')}${missing.length > 8 ? '…' : ''}</p>` : ''}
+    </section>
+    ${rows.length ? `<section><h3 class="mh">Sales log</h3><table class="mt"><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Sold at</th><th>Bought at</th><th>Profit</th><th></th></tr></thead><tbody>
+      ${rows.map(x => { const pr = x.cost === null || x.cost === undefined ? null : (x.price - x.cost) * x.qty; return `<tr><td>${new Date(x.at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })}</td><td>${esc(x.title || x.productId)}</td><td>${x.qty}</td><td>${inr(x.price)}</td><td>${x.cost === null || x.cost === undefined ? '<span class="hint">—</span>' : inr(x.cost)}</td><td class="${pr < 0 ? 'neg' : ''}">${pr === null ? '—' : inr(pr)}</td><td><button class="btn sm" data-edit="${esc(x.key)}">Edit</button> <button class="btn sm danger" data-del="${esc(x.key)}">✕</button></td></tr>`; }).join('')}
+    </tbody></table></section>` : ''}`;
+}
+function wireMar() {
+  $('#mPeriod').onchange = e => { UI.mPeriod = e.target.value; render(); };
+  $('#mCsv').onclick = () => {
+    const head = ['Date', 'Item', 'Type', 'Category', 'Qty', 'Sold at (each)', 'Bought at (each)', 'Revenue', 'Cost', 'Profit', 'Recorded by'];
+    const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = Object.values(S).sort((a, b) => a.at - b.at).map(x => { const rev = x.qty * x.price, cost = x.cost == null ? '' : x.qty * x.cost; return [new Date(x.at).toISOString().slice(0, 10), x.title, x.kind === 'used' ? 'Pre-owned' : 'New', catName(x.categoryId), x.qty, x.price, x.cost ?? '', rev, cost, cost === '' ? '' : rev - cost, x.by || ''].map(q).join(','); });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + [head.map(q).join(','), ...lines].join('\n')], { type: 'text/csv' })); a.download = `bazaar-sales-${today()}.csv`; a.click();
+  };
+  $('#mSale').onclick = () => {
+    const prods = Object.entries(C.products).filter(([, p]) => newStock(p) !== null).sort((a, b) => productTitle(a[1]).localeCompare(productTitle(b[1])));
+    openModal(`<h3>Record a sale</h3><p class="hint" style="margin-bottom:10px">For a sale you didn't log when changing stock. This doesn't change stock levels.</p>
+      <div class="fg"><div class="fld c6"><label>Item</label><select class="in" id="msP">${prods.map(([id, p]) => `<option value="${esc(id)}">${esc(productTitle(p))}</option>`).join('')}</select></div></div>
+      <div class="foot"><button class="btn" id="msNo">Cancel</button><button class="btn pri" id="msGo">Next</button></div>`, true);
+    $('#msNo').onclick = closeModal;
+    $('#msGo').onclick = () => { const id = $('#msP').value, p = C.products[id]; const vk = p.variants ? Object.keys(p.variants)[0] : null; askSale([{ productId: id, variant: vk, qty: 1 }]); };
+  };
+  $$('[data-del]').forEach(b => b.onclick = async () => {
+    const x = S[b.dataset.del];
+    if (await confirmBox('Delete this sale?', `${esc(x.title)} · ${x.qty} × ${inr(x.price)} will be removed from Margins. Stock levels don't change.`)) { try { await remove(ref(db, `private/sales/${b.dataset.del}`)); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); } }
+  });
+  $$('[data-edit]').forEach(b => b.onclick = () => {
+    const k = b.dataset.edit, x = S[k];
+    openModal(`<h3>Edit sale</h3><p class="hint" style="margin-bottom:10px">${esc(x.title)}</p>
+      <div class="fg"><div class="fld c2"><label>Qty</label><input class="in" id="esQ" inputmode="numeric" value="${x.qty}"></div>
+      <div class="fld c2"><label>Sold at ₹ (each)</label><input class="in" id="esP" inputmode="numeric" value="${x.price}"></div>
+      <div class="fld c2"><label>Bought at ₹ (each)</label><input class="in" id="esC" inputmode="numeric" value="${x.cost ?? ''}"></div>
+      <div class="fld c2"><label>Date</label><input class="in" id="esD" type="date" value="${new Date(x.at - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10)}"></div></div>
+      <div class="foot"><button class="btn" id="esNo">Cancel</button><button class="btn pri" id="esGo">Save</button></div>`, true);
+    $('#esNo').onclick = closeModal;
+    $('#esGo').onclick = async () => { const qty = num($('#esQ').value), price = num($('#esP').value); if (!(qty > 0) || price === null) return toast('Qty and price needed', true); if (await save(`private/sales/${k}`, { qty, price, cost: num($('#esC').value), at: dayToTs($('#esD').value) })) closeModal(); };
+  });
 }
 
 /* ───────── CATEGORIES ───────── */
