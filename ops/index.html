@@ -1302,7 +1302,7 @@ function reconCard(a, b) {
   if (!APP.length) return `<div class="grid" style="margin-bottom:16px">${head}<div class="empty">No bookings have been entered in the desk app yet. This check starts the day the front desk begins using it.</div></div></div>`;
   const appStart = APP.map(x => x.date).sort()[0], from = a > appStart ? a : appStart;
   if (from > b) return `<div class="grid" style="margin-bottom:16px">${head}<div class="empty">The desk app started on ${fd(appStart)}, after this period.</div></div></div>`;
-  const apps = APP.filter(x => x.date >= from && x.date <= b && x.status !== 'cancelled');
+  const apps = APP.filter(x => x.date >= from && x.date <= b && x.status !== 'cancelled' && x.status !== 'deleted');
   const sheet = BK.filter(x => x.date >= from && x.date <= b && x.played);
   const used = new Set(), pairs = [], appOnly = [];
   for (const e of apps.sort((p, q) => p.date.localeCompare(q.date) || p.start - q.start)) {
@@ -1391,7 +1391,7 @@ async function load(isRefresh) {
   try {
     const [bs, ms, es] = await Promise.all([get(ref(db, 'sheetBookings')), get(ref(db, 'meta/sync')), get(ref(db, 'entries')).catch(() => null)]);
     META = ms.val(); prep(bs.val());
-    APP = Object.values((es && es.val()) || {}).filter(x => x && x.date);
+    APP = Object.values((es && es.val()) || {}).filter(x => x && x.date && x.status !== 'deleted');
     dayISO = store.get('day', null); if (!isRefresh || !dayISO) dayISO = LAST;
     $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden');
     banners(); render();

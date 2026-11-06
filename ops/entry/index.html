@@ -254,6 +254,9 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 .modal-table .pic{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
 .modal-table .pic img{width:44px;height:44px;object-fit:cover;border-radius:8px}
 .modal-table .pic svg{width:40px;height:40px}
+.modal{position:fixed;inset:0;z-index:70;background:rgba(5,5,20,.75);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-card{width:100%;max-width:520px;background:var(--page);border:1px solid var(--crit);border-radius:16px;padding:18px 20px;max-height:92vh;overflow:auto}
+.modal-card h3{font-family:var(--head);font-weight:400;font-size:28px;letter-spacing:.04em;color:#ff9d9d}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;background:#0A0A22;border:1px solid var(--axis);border-radius:12px;padding:12px 18px;font-family:var(--ui);font-size:15px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 @media (max-width:640px){
   .top-row{padding:8px 12px;gap:8px}
@@ -513,10 +516,16 @@ function calc(e) {
 }
 
 /* ── Conflicts ── */
-function conflicts(e) {
-  const out = {};
-  for (const x of Object.values(ENTRIES)) {
-    if (!x || x.id === e.id || x.date !== e.date || x.status === 'cancelled') continue;
+const DAYCACHE = {};   // bookings for dates other than the one on screen (for clash checks)
+function ensureDay(iso) {
+  if (iso === DAYISO || DAYCACHE[iso]) return;
+  DAYCACHE[iso] = { loading: true, map: {} };
+  get(query(ref(db, 'entries'), orderByChild('date'), equalTo(iso))).then(sn => { DAYCACHE[iso] = { map: sn.val() || {} }; if (E && !E._quick && E.date === iso) renderEditor(); }).catch(() => { delete DAYCACHE[iso]; });
+}
+function conflicts(e, map) {
+  const out = {}, src = map || (e.date === DAYISO ? ENTRIES : (DAYCACHE[e.date] || {}).map || {});
+  for (const x of Object.values(src)) {
+    if (!x || x.id === e.id || x.date !== e.date || x.status === 'cancelled' || x.status === 'deleted') continue;
     if (x.start < e.start + e.minutes && e.start < x.start + x.minutes) for (const c of x.courts || []) out[c] = x;
   }
   return out;
@@ -560,7 +569,8 @@ function buildDoc(e, id, now) {
     pays: (e.pays || []).map(p => ({ id: p.id, method: p.method, amount: +p.amount || 0, payers: p.payers || [], at: p.at || now, by: p.by || USER })),
     payments: c.byMethod, paid: c.paid, status: e.status, notes: e.notes || '',
     games: (e.games || []).filter(g => g.matchId || [g.a1, g.a2, g.b1, g.b2, g.score].some(Boolean)).map(g => ({ matchId: g.matchId || null, a1: g.a1 || '', a2: g.a2 || '', b1: g.b1 || '', b2: g.b2 || '', score: g.score || '' })),
-    createdBy: e.createdBy || USER, createdAt: e.createdAt || now, updatedBy: USER, updatedAt: now
+    createdBy: e.createdBy || USER, createdAt: e.createdAt || now, updatedBy: USER, updatedAt: now,
+    ...(e.status === 'deleted' ? { deletedBy: USER, deletedAt: now, deleteReason: e.deleteReason || '' } : {})
   };
 }
 // Write a booking: used by the full editor and by quick actions on Open tabs
@@ -574,7 +584,10 @@ async function commit(e, action = 'update') {
   const mids = doc.players.filter(p => p.id).map(p => p.id);
   set(ref(clubDb, `visits/${id}`), { bookingId: id, date: doc.date, start: doc.startTime, end: doc.endTime, minutes: doc.minutes, sport: doc.sport, courts: doc.courts, type: doc.type,
     status: doc.status, players: mids, names: doc.players.map(p => p.name), updatedAt: now }).catch(() => {});
-  if (doc.type === 'open_play' && doc.sport === 'padel') {
+  if (doc.status === 'deleted') {
+    for (const g of doc.games || []) if (g.matchId) await remove(ref(clubDb, `openPlayMatches/${g.matchId}`)).catch(() => {});
+    remove(ref(clubDb, `openPlaySessions/desk-${id}`)).catch(() => {});
+  } else if (doc.type === 'open_play' && doc.sport === 'padel') {
     const st = doc.status === 'cancelled' ? 'Cancelled' : doc.status === 'no_show' ? 'Not filled' : (doc.date <= todayISO() ? 'Played' : 'Scheduled');
     set(ref(clubDb, `openPlaySessions/desk-${id}`), { id: 'desk-' + id, bookingId: id, source: 'desk', date: doc.date, time: sessTime(doc.start, doc.start + doc.minutes), start: doc.start,
       level: doc.level || '', group: doc.group || 'Community', players: doc.players.filter(p => !p.fill).map(p => p.name), fill: doc.totals.fills, status: st, note: doc.notes || '', courts: doc.courts, games: doc.games.filter(g => g.matchId).length, updatedAt: now }).catch(() => {});
@@ -632,7 +645,7 @@ function setDay(iso) {
   $('#dayPick').value = iso;
   if (unsub) unsub();
   ENTRIES = {}; renderDay();
-  unsub = onValue(query(ref(db, 'entries'), orderByChild('date'), equalTo(iso)), snap => { ENTRIES = snap.val() || {}; renderDay(); if (E && !E._quick) refresh(); },
+  unsub = onValue(query(ref(db, 'entries'), orderByChild('date'), equalTo(iso)), snap => { ENTRIES = Object.fromEntries(Object.entries(snap.val() || {}).filter(([, x]) => x && x.status !== 'deleted')); renderDay(); if (E && !E._quick) refresh(); },
     err => toast('Couldn\'t load bookings: ' + err.message, 5000));
 }
 $('#prevDay').onclick = () => setDay(addDays(DAYISO, -1));
@@ -709,8 +722,9 @@ function renderTabs() {
         <div class="brk">${lines}</div></div>`;
     }).join('') || `<div class="msg warn" style="margin:0">No players added yet. Open the booking to add who's playing.</div>`;
     const shared = Object.entries((d.items || {}).shared || {}).filter(([, q]) => q > 0);
-    return `<div class="tab ${x.sport}"><div class="th"><b data-open="${esc(x.id)}" style="cursor:pointer" title="Open booking">${esc((x.courts || []).join(' + '))} · ${hhmm(x.start)}–${hhmm(x.start + x.minutes)}</b>${live ? '<span class="chip ok">● Playing now</span>' : x.status === 'played' ? '<span class="chip info">Played</span>' : ''}</div>
-      <div class="sub">${esc((TYPES.find(y => y[0] === x.type) || ['', x.type])[1])} · ${esc((CFG.sources[x.source] || {}).label || '')} · bill ${inr(c.due)}${c.fills ? ` · ${c.fills} D&S fill-in` : ''}</div>
+    const twin = list.some(y => y.id !== x.id && y.start === x.start && (y.courts || []).some(ct => (x.courts || []).includes(ct)));
+    return `<div class="tab ${x.sport}"><div class="th"><b data-open="${esc(x.id)}" style="cursor:pointer" title="Open booking">${esc((x.courts || []).join(' + '))} · ${hhmm(x.start)}–${hhmm(x.start + x.minutes)}</b>${twin ? '<span class="chip warn">Possible duplicate</span>' : live ? '<span class="chip ok">● Playing now</span>' : x.status === 'played' ? '<span class="chip info">Played</span>' : ''}</div>
+      <div class="sub">ref …${esc(String(x.id).slice(-6))} · ${esc((TYPES.find(y => y[0] === x.type) || ['', x.type])[1])} · ${esc((CFG.sources[x.source] || {}).label || '')} · bill ${inr(c.due)}${c.fills ? ` · ${c.fills} D&S fill-in` : ''}</div>
       ${rows}
       ${shared.length ? `<div class="shared"><span>Shared:</span> ${shared.map(([k, q]) => `${q} × ${esc(itemOf(k, d).label)} (${inr((itemOf(k, d).price || 0) * q)})`).join(', ')} <span>· split ${c.per.length} ways</span></div>` : ''}
       <div class="tf"><span class="sub" style="flex:1">${c.remaining > 0.5 ? `<b style="color:#ff9d9d">${inr(c.remaining)}</b> still due` : '<b style="color:var(--goodText)">All paid</b>'}</span>
@@ -826,6 +840,7 @@ function closeEditor() { E = null; EDIT_LOCK = false; $('#sheet').classList.add(
 function timeOptions(sel) { let s = ''; for (let m = 300; m <= 1410; m += 30) s += `<option value="${m}" ${m === sel ? 'selected' : ''}>${hhmm(m)}</option>`; return s; }
 const fmtMin = m => m % 60 ? (m >= 60 ? Math.floor(m / 60) + 'h ' : '') + (m % 60) + 'm' : (m / 60) + 'h';
 function renderEditor() {
+  ensureDay(E.date);
   const e = E, c = calc(e), cf = conflicts(e), dis = EDIT_LOCK ? 'disabled' : '';
   const durs = [30, 60, 90, 120, 150, 180];
   let h = `<div class="sheet"><div class="sheet-h"><h2>${e.id ? 'BOOKING' : 'NEW BOOKING'}</h2><span class="sub">${fdw(e.date)} · ${esc(e.courts.join(' + '))} ${hhmm(e.start)}</span><div style="flex:1"></div><button class="btn btn-sm" data-act="close">Close</button></div>`;
@@ -895,6 +910,7 @@ function renderEditor() {
     <label class="f">Notes<textarea rows="2" data-f="notes" placeholder="Anything unusual about this booking" ${dis}>${esc(e.notes)}</textarea></label></div>`;
 
   if (e.sport === 'padel' && !c.isEv) h += gamesSection(e);
+  if (e.id && !EDIT_LOCK) h += `<div class="sec"><button class="btn btn-sm btn-danger" data-act="askdelete">Delete this booking…</button> <span class="sub">For duplicates or entries made by mistake. You'll be asked to confirm.</span></div>`;
   if (e.id && IS_OWNER) h += `<div class="sec"><div class="sub">Created by ${esc(e.createdBy || '—')} · last change by ${esc(e.updatedBy || '—')} ${e.updatedAt ? new Date(e.updatedAt).toLocaleString('en-IN') : ''}</div></div>`;
   h += `</div>`;
   const st = $('#sheet').scrollTop;
@@ -1023,6 +1039,13 @@ async function save() {
   SAVING = true; $('#saveBtn').disabled = true; $('#saveBtn').textContent = 'Saving…';
   const e = E, isNew = !e.id;
   try {
+    if (e.status !== 'cancelled') {
+      const fresh = (await get(query(ref(db, 'entries'), orderByChild('date'), equalTo(e.date)))).val() || {};
+      const cl = conflicts(e, fresh), hit = e.courts.filter(ct => cl[ct]);
+      if (hit.length) { const x = cl[hit[0]], who = ((x.players || []).find(p => p.booker) || (x.players || [])[0] || {}).name || 'another booking';
+        DAYCACHE[e.date] = { map: fresh };
+        throw new Error(`${hit.join(', ')} is already booked ${hhmm(x.start)}–${hhmm(x.start + x.minutes)} (${who}). Change the time or court, or open that booking instead.`); }
+    }
     if (!e.id) e.id = push(ref(db, 'entries')).key;
     let games = 0;
     if (e.sport === 'padel') { try { games = await writeGames(e, e.id); } catch (err) { toast('Games couldn\'t be saved to ratings: ' + err.message, 5000); } }
@@ -1033,8 +1056,41 @@ async function save() {
     if (e.date !== DAYISO) setDay(e.date);
     closeEditor();
   } catch (err) {
-    $('#saveErr').textContent = /permission/i.test(err.message) ? 'Not allowed: bookings older than yesterday can only be changed by an owner.' : 'Couldn\'t save: ' + err.message;
+    if (/already booked/.test(err.message)) renderEditor();
+    $('#saveErr').textContent = /permission/i.test(err.message) ? 'Not allowed: bookings older than yesterday can only be changed by an owner.' : /already booked/.test(err.message) ? err.message : 'Couldn\'t save: ' + err.message;
   } finally { SAVING = false; const b = $('#saveBtn'); if (b) { b.disabled = false; b.textContent = E ? saveLabel(calc(E)) : ''; } }
+}
+
+/* ── Delete with confirmation ── */
+function askDelete() {
+  const e = E, c = calc(e), booker = bookerOf(e) || {}, saved = ENTRIES[e.id] || (DAYCACHE[e.date] || { map: {} }).map[e.id] || e;
+  const nItems = Object.values(e.items || {}).reduce((a, m) => a + Object.values(m || {}).reduce((x, q) => x + (q > 0 ? q : 0), 0), 0);
+  const twins = Object.values(e.date === DAYISO ? ENTRIES : (DAYCACHE[e.date] || {}).map || {}).filter(x => x && x.id !== e.id && x.status !== 'deleted' && x.date === e.date && x.start === e.start && (x.courts || []).some(ct => e.courts.includes(ct)));
+  const scored = (e.games || []).filter(g => g.matchId).length;
+  const when = t => t ? new Date(t).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '—';
+  const m = document.createElement('div'); m.id = 'delModal'; m.className = 'modal';
+  m.innerHTML = `<div class="modal-card"><h3>DELETE THIS BOOKING?</h3>
+    <div class="lines" style="margin:12px 0">
+      <div class="ln"><span>Court & time</span><b>${esc(e.courts.join(' + '))} · ${fdw(e.date)} · ${hhmm(e.start)}–${hhmm(e.start + e.minutes)}</b></div>
+      <div class="ln"><span>Players</span><b style="white-space:normal;text-align:right">${esc(e.players.map(p => p.name).join(', ') || '—')}</b></div>
+      <div class="ln"><span>Items on tabs</span><b>${nItems ? nItems + ' item' + (nItems > 1 ? 's' : '') + ' · ' + inr(c.extras) : 'None'}</b></div>
+      <div class="ln"><span>Bill · paid</span><b>${inr(c.due)} · ${inr(c.paid)}</b></div>
+      <div class="ln"><span>Created</span><b>${esc(when(saved.createdAt))}${saved.createdBy ? ' · ' + esc(saved.createdBy.split('@')[0]) : ''}</b></div>
+      <div class="ln"><span>Last changed</span><b>${esc(when(saved.updatedAt))}</b></div>
+      <div class="ln"><span>Booking ref</span><b>…${esc(String(e.id).slice(-6))}</b></div></div>
+    ${twins.length ? `<div class="msg info">There ${twins.length > 1 ? 'are' : 'is'} ${twins.length} other booking${twins.length > 1 ? 's' : ''} on this court at the same time: ${twins.map(x => { const t = calc(toDraft(x)); const n = Object.values(x.items || {}).reduce((a, mm) => a + Object.values(mm || {}).reduce((y, q) => y + q, 0), 0); return `ref …${esc(String(x.id).slice(-6))} (${n} item${n === 1 ? '' : 's'}, bill ${inr(t.due)}, paid ${inr(t.paid)})`; }).join('; ')}. Make sure you're deleting the right one.</div>` : ''}
+    ${c.paid > 0.5 ? `<div class="msg warn">${inr(c.paid)} recorded as paid on this booking will be removed with it.</div>` : ''}
+    ${nItems ? `<div class="msg warn">The ${nItems} item${nItems > 1 ? 's' : ''} on this booking's tabs will be removed too.</div>` : ''}
+    ${scored ? `<div class="msg warn">${scored} scored game${scored > 1 ? 's' : ''} will be taken out of Smash Ratings.</div>` : ''}
+    <label class="f" style="margin-bottom:12px">Reason<select id="delReason"><option>Duplicate entry</option><option>Entered by mistake</option><option>Test entry</option><option>Other</option></select></label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end"><button class="btn" data-act="nodelete">Keep it</button><button class="btn btn-danger" style="border-color:var(--crit);background:rgba(224,85,85,.15)" data-act="yesdelete">Delete ${esc(e.courts.join('+'))} ${hhmm(e.start)} · ref …${esc(String(e.id).slice(-6))}</button></div></div>`;
+  $('#sheet').appendChild(m);
+}
+async function doDelete() {
+  const e = E, btn = document.querySelector('[data-act="yesdelete"]'); if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
+  const prev = e.status; e.deleteReason = ($('#delReason') || {}).value || ''; e.status = 'deleted';
+  try { await commit(e, 'delete'); toast('Booking deleted'); closeEditor(); }
+  catch (err) { e.status = prev; if (btn) { btn.disabled = false; btn.textContent = 'Delete'; } toast(/permission/i.test(err.message) ? 'Only an owner can delete bookings older than yesterday.' : 'Couldn\'t delete: ' + err.message, 4000); }
 }
 
 /* ── Events: editor and quick screens share #sheet ── */
@@ -1060,6 +1116,9 @@ $('#sheet').addEventListener('click', async ev => {
     return renderEditor();
   }
   if (d.act === 'cancelpay') { E._pay = null; return renderEditor(); }
+  if (d.act === 'askdelete') return askDelete();
+  if (d.act === 'nodelete') { const m = $('#delModal'); if (m) m.remove(); return; }
+  if (d.act === 'yesdelete') return doDelete();
   if (E._quick) return;
   if (d.act === 'close') return closeEditor();
   if (d.dur) { E.minutes = +d.dur; return renderEditor(); }
