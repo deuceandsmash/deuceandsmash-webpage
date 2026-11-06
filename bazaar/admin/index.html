@@ -324,7 +324,7 @@ function invHTML() {
       <button class="btn pri" id="addProd" ${noCats ? 'disabled' : ''}>+ Add product</button></div>
     ${noCats ? `<div class="empty"><h3>Set up categories first</h3><p>Go to <a href="#categories">Categories</a> and add the starter set.</p></div>` :
       !ps.length ? `<div class="empty"><h3>No products yet</h3><p>Products I research for you arrive in the <a href="#import">Import</a> tab. You can also add one by hand.</p></div>` :
-      `<p class="hint" style="margin-bottom:10px">Edit prices and stock right here; changes save when you leave the box. Hidden items don't show on the shop. 🔒 Buying price is stored separately and only owners can see it. When you lower stock, you'll be asked whether it was a sale so margins are tracked.</p>
+      `<p class="hint" style="margin-bottom:10px">Edit prices and stock right here; changes save when you leave the box. Hidden items don't show on the shop. 🔒 Buying price is stored separately and only owners can see it. Tap <b>Sell</b> when something sells: it records the sale (at the price you actually got) and takes it out of stock. At zero stock the shop shows "Sold out" with a Notify me button.</p>
       <div class="rows">${ps.map(([id, p]) => invRow(id, p)).join('')}</div>`}`;
 }
 const marginOf = (price, cost) => (price > 0 && cost > 0) ? { amt: price - cost, pct: Math.round((price - cost) / price * 100) } : null;
@@ -342,6 +342,7 @@ function invRow(id, p) {
     ${hasVar ? `<div class="f vsum">${vSummary(p)}<br><button class="btn sm" data-act="sizes" style="margin-top:4px">Sizes &amp; stock</button></div>`
              : `<label class="f">New stock<input class="in" data-f="stock" inputmode="numeric" placeholder="not sold new" value="${p.stock ?? ''}"></label>`}
     <div class="acts">
+      ${n !== null ? `<button class="btn sm pri" data-act="sell" ${n > 0 ? '' : 'disabled'} title="Record a sale and take it out of stock">Sell</button>` : ''}
       <button class="star ${p.featured ? 'on' : ''}" data-act="feat" title="Feature at the top">★</button>
       <label class="sw"><input type="checkbox" data-act="vis" ${p.visible ? 'checked' : ''}>${p.visible ? 'Live' : 'Hidden'}</label>
       <button class="btn sm" data-act="edit">Edit</button>
@@ -370,6 +371,7 @@ function wireInv() {
     row.querySelector('[data-act="feat"]').onclick = () => save(`catalog/products/${id}`, { featured: !C.products[id].featured });
     row.querySelector('[data-act="edit"]').onclick = () => editProduct(id);
     const sz = row.querySelector('[data-act="sizes"]'); if (sz) sz.onclick = () => editSizes(id);
+    const sl = row.querySelector('[data-act="sell"]'); if (sl) sl.onclick = () => sellItem(id);
   });
 }
 function editSizes(id) {
@@ -394,22 +396,35 @@ async function saveCost(kind, id, v) {
 const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
 const dayToTs = d => { const t = new Date(d + 'T12:00:00').getTime(); return isNaN(t) ? Date.now() : t; };
 function varLabel(p, k) { const v = p && p.variants && p.variants[k]; return v ? [v.size, v.color].filter(Boolean).join(' ') : ''; }
-/** items: [{productId, variant?, qty}] for new stock, or [{productId, usedId, qty:1}] for a pre-owned unit */
-function askSale(items, onDone) {
+/** Sell button: pick a size if needed, then record the sale AND take it out of stock in one go */
+function sellItem(id) {
+  const p = C.products[id], vs = Object.entries(p.variants || {});
+  if (!vs.length) return askSale([{ productId: id, qty: 1 }], null, { decrement: true });
+  const inStock = vs.filter(([, v]) => Number(v.stock) > 0);
+  if (inStock.length === 1) return askSale([{ productId: id, variant: inStock[0][0], qty: 1 }], null, { decrement: true });
+  openModal(`<h3>Which size sold?</h3><p class="hint" style="margin-bottom:10px">${esc(productTitle(p))}</p>
+    <div class="checks" id="sellSz">${inStock.map(([k, v]) => `<label><input type="radio" name="sz" value="${esc(k)}">${esc([v.size, v.color].filter(Boolean).join(' '))} <span class="hint">(${v.stock} left)</span></label>`).join('')}</div>
+    <div class="ferr" id="szErr"></div><div class="foot"><button class="btn" id="szNo">Cancel</button><button class="btn pri" id="szGo">Next</button></div>`, true);
+  $('#szNo').onclick = closeModal;
+  $('#szGo').onclick = () => { const k = ($('#sellSz input:checked') || {}).value; if (!k) return ($('#szErr').textContent = 'Pick the size that sold.'); askSale([{ productId: id, variant: k, qty: 1 }], null, { decrement: true }); };
+}
+/** items: [{productId, variant?, qty}] for new stock, or [{productId, usedId, qty:1}] for a pre-owned unit.
+ *  opts.decrement: also take the sold quantity out of stock (Sell button). */
+function askSale(items, onDone, opts = {}) {
   const rows = items.map((it, i) => {
     const p = C.products[it.productId] || {}, u = it.usedId ? C.used[it.usedId] : null;
     const price = u ? u.price : p.price, cost = u ? K.used[it.usedId] : K.products[it.productId];
     const label = u ? `Pre-owned ${productTitle(p)}` : productTitle(p) + (it.variant ? ` · ${varLabel(p, it.variant)}` : '');
     return `<div class="fg" data-i="${i}" style="align-items:end;margin-bottom:8px"><div class="fld c6"><b style="font-family:var(--body);font-size:16px">${esc(label)}</b></div>
       <div class="fld c2"><label>Qty sold</label><input class="in" data-s="qty" inputmode="numeric" value="${it.qty}" ${u ? 'readonly' : ''}></div>
-      <div class="fld c2"><label>Sold at ₹ (each)</label><input class="in" data-s="price" inputmode="numeric" value="${price ?? ''}"></div>
+      <div class="fld c2"><label>Sold at ₹ (each)${price ? ` <span class="hint">listed ${inr(price)}</span>` : ''}</label><input class="in" data-s="price" inputmode="numeric" value="${price ?? ''}"></div>
       <div class="fld c2"><label>Buying ₹ (each) 🔒</label><input class="in" data-s="cost" inputmode="numeric" value="${cost ?? ''}" placeholder="unknown"></div></div>`;
   }).join('');
-  openModal(`<h3>Was this a sale?</h3><p class="hint" style="margin-bottom:12px">Recording it as a sale tracks revenue and margin in the Margins tab. If you were just correcting the count, skip it.</p>
+  openModal(`<h3>${opts.decrement ? 'Record a sale' : 'Was this a sale?'}</h3><p class="hint" style="margin-bottom:12px">${opts.decrement ? 'Check the price it actually sold for (change it if you gave a discount). Saving records the sale and takes it out of stock.' : 'Recording it as a sale tracks revenue and margin in the Margins tab. If you were just correcting the count, skip it. You can change the sold price if you gave a discount.'}</p>
     ${rows}<div class="fg"><div class="fld c2"><label>Sale date</label><input class="in" id="saleDay" type="date" value="${today()}"></div></div>
     <div class="ferr" id="saleErr"></div>
-    <div class="foot"><button class="btn" id="saleNo">${items[0].usedId ? 'Mark sold without recording' : 'No, just a correction'}</button><button class="btn pri" id="saleYes">Record sale</button></div>`, true);
-  $('#saleNo').onclick = () => { closeModal(); onDone && onDone(false); };
+    <div class="foot"><button class="btn" id="saleNo">${opts.decrement ? 'Cancel' : items[0].usedId ? 'Mark sold without recording' : 'No, just a correction'}</button><button class="btn pri" id="saleYes">${opts.decrement ? 'Record sale &amp; update stock' : 'Record sale'}</button></div>`, true);
+  $('#saleNo').onclick = () => { closeModal(); if (!opts.decrement) onDone && onDone(false); };
   $('#saleYes').onclick = async () => {
     const at = dayToTs($('#saleDay').value), upd = {};
     for (const [i, it] of items.entries()) {
@@ -420,8 +435,14 @@ function askSale(items, onDone) {
       upd[`private/sales/${key}`] = { kind: it.usedId ? 'used' : 'new', productId: it.productId, usedId: it.usedId || null, variant: it.variant || null,
         title: productTitle(p) + (it.variant ? ` · ${varLabel(p, it.variant)}` : '') + (it.usedId ? ' (pre-owned)' : ''), categoryId: p.categoryId || null, qty, price, cost, at, by: (auth.currentUser || {}).email || null };
       if (cost !== null) upd[`private/cost/${it.usedId ? 'used' : 'products'}/${it.usedId || it.productId}`] = cost;
+      if (opts.decrement && !it.usedId) {
+        const have = it.variant ? Number(((p.variants || {})[it.variant] || {}).stock) || 0 : Number(p.stock) || 0;
+        if (qty > have) return ($('#saleErr').textContent = `Only ${have} in stock${it.variant ? ' in that size' : ''}.`);
+        upd[it.variant ? `catalog/products/${it.productId}/variants/${it.variant}/stock` : `catalog/products/${it.productId}/stock`] = have - qty;
+        upd[`catalog/products/${it.productId}/updatedAt`] = Date.now();
+      }
     }
-    try { await update(ref(db), upd); closeModal(); toast('Sale recorded'); onDone && onDone(true); }
+    try { await update(ref(db), upd); closeModal(); toast(opts.decrement ? 'Sold: recorded and stock updated' : 'Sale recorded'); onDone && onDone(true); }
     catch (e) { console.error(e); $('#saleErr').textContent = 'Not saved: ' + (e.code || e.message); }
   };
 }
