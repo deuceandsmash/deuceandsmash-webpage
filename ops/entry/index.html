@@ -273,6 +273,9 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
   .foot-in .tot{width:100%;justify-content:space-between}
   .foot-in .fsp{display:none}
   .foot-in .btn{flex:1}
+  .msg.dupe{margin:10px 0 4px}
+  .dupe-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .btn-del{min-width:40px;padding-left:10px;padding-right:10px}
   #saveErr{width:100%;max-width:none!important;order:-1}
   .tabs-grid{grid-template-columns:1fr}
   .thumbs{grid-template-columns:repeat(3,1fr)}
@@ -722,16 +725,19 @@ function renderTabs() {
         <div class="brk">${lines}</div></div>`;
     }).join('') || `<div class="msg warn" style="margin:0">No players added yet. Open the booking to add who's playing.</div>`;
     const shared = Object.entries((d.items || {}).shared || {}).filter(([, q]) => q > 0);
-    const twin = list.some(y => y.id !== x.id && y.start === x.start && (y.courts || []).some(ct => (x.courts || []).includes(ct)));
+    const twins = list.filter(y => y.id !== x.id && y.start < x.start + x.minutes && x.start < y.start + y.minutes && (y.courts || []).some(ct => (x.courts || []).includes(ct))), twin = twins.length > 0;
     return `<div class="tab ${x.sport}"><div class="th"><b data-open="${esc(x.id)}" style="cursor:pointer" title="Open booking">${esc((x.courts || []).join(' + '))} · ${hhmm(x.start)}–${hhmm(x.start + x.minutes)}</b>${twin ? '<span class="chip warn">Possible duplicate</span>' : live ? '<span class="chip ok">● Playing now</span>' : x.status === 'played' ? '<span class="chip info">Played</span>' : ''}</div>
       <div class="sub">ref …${esc(String(x.id).slice(-6))} · ${esc((TYPES.find(y => y[0] === x.type) || ['', x.type])[1])} · ${esc((CFG.sources[x.source] || {}).label || '')} · bill ${inr(c.due)}${c.fills ? ` · ${c.fills} D&S fill-in` : ''}</div>
+      ${twin ? `<div class="msg warn dupe">Same court and time as ${twins.map(y => 'ref …' + esc(String(y.id).slice(-6))).join(', ')}. If one was entered twice, delete it. If the court or time is wrong, edit it.
+        <div class="dupe-acts"><button class="btn btn-sm" data-open="${esc(x.id)}">Edit court / time</button><button class="btn btn-sm btn-danger" data-qdel="${esc(x.id)}">Delete ref …${esc(String(x.id).slice(-6))}</button></div></div>` : ''}
       ${rows}
       ${shared.length ? `<div class="shared"><span>Shared:</span> ${shared.map(([k, q]) => `${q} × ${esc(itemOf(k, d).label)} (${inr((itemOf(k, d).price || 0) * q)})`).join(', ')} <span>· split ${c.per.length} ways</span></div>` : ''}
       <div class="tf"><span class="sub" style="flex:1">${c.remaining > 0.5 ? `<b style="color:#ff9d9d">${inr(c.remaining)}</b> still due` : '<b style="color:var(--goodText)">All paid</b>'}</span>
         <button class="btn btn-sm" data-qadd="${esc(x.id)}" data-p="shared">+ Shared</button>
         ${c.remaining > 0.5 ? `<button class="btn btn-sm" data-qpay="${esc(x.id)}" data-p="*">${c.per.length > 1 ? 'Pay all' : 'Pay'}</button>` : ''}
         ${x.status === 'booked' ? `<button class="btn btn-sm" data-qplayed="${esc(x.id)}">Mark played</button>` : ''}
-        <button class="btn btn-sm btn-ghost" data-open="${esc(x.id)}">Open</button></div></div>`;
+        <button class="btn btn-sm btn-ghost" data-open="${esc(x.id)}">Edit</button>
+        <button class="btn btn-sm btn-ghost btn-del" data-qdel="${esc(x.id)}" title="Delete this booking (asks to confirm)" aria-label="Delete booking">🗑</button></div></div>`;
   }).join('')}</div>`;
 }
 $('#viewTabs').addEventListener('click', async ev => {
@@ -739,6 +745,7 @@ $('#viewTabs').addEventListener('click', async ev => {
   const b = ev.target.closest('button'); if (!b || b.disabled) return;
   if (b.dataset.open) return openEditor(ENTRIES[b.dataset.open]);
   if (b.dataset.openp) return openEditor(ENTRIES[b.dataset.openp], {}, b.dataset.p);
+  if (b.dataset.qdel) { const x = ENTRIES[b.dataset.qdel]; if (!x) return; if (lockedFor(toDraft(x))) return toast('Only an owner can delete bookings older than yesterday.'); openEditor(x); E._fromCard = true; return askDelete(); }
   if (b.dataset.qadd) return quickItems(ENTRIES[b.dataset.qadd], b.dataset.p);
   if (b.dataset.qpay) return quickPay(ENTRIES[b.dataset.qpay], b.dataset.p);
   if (b.dataset.qplayed) {
@@ -1117,7 +1124,7 @@ $('#sheet').addEventListener('click', async ev => {
   }
   if (d.act === 'cancelpay') { E._pay = null; return renderEditor(); }
   if (d.act === 'askdelete') return askDelete();
-  if (d.act === 'nodelete') { const m = $('#delModal'); if (m) m.remove(); return; }
+  if (d.act === 'nodelete') { if (E._fromCard) return closeEditor(); const m = $('#delModal'); if (m) m.remove(); return; }
   if (d.act === 'yesdelete') return doDelete();
   if (E._quick) return;
   if (d.act === 'close') return closeEditor();
