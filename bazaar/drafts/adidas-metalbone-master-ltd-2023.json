@@ -1,7 +1,7 @@
 {
  "kind": "product",
  "id": "adidas-metalbone-master-ltd-2023",
- "rev": 1,
+ "rev": 2,
  "data": {
   "brand": "adidas",
   "model": "Metalbone Master LTD",
@@ -121,7 +121,7 @@
    "Power",
    "2023"
   ],
-  "clubTake": "Pre-owned unit in excellent condition. Ale Galán-level spec at a fraction of the new price.",
+  "clubTake": "Bazaar Resale: pre-loved, in excellent condition. Ale Galán-level spec at a fraction of the new price.",
   "images": [
    "/bazaar/img/adidas-metalbone-master-ltd-2023/1.webp",
    "/bazaar/img/adidas-metalbone-master-ltd-2023/2.webp",

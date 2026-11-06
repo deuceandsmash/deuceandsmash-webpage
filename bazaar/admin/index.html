@@ -40,8 +40,11 @@ a{color:var(--blueText)}
 /* top */
 header.top{position:sticky;top:0;z-index:20;background:rgba(14,14,44,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
 .top-row{display:flex;align-items:center;gap:10px;padding:10px 0;flex-wrap:wrap}
-.brand{font-family:var(--head);font-size:28px;letter-spacing:.05em;line-height:1}
-.brand b{color:var(--yellow);font-weight:400}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand img{height:30px;width:auto}
+.wm-s{height:26px;width:89px;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+.wm-g{display:block;width:200px;height:auto;margin:6px auto 0}
+.gate-box h1.adm{font-size:20px;letter-spacing:.3em;color:var(--muted);margin-top:4px}
 .who{color:var(--muted);font-size:13px;margin-left:auto}
 .tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
 .tabs a{flex:none;text-decoration:none;color:var(--text2);font-family:var(--body);font-weight:600;font-size:16px;letter-spacing:.03em;text-transform:uppercase;padding:6px 13px;border-radius:999px}
@@ -162,7 +165,8 @@ table.mt tr:last-child td{border-bottom:0}
 <section class="gate" id="gate">
   <div class="gate-box">
     <img src="/bazaar/img/logo.webp" alt="Deuce & Smash">
-    <h1>Bazaar Admin</h1>
+    <svg class="wm-g" viewBox="0 0 252 74" role="img" aria-label="Bazaar"><defs><linearGradient id="gLime" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBEA58"/><stop offset=".5" stop-color="#D4D63A"/><stop offset="1" stop-color="#AAC22A"/></linearGradient><linearGradient id="gBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B5E0FA"/><stop offset=".5" stop-color="#5D9DEE"/><stop offset="1" stop-color="#1752E7"/></linearGradient></defs><text x="126" y="72" text-anchor="middle" font-family="'Bebas Neue', Impact, sans-serif" font-size="100" textLength="248" lengthAdjust="spacingAndGlyphs" stroke-width="2.2" stroke-linejoin="round"><tspan fill="url(#gLime)" stroke="url(#gLime)">BAZ</tspan><tspan fill="url(#gBlue)" stroke="url(#gBlue)">AAR</tspan></text></svg>
+    <h1 class="adm">Admin</h1>
     <p>Owners only. Sign in with your Google account.</p>
     <div id="gateBody"><div class="spinner"></div></div>
     <div class="gate-msg" id="gateMsg"></div>
@@ -173,14 +177,14 @@ table.mt tr:last-child td{border-bottom:0}
   <header class="top">
     <div class="wrap">
       <div class="top-row">
-        <div class="brand">D<b>&amp;</b>S BAZAAR</div>
+        <a class="brand" href="#inventory" aria-label="Bazaar admin"><img src="/bazaar/img/logo.webp" alt="Deuce &amp; Smash"><svg class="wm-s" viewBox="0 0 252 74" role="img" aria-label="Bazaar"><defs><linearGradient id="gLimeH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBEA58"/><stop offset=".5" stop-color="#D4D63A"/><stop offset="1" stop-color="#AAC22A"/></linearGradient><linearGradient id="gBlueH" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B5E0FA"/><stop offset=".5" stop-color="#5D9DEE"/><stop offset="1" stop-color="#1752E7"/></linearGradient></defs><text x="126" y="72" text-anchor="middle" font-family="'Bebas Neue', Impact, sans-serif" font-size="100" textLength="248" lengthAdjust="spacingAndGlyphs" stroke-width="2.2" stroke-linejoin="round"><tspan fill="url(#gLimeH)" stroke="url(#gLimeH)">BAZ</tspan><tspan fill="url(#gBlueH)" stroke="url(#gBlueH)">AAR</tspan></text></svg></a>
         <a class="btn sm" href="/bazaar/" target="_blank" rel="noopener">View shop ↗</a>
         <span class="who" id="who"></span>
         <button class="btn sm" id="signOutBtn">Sign out</button>
       </div>
       <nav class="tabs" id="tabs">
         <a href="#inventory" data-tab="inventory">Inventory</a>
-        <a href="#used" data-tab="used">Pre-owned</a>
+        <a href="#used" data-tab="used">Bazaar Resale</a>
         <a href="#requests" data-tab="requests">Requests<span class="n hidden" id="nReq"></span></a>
         <a href="#import" data-tab="import">Import<span class="n hidden" id="nImp"></span></a>
         <a href="#margins" data-tab="margins">Margins</a>
@@ -335,7 +339,7 @@ function invRow(id, p) {
   const d = discount(p.mrp, p.price), cost = K.products[id];
   return `<div class="r ${p.visible ? '' : 'off'}" data-id="${esc(id)}">
     ${thumb(list(p.images)[0])}
-    <div class="t"><b>${esc(productTitle(p))}</b><span>${esc(catName(p.categoryId))}${usedN ? ` · ${usedN} pre-owned` : ''}${s ? ` · ${s.text}` : ' · not sold new'}${d ? ` · ${d}% off` : ''}${n !== null ? marginHTML(p.price, cost) : ''}</span></div>
+    <div class="t"><b>${esc(productTitle(p))}</b><span>${esc(catName(p.categoryId))}${usedN ? ` · ${usedN} pre-loved` : ''}${s ? ` · ${s.text}` : ' · not sold new'}${d ? ` · ${d}% off` : ''}${n !== null ? marginHTML(p.price, cost) : ''}</span></div>
     <label class="f">MRP ₹<input class="in" data-f="mrp" inputmode="numeric" value="${p.mrp ?? ''}"></label>
     <label class="f">Buying ₹ 🔒<input class="in" data-c="1" inputmode="numeric" value="${cost ?? ''}" title="Only owners can see this"></label>
     <label class="f">Club price ₹<input class="in" data-f="price" inputmode="numeric" value="${p.price ?? ''}"></label>
@@ -408,13 +412,13 @@ function sellItem(id) {
   $('#szNo').onclick = closeModal;
   $('#szGo').onclick = () => { const k = ($('#sellSz input:checked') || {}).value; if (!k) return ($('#szErr').textContent = 'Pick the size that sold.'); askSale([{ productId: id, variant: k, qty: 1 }], null, { decrement: true }); };
 }
-/** items: [{productId, variant?, qty}] for new stock, or [{productId, usedId, qty:1}] for a pre-owned unit.
+/** items: [{productId, variant?, qty}] for new stock, or [{productId, usedId, qty:1}] for a pre-loved racket.
  *  opts.decrement: also take the sold quantity out of stock (Sell button). */
 function askSale(items, onDone, opts = {}) {
   const rows = items.map((it, i) => {
     const p = C.products[it.productId] || {}, u = it.usedId ? C.used[it.usedId] : null;
     const price = u ? u.price : p.price, cost = u ? K.used[it.usedId] : K.products[it.productId];
-    const label = u ? `Pre-owned ${productTitle(p)}` : productTitle(p) + (it.variant ? ` · ${varLabel(p, it.variant)}` : '');
+    const label = u ? `Pre-Loved ${productTitle(p)}` : productTitle(p) + (it.variant ? ` · ${varLabel(p, it.variant)}` : '');
     return `<div class="fg" data-i="${i}" style="align-items:end;margin-bottom:8px"><div class="fld c6"><b style="font-family:var(--body);font-size:16px">${esc(label)}</b></div>
       <div class="fld c2"><label>Qty sold</label><input class="in" data-s="qty" inputmode="numeric" value="${it.qty}" ${u ? 'readonly' : ''}></div>
       <div class="fld c2"><label>Sold at ₹ (each)${price ? ` <span class="hint">listed ${inr(price)}</span>` : ''}</label><input class="in" data-s="price" inputmode="numeric" value="${price ?? ''}"></div>
@@ -433,7 +437,7 @@ function askSale(items, onDone, opts = {}) {
       const p = C.products[it.productId] || {};
       const key = push(ref(db, 'private/sales')).key;
       upd[`private/sales/${key}`] = { kind: it.usedId ? 'used' : 'new', productId: it.productId, usedId: it.usedId || null, variant: it.variant || null,
-        title: productTitle(p) + (it.variant ? ` · ${varLabel(p, it.variant)}` : '') + (it.usedId ? ' (pre-owned)' : ''), categoryId: p.categoryId || null, qty, price, cost, at, by: (auth.currentUser || {}).email || null };
+        title: productTitle(p) + (it.variant ? ` · ${varLabel(p, it.variant)}` : '') + (it.usedId ? ' (pre-loved)' : ''), categoryId: p.categoryId || null, qty, price, cost, at, by: (auth.currentUser || {}).email || null };
       if (cost !== null) upd[`private/cost/${it.usedId ? 'used' : 'products'}/${it.usedId || it.productId}`] = cost;
       if (opts.decrement && !it.usedId) {
         const have = it.variant ? Number(((p.variants || {})[it.variant] || {}).stock) || 0 : Number(p.stock) || 0;
@@ -497,7 +501,7 @@ function editProduct(id) {
   $('#pfCancel').onclick = closeModal;
   if (id) $('#pfDel').onclick = async () => {
     const units = Object.values(C.used).filter(u => u.productId === id).length;
-    if (units) return toast(`Remove its ${units} pre-owned unit(s) first`, true);
+    if (units) return toast(`Remove its ${units} pre-loved racket(s) first`, true);
     if (await confirmBox('Delete product?', `<b>${esc(productTitle(p))}</b> will be removed from the shop and admin. This can't be undone. To take it off the shop for now, use the Live switch instead.`)) {
       try { await remove(ref(db, `catalog/products/${id}`)); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); }
     }
@@ -530,16 +534,16 @@ function editProduct(id) {
   };
 }
 
-/* ───────── PRE-OWNED ───────── */
+/* ───────── BAZAAR RESALE (pre-loved) ───────── */
 function usedHTML() {
   const us = Object.entries(C.used).filter(([, u]) => UI.usedF === 'all' || (UI.usedF === 'sold' ? u.status === 'sold' : u.status !== 'sold'))
     .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
   const rackets = Object.keys(C.products).length;
-  return `<div class="toolbar"><h2>Pre-owned</h2>
+  return `<div class="toolbar"><h2>Bazaar Resale</h2>
     <select class="in" id="usedF">${[['available', 'Available'], ['sold', 'Sold'], ['all', 'All']].map(([v, l]) => `<option value="${v}" ${UI.usedF === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
-    <button class="btn pri" id="addUsed" ${rackets ? '' : 'disabled'}>+ Add pre-owned unit</button></div>
+    <button class="btn pri" id="addUsed" ${rackets ? '' : 'disabled'}>+ Add pre-loved racket</button></div>
     <p class="hint" style="margin-bottom:10px">Each unit is one physical racket. It links to its model's product page for the description. Sold units show a "Sold" badge on the shop for 14 days, then drop off.</p>
-    ${!us.length ? `<div class="empty"><h3>Nothing here</h3><p>${rackets ? 'Add a pre-owned unit, or send me its photos and details in chat.' : 'Add the model as a product first.'}</p></div>` :
+    ${!us.length ? `<div class="empty"><h3>Nothing here</h3><p>${rackets ? 'Add a pre-loved racket, or send me its photos and details in chat.' : 'Add the model as a product first.'}</p></div>` :
     `<div class="rows">${us.map(([id, u]) => {
       const p = C.products[u.productId] || {}, g = GRADES[u.grade], sold = u.status === 'sold';
       const shown = usedShown(u) && p.visible, cost = K.used[id];
@@ -582,7 +586,7 @@ function editUsed(id) {
   const u = id ? C.used[id] : { grade: 'excellent', status: 'available', visible: true };
   const prods = Object.entries(C.products).sort((a, b) => productTitle(a[1]).localeCompare(productTitle(b[1])));
   const dm = u.damage || {};
-  openModal(`<h3>${id ? 'Edit pre-owned unit' : 'Add pre-owned unit'}</h3>
+  openModal(`<h3>${id ? 'Edit pre-loved racket' : 'Add pre-loved racket'}</h3>
   <form id="uf" class="fg" autocomplete="off">
     <div class="fld c6"><label>Model</label><select class="in" name="productId" id="ufProd">${prods.map(([pid, p]) => `<option value="${esc(pid)}" ${pid === u.productId ? 'selected' : ''}>${esc(productTitle(p))}</option>`).join('')}</select></div>
     <div class="fld c2"><label>Condition</label><select class="in" name="grade">${Object.entries(GRADES).map(([k, g]) => `<option value="${k}" ${u.grade === k ? 'selected' : ''}>${g.label}</option>`).join('')}</select></div>
@@ -629,7 +633,7 @@ function editUsed(id) {
 function reqItem(r) {
   const p = C.products[r.productId];
   if (!p) return { title: r.productId + ' (removed)', p: null };
-  if (r.usedId) { const u = C.used[r.usedId]; const g = u && GRADES[u.grade]; return { title: `Pre-owned ${productTitle(p)}${g ? ' · ' + g.label : ''}${u ? ' · ' + inr(u.price) : ''}`, p, u }; }
+  if (r.usedId) { const u = C.used[r.usedId]; const g = u && GRADES[u.grade]; return { title: `Pre-Loved ${productTitle(p)}${g ? ' · ' + g.label : ''}${u ? ' · ' + inr(u.price) : ''}`, p, u }; }
   const v = r.variant && p.variants && p.variants[r.variant];
   return { title: productTitle(p) + (v ? ` · ${[v.size, v.color].filter(Boolean).join(' ')}` : ''), p, v };
 }
@@ -704,7 +708,7 @@ function impHTML() {
       const st = draftState(d), x = d.data || {}, p = d.kind === 'used' ? (C.products[x.productId] || {}) : x;
       return `<div class="draft" data-id="${esc(d.id)}">
         ${thumb(list(x.images)[0] || list(p.images)[0])}
-        <div><span class="pill ${st === 'new' ? 'y' : st === 'update' ? 'b' : ''}">${st === 'new' ? 'New' : st === 'update' ? 'Update' : 'Imported'}</span> ${d.kind === 'used' ? '<span class="pill">Pre-owned unit</span>' : ''}
+        <div><span class="pill ${st === 'new' ? 'y' : st === 'update' ? 'b' : ''}">${st === 'new' ? 'New' : st === 'update' ? 'Update' : 'Imported'}</span> ${d.kind === 'used' ? '<span class="pill">Pre-loved racket</span>' : ''}
           <div style="font-family:var(--body);font-size:18px;font-weight:700;margin-top:4px">${esc(productTitle(p) || d.id)}</div>
           <div class="hook">${esc(d.kind === 'used' ? `${(GRADES[x.grade] || {}).label || ''} · ${inr(x.price)}` : (x.hook || ''))}</div>
           ${list(d.sources).length ? `<div class="hint" style="margin-top:4px">Sources: ${list(d.sources).map((s, i) => `<a href="${esc(s)}" target="_blank" rel="noopener">${i + 1}</a>`).join(' ')}</div>` : ''}</div>
@@ -779,18 +783,18 @@ function marHTML() {
   // stock on hand
   let su = 0, sCost = 0, sRetail = 0, sRetailC = 0, missing = [];
   Object.entries(C.products).forEach(([id, p]) => { const n = newStock(p); if (!(n > 0)) return; su += n; sRetail += n * (Number(p.price) || 0); const c = K.products[id]; if (c > 0) { sCost += n * c; sRetailC += n * (Number(p.price) || 0); } else missing.push(productTitle(p)); });
-  Object.entries(C.used).forEach(([id, u]) => { if (u.status === 'sold') return; su += 1; sRetail += Number(u.price) || 0; const c = K.used[id]; if (c > 0) { sCost += c; sRetailC += Number(u.price) || 0; } else missing.push('Pre-owned ' + productTitle(C.products[u.productId] || {})); });
+  Object.entries(C.used).forEach(([id, u]) => { if (u.status === 'sold') return; su += 1; sRetail += Number(u.price) || 0; const c = K.used[id]; if (c > 0) { sCost += c; sRetailC += Number(u.price) || 0; } else missing.push('Pre-Loved ' + productTitle(C.products[u.productId] || {})); });
   return `<div class="toolbar"><h2>Margins</h2>
     <select class="in" id="mPeriod">${PERIODS.map(([k, l]) => `<option value="${k}" ${UI.mPeriod === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
     <button class="btn" id="mSale">+ Record a sale</button><button class="btn" id="mCsv" ${all.length ? '' : 'disabled'}>Download CSV</button></div>
-    <p class="hint" style="margin-bottom:12px">🔒 Owners only. Sales are logged here when you lower stock or mark a pre-owned racket sold, and you choose "Record sale". Zoho POS is still the official record; this is for margin analysis.</p>
+    <p class="hint" style="margin-bottom:12px">🔒 Owners only. Sales are logged here when you lower stock or mark a pre-loved racket sold, and you choose "Record sale". Zoho POS is still the official record; this is for margin analysis.</p>
     <div class="tiles">
       <div class="tile"><span>Revenue</span><b>${inr(t.rev)}</b><small>${t.units} unit${t.units === 1 ? '' : 's'} · ${t.n} sale${t.n === 1 ? '' : 's'}</small></div>
       <div class="tile"><span>Cost of goods</span><b>${inr(t.cost)}</b><small>${t.noCost ? `${t.noCost} sale${t.noCost === 1 ? '' : 's'} missing buying price` : 'all sales costed'}</small></div>
       <div class="tile"><span>Gross profit</span><b class="${t.profit < 0 ? 'neg' : 'pos'}">${inr(t.profit)}</b><small>on costed sales</small></div>
       <div class="tile"><span>Margin</span><b>${pctTxt(t.profit, t.revC)}</b><small>profit ÷ revenue</small></div>
     </div>
-    ${!rows.length ? `<div class="empty" style="margin-top:14px"><h3>No sales recorded${UI.mPeriod === 'all' ? ' yet' : ' in this period'}</h3><p>When you sell something, lower its stock in Inventory (or tap Mark sold on a pre-owned racket) and choose <b>Record sale</b>.</p></div>` : `
+    ${!rows.length ? `<div class="empty" style="margin-top:14px"><h3>No sales recorded${UI.mPeriod === 'all' ? ' yet' : ' in this period'}</h3><p>When you sell something, lower its stock in Inventory (or tap Mark sold on a pre-loved racket) and choose <b>Record sale</b>.</p></div>` : `
     <div class="mgrid">
       <section><h3 class="mh">By month</h3>${aggTable('Month', months, maxP(months))}</section>
       <section><h3 class="mh">By category</h3>${aggTable('Category', cats, maxP(cats))}</section>
@@ -798,7 +802,7 @@ function marHTML() {
     <section><h3 class="mh">By product <span class="hint">(top 15 by profit)</span></h3>${aggTable('Product', prods.map(([k, a]) => [esc(k), a]), maxP(prods))}</section>`}
     <section><h3 class="mh">Stock on hand <span class="hint">(right now)</span></h3>
       <div class="tiles">
-        <div class="tile"><span>Units in stock</span><b>${su}</b><small>new + pre-owned</small></div>
+        <div class="tile"><span>Units in stock</span><b>${su}</b><small>new + pre-loved</small></div>
         <div class="tile"><span>Value at buying price</span><b>${inr(sCost)}</b><small>what it cost you</small></div>
         <div class="tile"><span>Value at club price</span><b>${inr(sRetail)}</b><small>if it all sells</small></div>
         <div class="tile"><span>Potential profit</span><b class="pos">${inr(sRetailC - sCost)}</b><small>${pctTxt(sRetailC - sCost, sRetailC)} margin on costed stock</small></div>
@@ -814,7 +818,7 @@ function wireMar() {
   $('#mCsv').onclick = () => {
     const head = ['Date', 'Item', 'Type', 'Category', 'Qty', 'Sold at (each)', 'Bought at (each)', 'Revenue', 'Cost', 'Profit', 'Recorded by'];
     const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const lines = Object.values(S).sort((a, b) => a.at - b.at).map(x => { const rev = x.qty * x.price, cost = x.cost == null ? '' : x.qty * x.cost; return [new Date(x.at).toISOString().slice(0, 10), x.title, x.kind === 'used' ? 'Pre-owned' : 'New', catName(x.categoryId), x.qty, x.price, x.cost ?? '', rev, cost, cost === '' ? '' : rev - cost, x.by || ''].map(q).join(','); });
+    const lines = Object.values(S).sort((a, b) => a.at - b.at).map(x => { const rev = x.qty * x.price, cost = x.cost == null ? '' : x.qty * x.cost; return [new Date(x.at).toISOString().slice(0, 10), x.title, x.kind === 'used' ? 'Pre-Loved' : 'New', catName(x.categoryId), x.qty, x.price, x.cost ?? '', rev, cost, cost === '' ? '' : rev - cost, x.by || ''].map(q).join(','); });
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + [head.map(q).join(','), ...lines].join('\n')], { type: 'text/csv' })); a.download = `bazaar-sales-${today()}.csv`; a.click();
   };
   $('#mSale').onclick = () => {

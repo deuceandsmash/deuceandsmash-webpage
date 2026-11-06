@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Bazaar — Deuce &amp; Smash</title>
-<meta name="description" content="Rackets, paddles, balls and apparel available at Deuce & Smash, Baner, Pune. New and pre-owned. Buy at the club front desk.">
+<meta name="description" content="Rackets, paddles, balls and apparel available at Deuce & Smash, Baner, Pune. New gear and Bazaar Resale pre-loved rackets. Buy at the club front desk.">
 <meta property="og:title" content="Bazaar — Deuce & Smash">
-<meta property="og:description" content="New and pre-owned rackets, paddles, balls and apparel at the club.">
+<meta property="og:description" content="New gear and hand-picked pre-loved rackets at the club.">
 <meta property="og:image" content="https://deuceandsmash.com/bazaar/img/logo.webp">
 <meta name="theme-color" content="#0E0E2C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,7 +36,6 @@ img{display:block;max-width:100%}
 .top{padding:22px 0 6px;text-align:center}
 .top a.home{display:inline-block}
 .top img.logo{width:min(300px,70vw);height:auto;margin:0 auto}
-.bazaar{font-family:var(--head);font-size:clamp(46px,11vw,84px);line-height:.9;letter-spacing:.04em;margin-top:6px;color:var(--yellow)}
 .tag{font-family:var(--body);font-size:17px;color:var(--text2);letter-spacing:.02em;margin-top:6px}
 .tag b{color:var(--text);font-weight:600}
 
@@ -210,14 +209,47 @@ footer b{color:var(--text2)}
 .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--yellow);border-radius:50%;animation:sp 0.8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 :focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+/* wordmark */
+.wm{display:block;width:min(288px,67vw);height:auto;margin:10px auto 0;filter:drop-shadow(0 0 10px rgba(125,197,21,.18)) drop-shadow(0 2px 2px rgba(0,0,0,.45))}
+/* Bazaar Resale */
+.rs-kick{display:inline-block;font-family:var(--body);font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--page);background:linear-gradient(90deg,#FBEA58,#AAC22A);padding:3px 10px;border-radius:6px}
+.rs-teaser{display:flex;gap:14px;align-items:center;justify-content:space-between;text-decoration:none;background:linear-gradient(120deg,rgba(26,111,212,.22),rgba(125,197,21,.12));border:1px solid #33407a;border-radius:16px;padding:14px 16px;margin-bottom:16px}
+.rs-teaser b{display:block;font-family:var(--head);font-weight:400;font-size:28px;letter-spacing:.03em;line-height:1;margin:7px 0 4px}
+.rs-sub{color:var(--text2);font-size:14px}
+.rs-go{flex:none;font-family:var(--body);font-weight:700;font-size:16px;letter-spacing:.04em;text-transform:uppercase;color:var(--page);background:var(--yellow);padding:9px 14px;border-radius:10px}
+@media (max-width:560px){.rs-teaser{flex-direction:column;align-items:flex-start}}
+.resale{position:relative;overflow:hidden;background:radial-gradient(120% 140% at 100% 0%,rgba(26,111,212,.32),transparent 55%),radial-gradient(90% 120% at 0% 100%,rgba(125,197,21,.16),transparent 55%),var(--card);border:1px solid #33407a;border-radius:20px;padding:24px 22px 22px;margin-bottom:20px}
+.resale h2{font-family:var(--head);font-weight:400;font-size:clamp(40px,7vw,64px);line-height:.92;letter-spacing:.02em;margin:12px 0 10px}
+.resale h2 em{font-style:normal;background:linear-gradient(180deg,#B5E0FA,#1752E7);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rs-one{font-family:var(--body);font-size:21px;font-weight:600;color:var(--yellow);line-height:1.2;max-width:640px}
+.rs-body{max-width:760px;margin-top:14px}
+.rs-body p{color:var(--text2);font-size:15.5px;margin-bottom:10px}
+.rs-body .rs-warn{color:var(--text);font-weight:600;border-left:3px solid var(--orange);padding-left:11px}
+.rs-points{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}
+@media (max-width:900px){.rs-points{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.rs-points{grid-template-columns:minmax(0,1fr)}}
+.rs-pt{display:flex;gap:10px;background:rgba(14,14,44,.55);border:1px solid var(--line);border-radius:12px;padding:12px}
+.rs-ic{font-size:22px;line-height:1}
+.rs-pt b{display:block;font-family:var(--body);font-weight:700;font-size:17px;letter-spacing:.03em;text-transform:uppercase}
+.rs-pt p{color:var(--text2);font-size:13.5px;margin-top:2px}
+.rs-grades{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:flex-start;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.rs-gl{width:100%;font-family:var(--body);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:13px;color:var(--muted)}
+.rs-g{flex:1 1 200px;display:grid;grid-template-columns:12px 1fr;column-gap:8px;align-items:center}
+.rs-g i{width:12px;height:12px;border-radius:3px}
+.rs-g b{font-family:var(--body);font-size:16px}
+.rs-g span{grid-column:2;color:var(--muted);font-size:13px}
+.rs-wa{display:inline-flex;margin-top:18px}
+.rs-mini{background:var(--card);border:1px solid #33407a;border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px;color:var(--text2)}
+.rs-mini b{color:var(--text)}
+
 </style>
 </head>
 <body>
 
 <header class="top wrap">
   <a class="home" href="/" aria-label="Deuce & Smash home"><img class="logo" src="/bazaar/img/logo.webp" alt="Deuce & Smash" width="1200" height="268"></a>
-  <div class="bazaar">Bazaar</div>
-  <p class="tag">New &amp; pre-owned gear, hand-picked by the club. <b>See it here, buy at the front desk.</b></p>
+  <svg class="wm" viewBox="0 0 252 74" role="img" aria-label="Bazaar"><defs><linearGradient id="gLime" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBEA58"/><stop offset=".5" stop-color="#D4D63A"/><stop offset="1" stop-color="#AAC22A"/></linearGradient><linearGradient id="gBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B5E0FA"/><stop offset=".5" stop-color="#5D9DEE"/><stop offset="1" stop-color="#1752E7"/></linearGradient></defs><text x="126" y="72" text-anchor="middle" font-family="'Bebas Neue', Impact, sans-serif" font-size="100" textLength="248" lengthAdjust="spacingAndGlyphs" stroke-width="2.2" stroke-linejoin="round"><tspan fill="url(#gLime)" stroke="url(#gLime)">BAZ</tspan><tspan fill="url(#gBlue)" stroke="url(#gBlue)">AAR</tspan></text></svg>
+  <p class="tag">New &amp; pre-loved gear, hand-picked by the club. <b>See it here, buy at the front desk.</b></p>
 </header>
 
 <div class="bar list-view">
@@ -227,7 +259,7 @@ footer b{color:var(--text2)}
         <button data-v="all" class="on">All</button><button data-v="padel">Padel</button><button data-v="pickleball">Pickleball</button>
       </div>
       <div class="seg" id="condSeg">
-        <button data-v="all" class="on">All</button><button data-v="new">New</button><button data-v="used">Pre-owned</button>
+        <button data-v="all" class="on">All</button><button data-v="new">New</button><button data-v="used">Bazaar Resale</button>
       </div>
     </div>
     <div class="chips" id="catChips"></div>
@@ -332,6 +364,34 @@ function segHandler(id, key) {
   });
 }
 segHandler('#sportSeg', 'sport'); segHandler('#condSeg', 'cond');
+function setCond(v) { F.cond = v; [...$('#condSeg').children].forEach(x => x.classList.toggle('on', x.dataset.v === v)); renderList(); scrollTo({ top: $('.bar').offsetTop, behavior: 'smooth' }); }
+/* ───────── Bazaar Resale pitch ───────── */
+const RS_POINTS = [
+  ['🔍', 'Checked by hand', 'Every racket is physically inspected at the club (frame, face, edge guard and grip) before it is listed.'],
+  ['🏷️', 'Honest grades', 'Graded Like New, Excellent, Good or Fair, with notes on any marks. What you read is what you get.'],
+  ['🤝', 'Feel it first', 'Tap "Keep it ready for me to see" and pick it up at the front desk. Pay only if it feels right in your hand.'],
+  ['⏳', 'One of each', 'Every racket is a one-off. No restocks, no waiting lists. When it is gone, it is gone.']
+];
+function resaleHTML(full) {
+  const n = Object.values(C.used).filter(u => u.status !== 'sold' && usedShown(u) && (C.products[u.productId] || {}).visible).length;
+  if (!full) return n ? `<a class="rs-teaser" href="#" data-resale>
+      <div><span class="rs-kick">Bazaar Resale</span><b>Second serve. First-class rackets.</b><span class="rs-sub">Hand-picked pre-loved rackets at prices you won't see new. ${n} available right now.</span></div>
+      <span class="rs-go">Shop resale →</span></a>` : '';
+  return `<section class="resale">
+    <span class="rs-kick">Bazaar Resale</span>
+    <h2>Second serve.<br><em>First-class rackets.</em></h2>
+    <p class="rs-one">We're doing our best to bring you the best rackets at the most competitive prices.</p>
+    <div class="rs-body">
+      <p>Not every racket fits every player. Sometimes people change their mind, and we use that opportunity to source quality rackets, verify them and physically check their condition. Then we make them available exclusively to our members, so you can play with the best rackets at the best prices.</p>
+      <p>Pro-level frames you'd normally think twice about become a real option, and a racket that wasn't right for one player gets a second life with someone it suits.</p>
+      <p class="rs-warn">Every item is hand-picked, so it's available only until it's gone. Once it's gone, we can't guarantee the same racket at the same competitive price.</p>
+    </div>
+    <div class="rs-points">${RS_POINTS.map(([i, h, t]) => `<div class="rs-pt"><span class="rs-ic">${i}</span><div><b>${h}</b><p>${t}</p></div></div>`).join('')}</div>
+    <div class="rs-grades"><span class="rs-gl">How we grade</span>${Object.values(GRADES).map(g => `<div class="rs-g"><i style="background:${g.color}"></i><b>${g.label}</b><span>${esc(g.text)}</span></div>`).join('')}</div>
+    <a class="btn wa rs-wa" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent("Hi Deuce & Smash! I'm looking for a pre-loved racket from Bazaar Resale. Here's what I'm after: ")}">${WA_ICON} Looking for something specific? Tell us</a>
+  </section>`;
+}
+
 $('#catChips').addEventListener('click', e => {
   const b = e.target.closest('.chip'); if (!b) return;
   F.cat = b.dataset.v;
@@ -354,7 +414,7 @@ function cardHTML(it) {
   let badges = '', status = '';
   if (it.kind === 'used') {
     const g = GRADES[it.u.grade];
-    badges += `<span class="bdg used" style="box-shadow:inset 3px 0 0 ${g ? g.color : '#999'}">Pre-owned${g ? ' · ' + g.label : ''}</span>`;
+    badges += `<span class="bdg used" style="box-shadow:inset 3px 0 0 ${g ? g.color : '#999'}">Pre-Loved${g ? ' · ' + g.label : ''}</span>`;
     if (it.sold) badges += `<span class="bdg sold">Sold</span>`;
     status = it.sold ? `<span class="stk out">Sold</span>` : `<span class="stk in">1 available</span>`;
   } else {
@@ -380,8 +440,9 @@ function renderList() {
     return;
   }
   $('#listView').innerHTML = its.length
-    ? `<div class="count">${its.length} item${its.length === 1 ? '' : 's'}</div><div class="grid">${its.map(cardHTML).join('')}</div>`
-    : `<div class="empty"><h3>Nothing matches</h3><p>Try a different filter.</p></div>`;
+    ? `${F.cond === 'used' ? resaleHTML(true) : F.cond === 'all' && F.cat === 'all' && !F.q ? resaleHTML(false) : ''}<div class="count">${its.length} item${its.length === 1 ? '' : 's'}</div><div class="grid">${its.map(cardHTML).join('')}</div>`
+    : `${F.cond === 'used' ? resaleHTML(true) : ''}<div class="empty"><h3>${F.cond === 'used' ? 'New resale rackets landing soon' : 'Nothing matches'}</h3><p>${F.cond === 'used' ? 'Every resale racket is a one-off, and the last batch has gone. Message us on WhatsApp and we\'ll tell you when the next ones arrive.' : 'Try a different filter.'}</p></div>`;
+  document.querySelectorAll('[data-resale]').forEach(a => a.onclick = e => { e.preventDefault(); setCond('used'); });
 }
 
 /* ───────── detail ───────── */
@@ -454,12 +515,12 @@ function renderProduct(id) {
         <div class="d-brand">${esc(p.brand || '')}${cat(p).name ? ' · ' + esc(cat(p).name) : ''}${p.year ? ' · ' + esc(p.year) : ''}</div>
         <h1 class="d-name">${esc(p.model || '')}</h1>
         ${p.hook ? `<p class="hook">${esc(p.hook)}</p>` : ''}
-        ${n !== null ? `${priceHTML(p.price, p.mrp, 'd-price')}<span class="stk ${s.cls}">${s.text}${vSel ? ` in ${esc(vLabel(vSel))}` : ''}</span>` : `<p class="note" style="margin-top:14px">Not stocked new right now. See pre-owned below.</p>`}
+        ${n !== null ? `${priceHTML(p.price, p.mrp, 'd-price')}<span class="stk ${s.cls}">${s.text}${vSel ? ` in ${esc(vLabel(vSel))}` : ''}</span>` : `<p class="note" style="margin-top:14px">Not stocked new right now. See Bazaar Resale below.</p>`}
         ${vars.length ? `<div class="sizes" id="sizes">${vars.map(v => `<button class="size ${v.key === sel.variant ? 'on' : ''} ${v.stock > 0 ? '' : 'out'}" data-k="${esc(v.key)}">${esc(v.size || v.color)}${v.size && v.color ? `<small>${esc(v.color)}</small>` : ''}</button>`).join('')}</div>` : ''}
         ${n !== null ? ctaHTML({ title, label: vSel ? vLabel(vSel) : '', available }) : ''}
-        ${units.length ? `<div class="sec"><h3>Pre-owned</h3><div class="units">${units.map(([uid, u]) => {
+        ${units.length ? `<div class="sec"><h3>Bazaar Resale · Pre-Loved</h3><div class="units">${units.map(([uid, u]) => {
           const g = GRADES[u.grade]; const img = list(u.images)[0] || list(p.images)[0];
-          return `<a class="unit" href="#/u/${encodeURIComponent(uid)}">${img ? `<img src="${esc(img)}" alt="">` : ''}<div class="u-m"><div class="name" style="font-size:17px">${g ? g.label : 'Pre-owned'}${u.status === 'sold' ? ' · Sold' : ''}</div><div class="note">${u.monthsUsed ? `${u.monthsUsed} month${u.monthsUsed == 1 ? '' : 's'} used` : ''}</div></div><div class="u-p">${inr(u.price)}</div></a>`;
+          return `<a class="unit" href="#/u/${encodeURIComponent(uid)}">${img ? `<img src="${esc(img)}" alt="">` : ''}<div class="u-m"><div class="name" style="font-size:17px">${g ? g.label : 'Pre-Loved'}${u.status === 'sold' ? ' · Sold' : ''}</div><div class="note">${u.monthsUsed ? `${u.monthsUsed} month${u.monthsUsed == 1 ? '' : 's'} used` : ''}</div></div><div class="u-p">${inr(u.price)}</div></a>`;
         }).join('')}</div></div>` : ''}
         ${contentHTML(p)}
       </div>
@@ -479,26 +540,27 @@ function renderUsed(uid) {
   const imgs = list(u.images).length ? list(u.images) : list(p.images);
   const mrp = u.mrp ?? p.mrp, dmg = u.damage || {};
   const dmgRows = [['Frame', dmg.frame], ['Face', dmg.face], ['Edge guard', dmg.edge], ['Grip', dmg.grip]].filter(([, v]) => v);
-  document.title = `Pre-owned ${title} — Bazaar — Deuce & Smash`;
+  document.title = `Pre-Loved ${title} — Bazaar Resale — Deuce & Smash`;
   $('#detailView').innerHTML = `
     <a class="back" href="#/">← All gear</a>
     <div class="d-grid">
       ${gallery(imgs, !!list(u.images).length)}
       <div>
-        <div class="d-brand">Pre-owned · ${esc(p.brand || '')}${p.year ? ' · ' + esc(p.year) : ''}</div>
+        <div class="d-brand">Bazaar Resale · Pre-Loved · ${esc(p.brand || '')}${p.year ? ' · ' + esc(p.year) : ''}</div>
         <h1 class="d-name">${esc(p.model || '')}</h1>
         ${p.hook ? `<p class="hook">${esc(p.hook)}</p>` : ''}
         ${priceHTML(u.price, mrp, 'd-price', true)}
         ${mrp > 0 ? `<p class="note">Price when new: ${inr(mrp)}</p>` : ''}
         ${g ? `<div class="grade"><span class="g" style="background:${g.color}">${g.label}</span><p>${esc(g.text)}</p></div>` : ''}
+        <div class="rs-mini"><b>Bazaar Resale:</b> hand-picked, physically checked by the club and offered to members only. This is the only one, so once it's gone, it's gone. <a href="#/resale">How it works</a></div>
         <div class="facts">
           ${u.monthsUsed ? `<div class="fact"><span>Used for</span><b>${esc(u.monthsUsed)} month${u.monthsUsed == 1 ? '' : 's'}</b></div>` : ''}
           <div class="fact"><span>Grip</span><b>${u.gripReplaced ? 'Replaced, fresh' : 'Original'}</b></div>
         </div>
         ${!list(u.images).length ? `<p class="note" style="margin-top:8px">Photos show the model. Ask us for photos of this exact racket.</p>` : ''}
         ${sold ? `<div class="pay" style="margin-top:16px"><span>✅</span><span>This one has been sold. ${newStock(p) > 0 ? `<a href="#/p/${encodeURIComponent(p.id)}">It's also available new.</a>` : 'Message us and we\'ll tell you when another comes in.'}</span></div>
-               <div class="ctas"><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hi Deuce & Smash! Do you have another pre-owned ${title}?`)}">${WA_ICON} Ask on WhatsApp</a></div>`
-             : ctaHTML({ title: `pre-owned ${title}`, label: g ? g.label + ', ' + inr(u.price) : inr(u.price), available: true })}
+               <div class="ctas"><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hi Deuce & Smash! Do you have another pre-loved ${title} in Bazaar Resale?`)}">${WA_ICON} Ask on WhatsApp</a></div>`
+             : ctaHTML({ title: `pre-loved ${title}`, label: g ? g.label + ', ' + inr(u.price) : inr(u.price), available: true })}
         ${(dmgRows.length || u.notes) ? `<div class="sec"><h3>Condition notes</h3>${dmgRows.length ? `<table class="specs">${dmgRows.map(([k, v]) => `<tr><td>${k}</td><td>${esc(v)}</td></tr>`).join('')}</table>` : ''}${u.notes ? `<p class="style" style="margin-top:10px">${esc(u.notes)}</p>` : ''}</div>` : ''}
         ${newStock(p) !== null && !sold ? `<p class="note" style="margin-top:16px"><a href="#/p/${encodeURIComponent(p.id)}">Prefer new? See the new ${esc(title)} →</a></p>` : ''}
         ${contentHTML(p)}
@@ -506,7 +568,7 @@ function renderUsed(uid) {
     </div>
     ${deepHTML(p)}`;
   wireGallery();
-  wireReq({ productId: u.productId, usedId: uid, title: `pre-owned ${title}${g ? ' (' + g.label + ')' : ''}`, variants: [] });
+  wireReq({ productId: u.productId, usedId: uid, title: `pre-loved ${title}${g ? ' (' + g.label + ')' : ''}`, variants: [] });
 }
 
 function notFound() {
@@ -573,6 +635,7 @@ function route() {
   if (!loaded) return;
   const h = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
   const [kind, id] = h.split('/');
+  if (kind === 'resale') { history.replaceState(null, '', '#/'); document.body.classList.remove('view-detail'); document.title = 'Bazaar Resale — Deuce & Smash'; setCond('used'); return; }
   if ((kind === 'p' || kind === 'u') && id) {
     if (!document.body.classList.contains('view-detail')) lastListScroll = scrollY;
     document.body.classList.add('view-detail');
