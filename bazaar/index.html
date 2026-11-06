@@ -222,16 +222,25 @@ footer b{color:var(--text2)}
 .resale h2{font-family:var(--head);font-weight:400;font-size:clamp(40px,7vw,64px);line-height:.92;letter-spacing:.02em;margin:12px 0 10px}
 .resale h2 em{font-style:normal;background:linear-gradient(180deg,#B5E0FA,#1752E7);-webkit-background-clip:text;background-clip:text;color:transparent}
 .rs-one{font-family:var(--body);font-size:21px;font-weight:600;color:var(--yellow);line-height:1.2;max-width:640px}
-.rs-body{max-width:760px;margin-top:14px}
-.rs-body p{color:var(--text2);font-size:15.5px;margin-bottom:10px}
-.rs-body .rs-warn{color:var(--text);font-weight:600;border-left:3px solid var(--orange);padding-left:11px}
-.rs-points{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}
-@media (max-width:900px){.rs-points{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:520px){.rs-points{grid-template-columns:minmax(0,1fr)}}
-.rs-pt{display:flex;gap:10px;background:rgba(14,14,44,.55);border:1px solid var(--line);border-radius:12px;padding:12px}
-.rs-ic{font-size:22px;line-height:1}
-.rs-pt b{display:block;font-family:var(--body);font-weight:700;font-size:17px;letter-spacing:.03em;text-transform:uppercase}
-.rs-pt p{color:var(--text2);font-size:13.5px;margin-top:2px}
+.rs-promise{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.rs-promise span{display:inline-flex;align-items:center;gap:7px;background:rgba(14,14,44,.6);border:1px solid #3a4890;border-radius:999px;padding:7px 13px;font-family:var(--body);font-weight:700;font-size:15px;letter-spacing:.04em;text-transform:uppercase}
+.rs-promise i{font-style:normal;font-size:16px}
+.rs-h{font-family:var(--body);font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px}
+.rs-steps{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px;counter-reset:s}
+@media (max-width:900px){.rs-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.rs-steps{grid-template-columns:minmax(0,1fr);gap:14px}}
+.rs-pt{position:relative;background:rgba(14,14,44,.6);border:1px solid var(--line);border-radius:14px;padding:16px 14px 14px}
+.rs-steps .rs-pt:not(:last-child):after{content:"→";position:absolute;right:-19px;top:50%;transform:translateY(-50%);color:var(--yellow);font-size:18px;font-weight:700}
+@media (max-width:900px){.rs-steps .rs-pt:nth-child(2):after{display:none}}
+@media (max-width:520px){.rs-steps .rs-pt:not(:last-child):after{display:block!important;content:"↓";right:auto;left:50%;top:auto;bottom:-17px;transform:translateX(-50%)}.rs-promise{display:grid;grid-template-columns:1fr 1fr;gap:6px}.rs-promise span{font-size:13px;padding:7px 9px;gap:5px;justify-content:center;text-align:center}.rs-pt{display:grid;grid-template-columns:38px 1fr;column-gap:10px;align-items:center;padding:14px 14px 12px}.rs-ic{grid-row:span 2;margin:0;font-size:28px}.rs-pt p{grid-column:2}}
+.rs-n{position:absolute;top:-11px;left:14px;width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#B5E0FA,#1752E7);color:#fff;font-family:var(--head);font-size:16px;display:flex;align-items:center;justify-content:center}
+.rs-ic{display:block;font-size:30px;line-height:1;margin:4px 0 8px}
+.rs-pt b{display:block;font-family:var(--body);font-weight:700;font-size:18px;letter-spacing:.03em;text-transform:uppercase}
+.rs-pt p{color:var(--text2);font-size:14px;margin-top:3px}
+.rs-gone{display:flex;gap:14px;align-items:center;margin-top:20px;background:linear-gradient(90deg,rgba(224,90,0,.22),rgba(224,90,0,.04));border:1px solid rgba(224,90,0,.5);border-radius:14px;padding:14px 16px}
+.rs-big{font-size:34px;line-height:1}
+.rs-gone b{display:block;font-family:var(--head);font-weight:400;font-size:28px;letter-spacing:.03em;line-height:1}
+.rs-gone p{color:var(--text2);font-size:14px;margin-top:4px}
 .rs-grades{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:flex-start;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .rs-gl{width:100%;font-family:var(--body);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:13px;color:var(--muted)}
 .rs-g{flex:1 1 200px;display:grid;grid-template-columns:12px 1fr;column-gap:8px;align-items:center}
@@ -366,12 +375,13 @@ function segHandler(id, key) {
 segHandler('#sportSeg', 'sport'); segHandler('#condSeg', 'cond');
 function setCond(v) { F.cond = v; [...$('#condSeg').children].forEach(x => x.classList.toggle('on', x.dataset.v === v)); renderList(); scrollTo({ top: $('.bar').offsetTop, behavior: 'smooth' }); }
 /* ───────── Bazaar Resale pitch ───────── */
-const RS_POINTS = [
-  ['🔍', 'Checked by hand', 'Every racket is physically inspected at the club (frame, face, edge guard and grip) before it is listed.'],
-  ['🏷️', 'Honest grades', 'Graded Like New, Excellent, Good or Fair, with notes on any marks. What you read is what you get.'],
-  ['🤝', 'Feel it first', 'Tap "Keep it ready for me to see" and pick it up at the front desk. Pay only if it feels right in your hand.'],
-  ['⏳', 'One of each', 'Every racket is a one-off. No restocks, no waiting lists. When it is gone, it is gone.']
+const RS_STEPS = [
+  ['🔄', 'It didn\'t fit them', 'Not every racket suits every player. Someone changes their mind.'],
+  ['🔍', 'We check it by hand', 'Frame, face, edge guard and grip, inspected in person at the club.'],
+  ['🏷️', 'Graded honestly', 'Like New to Fair, with notes on any marks. Priced well below new.'],
+  ['🎾', 'It finds its player', 'Feel it at the front desk. Pay only if it feels right.']
 ];
+const RS_PROMISES = [['✅', 'Physically checked'], ['👥', 'Members only'], ['💸', 'Well below new'], ['🤝', 'Feel it before you buy']];
 function resaleHTML(full) {
   const n = Object.values(C.used).filter(u => u.status !== 'sold' && usedShown(u) && (C.products[u.productId] || {}).visible).length;
   if (!full) return n ? `<a class="rs-teaser" href="#" data-resale>
@@ -381,12 +391,10 @@ function resaleHTML(full) {
     <span class="rs-kick">Bazaar Resale</span>
     <h2>Second serve.<br><em>First-class rackets.</em></h2>
     <p class="rs-one">We're doing our best to bring you the best rackets at the most competitive prices.</p>
-    <div class="rs-body">
-      <p>Not every racket fits every player. Sometimes people change their mind, and we use that opportunity to source quality rackets, verify them and physically check their condition. Then we make them available exclusively to our members, so you can play with the best rackets at the best prices.</p>
-      <p>Pro-level frames you'd normally think twice about become a real option, and a racket that wasn't right for one player gets a second life with someone it suits.</p>
-      <p class="rs-warn">Every item is hand-picked, so it's available only until it's gone. Once it's gone, we can't guarantee the same racket at the same competitive price.</p>
-    </div>
-    <div class="rs-points">${RS_POINTS.map(([i, h, t]) => `<div class="rs-pt"><span class="rs-ic">${i}</span><div><b>${h}</b><p>${t}</p></div></div>`).join('')}</div>
+    <div class="rs-promise">${RS_PROMISES.map(([i, t]) => `<span><i>${i}</i>${t}</span>`).join('')}</div>
+    <h3 class="rs-h">From their bag to yours</h3>
+    <ol class="rs-steps">${RS_STEPS.map(([i, h, t], k) => `<li class="rs-pt"><span class="rs-n">${k + 1}</span><span class="rs-ic">${i}</span><b>${h}</b><p>${t}</p></li>`).join('')}</ol>
+    <div class="rs-gone"><span class="rs-big">⏳</span><div><b>One of each. Gone means gone.</b><p>Every racket is hand-picked. Once it's sold, we can't promise the same racket at the same price again.</p></div></div>
     <div class="rs-grades"><span class="rs-gl">How we grade</span>${Object.values(GRADES).map(g => `<div class="rs-g"><i style="background:${g.color}"></i><b>${g.label}</b><span>${esc(g.text)}</span></div>`).join('')}</div>
     <a class="btn wa rs-wa" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent("Hi Deuce & Smash! I'm looking for a pre-loved racket from Bazaar Resale. Here's what I'm after: ")}">${WA_ICON} Looking for something specific? Tell us</a>
   </section>`;
