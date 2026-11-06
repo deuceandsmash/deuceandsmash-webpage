@@ -1504,7 +1504,7 @@ window.wormClearAll = () => {
 
 // ===== Open Play tab =====
 window.showOpForm = () => {
-  const memberNames = Object.values(members).map(m => m.name).sort();
+  const memberNames = Object.values(members).filter(m => m.active !== false).map(m => m.name).sort();
   document.getElementById('op-area').innerHTML = `
     <div class="op-form">
       <h3>Log Open Play Match</h3>
@@ -1693,9 +1693,14 @@ window.toggleOpDay = (idx) => {
 window.editOpMatch = (matchId) => {
   const m = opMatches[matchId];
   if (!m) return;
-  const memberNames = Object.values(members).map(m => m.name).sort();
-  const opts = memberNames.map(n => `<option${(m.teamA||[])[0]===n||((m.teamB||[])[0]===n&&false)?'':''} value="${n}">${n}</option>`).join('');
-  const selOpts = (val) => memberNames.map(n => `<option value="${n}"${n===val?' selected':''}>${n}</option>`).join('');
+  const memberNames = Object.values(members).filter(mb => mb.active !== false).map(mb => mb.name).sort();
+  const opts = memberNames.map(n => `<option value="${n}">${n}</option>`).join('');
+  const selOpts = (val) => {
+    // Always include current value even if from inactive member (for display), but mark it
+    const hasVal = val && memberNames.includes(val);
+    const extra = val && !hasVal ? `<option value="${val}" selected>${val} (inactive)</option>` : '';
+    return extra + memberNames.map(n => `<option value="${n}"${n===val?' selected':''}>${n}</option>`).join('');
+  };
 
   const overlay = document.createElement('div');
   overlay.id = 'edit-match-overlay';
