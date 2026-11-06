@@ -106,8 +106,16 @@ main{max-width:1400px;margin:0 auto;padding:18px 20px 120px}
 .tab.pickle{border-top-color:var(--pickle)}
 .tab .th{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .tab .th b{font-family:var(--head);font-weight:400;font-size:26px;letter-spacing:.04em}
-.tab .prow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--grid)}
-.tab .prow .nm{font-size:18px;font-weight:600;line-height:1.15}
+.tab .prow{display:grid;grid-template-columns:1fr auto auto;gap:6px 8px;align-items:center;padding:8px 0;border-top:1px solid var(--grid)}
+.tab .prow .nm{font-size:18px;font-weight:600;line-height:1.15;background:none;border:0;text-align:left;padding:0;font-family:var(--body)}
+.tab .prow .nm:hover{color:var(--yellow)}
+.tab .brk{grid-column:1/-1;background:var(--card2);border-radius:10px;padding:6px 10px;font-family:var(--ui);font-size:13.5px}
+.tab .brk .bl{display:flex;justify-content:space-between;gap:10px;padding:2px 0;color:var(--text2)}
+.tab .brk .bl b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+.tab .brk .bl.sum{border-top:1px solid var(--grid);margin-top:3px;padding-top:4px;color:var(--text)}
+.tab .brk .bl.paid b{color:var(--goodText)}
+.tab .shared{font-family:var(--ui);font-size:13px;color:var(--text2)}
+.tab .shared span{color:var(--muted)}
 .tab .prow .nm small{display:block;font-family:var(--ui);font-size:12.5px;color:var(--muted);font-weight:500}
 .tab .prow .bal{font-family:var(--ui);font-weight:600;font-variant-numeric:tabular-nums;text-align:right;min-width:72px}
 .tab .prow .bal.zero{color:var(--goodText)} .tab .prow .bal.owe{color:#ff9d9d}
@@ -171,7 +179,27 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 .th-item .lb{font-size:14.5px;font-weight:600;line-height:1.1}
 .th-item .pr{font-family:var(--ui);font-size:12.5px;color:var(--muted)}
 .th-item .q{position:absolute;top:6px;right:6px;min-width:26px;height:26px;border-radius:13px;background:var(--yellow);color:var(--navy);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;padding:0 6px}
-.tabsum{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.tabsum{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;margin-bottom:12px}
+.th-wrap{display:flex;flex-direction:column;gap:4px}
+.th-wrap.on .th-item{border-color:var(--yellow)}
+.th-step{display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:3px}
+.th-step button{width:40px;height:34px;border-radius:8px;border:0;background:var(--card3);font-size:20px;font-weight:700}
+.th-step b{font-size:17px}
+.ts-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-family:var(--ui)}
+.ts-h{display:flex;justify-content:space-between;font-size:15px;padding:2px 2px 6px;border-bottom:1px solid var(--grid);margin-bottom:4px}
+.ts-h b{font-family:var(--body);font-size:18px}
+.ts-h span{font-weight:600;font-variant-numeric:tabular-nums}
+.ts-line{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px}
+.ts-line .pic{width:34px;height:34px;flex:none;display:flex;align-items:center;justify-content:center}
+.ts-line .pic img{width:34px;height:34px;border-radius:6px;object-fit:cover;background:#fff}
+.ts-line .pic svg{width:30px;height:30px}
+.ts-line .nm{flex:1;line-height:1.15}
+.ts-line .nm small{display:block;color:var(--muted);font-size:12px}
+.ts-line .qs{display:flex;align-items:center;gap:4px}
+.ts-line .qs button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--card2);font-size:18px;font-weight:700}
+.ts-line .qs b{min-width:20px;text-align:center}
+.ts-line .amt{min-width:56px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.ts-line .clr{width:30px;height:30px;border-radius:50%;border:1px solid #6b2222;background:transparent;color:#ff9d9d;font-size:13px}
 .ts-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-family:var(--ui);font-size:14px}
 .ts-row > b{font-family:var(--body);font-size:17px;min-width:110px}
 .ts-row .it{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border-radius:999px;padding:3px 4px 3px 10px}
@@ -669,14 +697,22 @@ function renderTabs() {
   $('#viewTabs').innerHTML = `<div class="tabs-grid">${list.map(x => {
     const d = toDraft(x), c = calc(d), live = DAYISO === todayISO() && nowM >= x.start && nowM < x.start + x.minutes;
     const rows = c.per.map(p => {
-      const its = Object.entries((d.items || {})[p.key] || {}).filter(([, q]) => q > 0).map(([k, q]) => `${q}× ${itemOf(k, d).label.replace(/ \(can\)/, '')}`).join(', ');
-      return `<div class="prow"><div class="nm">${esc(p.name)}<small>${its ? esc(its) : 'No items yet'}${c.sharedCost ? ' · + share of shared' : ''}</small></div>
+      const its = Object.entries((d.items || {})[p.key] || {}).filter(([, q]) => q > 0);
+      const lines = [`<div class="bl"><span>Court${c.fills ? ' (after D&S fill-in)' : ''}</span><b>${inr(p.court)}</b></div>`,
+        ...its.map(([k, q]) => { const it = itemOf(k, d); return `<div class="bl"><span>${q} × ${esc(it.label)}</span><b>${inr((it.price || 0) * q)}</b></div>`; }),
+        p.shared ? `<div class="bl"><span>Share of shared items</span><b>${inr(p.shared)}</b></div>` : '',
+        `<div class="bl sum"><span>Total</span><b>${inr(p.charge)}</b></div>`,
+        p.paid ? `<div class="bl paid"><span>Paid</span><b>−${inr(p.paid)}</b></div>` : ''].join('');
+      return `<div class="prow"><button class="nm" data-openp="${esc(x.id)}" data-p="${esc(p.key)}" title="Open ${esc(p.name)}'s tab">${esc(p.name)}<small>${its.length ? its.reduce((a, [, q]) => a + q, 0) + ' item' + (its.reduce((a, [, q]) => a + q, 0) > 1 ? 's' : '') : 'No items yet'} · tap to open</small></button>
         <div class="bal ${p.balance > 0.5 ? 'owe' : 'zero'}">${p.balance > 0.5 ? inr(p.balance) : 'Paid ✓'}</div>
-        <div class="acts"><button class="btn btn-sm" data-qadd="${esc(x.id)}" data-p="${esc(p.key)}">+ Items</button><button class="btn btn-sm" data-qpay="${esc(x.id)}" data-p="${esc(p.key)}" ${p.balance > 0.5 ? '' : 'disabled'}>Pay</button></div></div>`;
+        <div class="acts"><button class="btn btn-sm" data-qadd="${esc(x.id)}" data-p="${esc(p.key)}">+ Items</button><button class="btn btn-sm" data-qpay="${esc(x.id)}" data-p="${esc(p.key)}" ${p.balance > 0.5 ? '' : 'disabled'}>Pay</button></div>
+        <div class="brk">${lines}</div></div>`;
     }).join('') || `<div class="msg warn" style="margin:0">No players added yet. Open the booking to add who's playing.</div>`;
-    return `<div class="tab ${x.sport}"><div class="th"><b>${esc((x.courts || []).join(' + '))} · ${hhmm(x.start)}–${hhmm(x.start + x.minutes)}</b>${live ? '<span class="chip ok">● Playing now</span>' : x.status === 'played' ? '<span class="chip info">Played</span>' : ''}</div>
+    const shared = Object.entries((d.items || {}).shared || {}).filter(([, q]) => q > 0);
+    return `<div class="tab ${x.sport}"><div class="th"><b data-open="${esc(x.id)}" style="cursor:pointer" title="Open booking">${esc((x.courts || []).join(' + '))} · ${hhmm(x.start)}–${hhmm(x.start + x.minutes)}</b>${live ? '<span class="chip ok">● Playing now</span>' : x.status === 'played' ? '<span class="chip info">Played</span>' : ''}</div>
       <div class="sub">${esc((TYPES.find(y => y[0] === x.type) || ['', x.type])[1])} · ${esc((CFG.sources[x.source] || {}).label || '')} · bill ${inr(c.due)}${c.fills ? ` · ${c.fills} D&S fill-in` : ''}</div>
       ${rows}
+      ${shared.length ? `<div class="shared"><span>Shared:</span> ${shared.map(([k, q]) => `${q} × ${esc(itemOf(k, d).label)} (${inr((itemOf(k, d).price || 0) * q)})`).join(', ')} <span>· split ${c.per.length} ways</span></div>` : ''}
       <div class="tf"><span class="sub" style="flex:1">${c.remaining > 0.5 ? `<b style="color:#ff9d9d">${inr(c.remaining)}</b> still due` : '<b style="color:var(--goodText)">All paid</b>'}</span>
         <button class="btn btn-sm" data-qadd="${esc(x.id)}" data-p="shared">+ Shared</button>
         ${c.remaining > 0.5 ? `<button class="btn btn-sm" data-qpay="${esc(x.id)}" data-p="*">${c.per.length > 1 ? 'Pay all' : 'Pay'}</button>` : ''}
@@ -685,8 +721,10 @@ function renderTabs() {
   }).join('')}</div>`;
 }
 $('#viewTabs').addEventListener('click', async ev => {
+  const t = ev.target.closest('[data-open]'); if (t && t.tagName === 'B') return openEditor(ENTRIES[t.dataset.open]);
   const b = ev.target.closest('button'); if (!b || b.disabled) return;
   if (b.dataset.open) return openEditor(ENTRIES[b.dataset.open]);
+  if (b.dataset.openp) return openEditor(ENTRIES[b.dataset.openp], {}, b.dataset.p);
   if (b.dataset.qadd) return quickItems(ENTRIES[b.dataset.qadd], b.dataset.p);
   if (b.dataset.qpay) return quickPay(ENTRIES[b.dataset.qpay], b.dataset.p);
   if (b.dataset.qplayed) {
@@ -732,15 +770,19 @@ function thumbGrid(e, owner) {
   for (const [cat, cl] of CATS) {
     const its = sorted(CFG.items).filter(([k, it]) => (it.cat || 'other') === cat && (it.sport === 'any' || it.sport === e.sport || mine[k] > 0));
     if (!its.length) continue;
-    h += `<div class="cat">${cl}</div><div class="thumbs">${its.map(([k, it]) => `<button class="th-item" data-add="${k}" ${EDIT_LOCK ? 'disabled' : ''} aria-label="Add ${esc(it.label)}">
-      ${mine[k] ? `<span class="q">${mine[k]}</span>` : ''}<span class="pic">${itemPic(k, it)}</span><span class="lb">${esc(it.label)}</span><span class="pr">${inr(it.price)}</span></button>`).join('')}</div>`;
+    h += `<div class="cat">${cl}</div><div class="thumbs">${its.map(([k, it]) => `<div class="th-wrap ${mine[k] ? 'on' : ''}"><button class="th-item" data-add="${k}" ${EDIT_LOCK ? 'disabled' : ''} aria-label="Add ${esc(it.label)}">
+      ${mine[k] ? `<span class="q">${mine[k]}</span>` : ''}<span class="pic">${itemPic(k, it)}</span><span class="lb">${esc(it.label)}</span><span class="pr">${inr(it.price)}</span></button>
+      ${mine[k] && !EDIT_LOCK ? `<div class="th-step"><button data-sub="${k}" data-o="${esc(owner)}" aria-label="Remove one ${esc(it.label)}">−</button><b>${mine[k]}</b><button data-plus="${k}" data-o="${esc(owner)}" aria-label="Add one ${esc(it.label)}">+</button></div>` : ''}</div>`).join('')}</div>`;
   }
   return h;
 }
 function tabRow(e, owner, name) {
   const map = (e.items || {})[owner] || {}, its = Object.entries(map).filter(([, q]) => q > 0);
   if (!its.length) return '';
-  return `<div class="ts-row"><b>${esc(name)}</b>${its.map(([k, q]) => `<span class="it">${q}× ${esc(itemOf(k, e).label)}<button data-sub="${k}" data-o="${esc(owner)}" aria-label="Remove one" ${EDIT_LOCK ? 'disabled' : ''}>−</button></span>`).join('')}<span class="amt">${inr(itemsCost(map, e))}</span></div>`;
+  return `<div class="ts-card"><div class="ts-h"><b>${esc(name)}</b><span>${inr(itemsCost(map, e))}</span></div>${its.map(([k, q]) => { const it = itemOf(k, e);
+    return `<div class="ts-line"><span class="pic">${itemPic(k, it)}</span><span class="nm">${esc(it.label)}<small>${q} × ${inr(it.price)}</small></span>
+      ${EDIT_LOCK ? '' : `<span class="qs"><button data-sub="${k}" data-o="${esc(owner)}" aria-label="Remove one">−</button><b>${q}</b><button data-plus="${k}" data-o="${esc(owner)}" aria-label="Add one">+</button></span>`}
+      <span class="amt">${inr((it.price || 0) * q)}</span>${EDIT_LOCK ? '' : `<button class="clr" data-clr="${k}" data-o="${esc(owner)}" aria-label="Remove ${esc(it.label)}">✕</button>`}</div>`; }).join('')}</div>`;
 }
 function balanceTable(e, c, withButtons = true) {
   if (!c.per.length) return `<div class="msg info">Add players to keep a tab for each of them. Until then, payments count against the whole booking.</div>`;
@@ -771,12 +813,13 @@ function blank(pre) {
     items: {}, pays: [], status: 'booked', notes: '', games: []
   };
 }
-function openEditor(entry, pre = {}) {
+function openEditor(entry, pre = {}, owner) {
   E = entry ? toDraft(entry) : blank(pre);
   E._removedGames = [];
   EDIT_LOCK = !!entry && lockedFor(E);
-  const b = bookerOf(E); E._owner = b && !b.fill ? b.key : 'shared';
+  const b = bookerOf(E); E._owner = owner || (b && !b.fill ? b.key : 'shared');
   openSheet(); renderEditor();
+  if (owner) { const s = $('#itemsSec'); if (s) $('#sheet').scrollTop = s.offsetTop - 70; }
 }
 function closeEditor() { E = null; EDIT_LOCK = false; $('#sheet').classList.add('hidden'); $('#sheet').innerHTML = ''; $('#footHost').innerHTML = ''; document.body.style.overflow = ''; }
 
@@ -831,11 +874,12 @@ function renderEditor() {
   // Items, charged to a player's tab or shared
   const P = payersOf(e);
   if (e._owner !== 'shared' && !P.some(p => p.key === e._owner)) e._owner = P[0] ? P[0].key : 'shared';
-  h += `<div class="sec"><h4>Items <small>pick whose tab, then tap items · shared items are split between all players</small></h4>
+  h += `<div class="sec" id="itemsSec"><h4>Items <small>pick whose tab, then tap items · shared items are split between all players</small></h4>
     <div class="owners">${P.map(p => { const x = c.per.find(y => y.key === p.key); return `<button class="own ${e._owner === p.key ? 'on' : ''}" data-owner="${esc(p.key)}">${esc(p.name)}<small>${x && x.own ? inr(x.own) + ' items' : 'no items'}</small></button>`; }).join('')}
       <button class="own ${e._owner === 'shared' ? 'on' : ''}" data-owner="shared">Shared<small>${c.sharedCost ? inr(c.sharedCost) : 'balls, etc.'}</small></button></div>
     ${thumbGrid(e, e._owner)}
-    <div class="tabsum">${[...P.map(p => tabRow(e, p.key, p.name)), tabRow(e, 'shared', 'Shared')].join('')}</div>
+    <div class="cat">On the tabs</div>
+    <div class="tabsum">${[...P.map(p => tabRow(e, p.key, p.name)), tabRow(e, 'shared', 'Shared (split between players)')].join('') || '<span class="sub">No items yet.</span>'}</div>
     <div class="lines" id="billLines"></div></div>`;
 
   // Payment: each player's tab and the payments taken so far
@@ -1005,6 +1049,8 @@ $('#sheet').addEventListener('click', async ev => {
   if (d.qx === 'close') return closeEditor();
   if (d.add) { addItem(E._owner, d.add, 1); return redraw(); }
   if (d.sub) { addItem(d.o, d.sub, -1); return redraw(); }
+  if (d.plus) { addItem(d.o, d.plus, 1); return redraw(); }
+  if (d.clr) { addItem(d.o, d.clr, -9999); return redraw(); }
   if (d.pm) { E._pay.method = d.pm; const a = $('#payAmt'); if (a) E._pay.amount = a.value === '' ? null : +a.value; return redraw(); }
   if (d.act === 'recordpay') {
     const amt = +($('#payAmt') || {}).value || 0; if (!(amt > 0)) return toast('Enter an amount.');
