@@ -605,10 +605,6 @@ DSR.compute=(seeds,matches,today)=>{
   const list=matches.filter(m=>m.status==="confirmed"&&DSR.W[m.format]).slice().sort((x,y)=>x.date.localeCompare(y.date)||String(x.enteredAt||"").localeCompare(String(y.enteredAt||"")));
   for(const m of list){
     const A=m.teamA.map(get),B=m.teamB.map(get);
-    // Skip this match for any player whose assessment date is after the match date
-    const allPlayers=[...A,...B];
-    const skip=allPlayers.some(p=>{const s=seeds[p.name];return s?.assessedAt&&m.date<s.assessedAt;});
-    if(skip)continue;
     const W=DSR.W[m.format];const d=dayNum(m.date);
     // Parse individual sets when available (score like "6-3, 4-6"), else treat as one set
     const setScores=(()=>{
@@ -619,6 +615,8 @@ DSR.compute=(seeds,matches,today)=>{
     })();
     const nSets=setScores.length;
     const apply=(p,team,opp,oppAvg,surprise,isFirst)=>{
+      // Skip this match for a player whose staff assessment started after the match date
+      if(seeds[p.name]?.assessedAt&&m.date<seeds[p.name].assessedAt)return;
       const away=p.last==null?0:d-p.last;
       let status=DSR.isProvisional(p)?"provisional":p.me<30?"established":"veteran";
       if(away>=DSR.BREAK.provisional)status="provisional";
