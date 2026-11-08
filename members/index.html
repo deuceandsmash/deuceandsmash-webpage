@@ -1082,10 +1082,24 @@ function renderDrawerView(m, r, playerSessions) {
         const oppScore = s.teamA?.includes(m.name) ? s.b : s.a;
         const result = myScore > oppScore ? 'W' : myScore < oppScore ? 'L' : 'D';
         const rc = result==='W'?'var(--success)':result==='L'?'var(--danger)':'var(--muted)';
+        // Per-set score display: use setsData if available, else try score string, else totals
+        const onA = s.teamA?.includes(m.name);
+        const setScoreStr = String(s.score||'');
+        const setScoreParts = setScoreStr.split(/[,;]/).map(x=>x.trim()).filter(x=>/^\d{1,2}-\d{1,2}$/.test(x));
+        const hasSetScores = setScoreParts.length > 1;
+        const scoreHtml = hasSetScores
+          ? setScoreParts.map((sp,si)=>{
+              const [pA,pB]=sp.split('-').map(Number);
+              const my=onA?pA:pB, opp=onA?pB:pA;
+              const sc=my>opp?'var(--success)':my<opp?'var(--danger)':'var(--muted)';
+              return (si>0?'<span style="color:var(--muted);font-size:0.7rem;margin:0 1px">,</span>':'')
+                +`<span style="color:${sc};font-size:0.85rem;font-weight:700">${my}–${opp}</span>`;
+            }).join('')
+          : `<span>${myScore}–${oppScore}</span>`;
         return `<li class="history-item" style="flex-direction:column;align-items:flex-start;gap:4px">
-          <div style="display:flex;justify-content:space-between;width:100%">
+          <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
             <span style="font-size:0.8rem;color:var(--muted)">${s.date||'—'}</span>
-            <span style="font-weight:800;color:${rc}">${result} ${myScore}–${oppScore}</span>
+            <span style="font-weight:800;color:${rc}">${result} ${scoreHtml}</span>
           </div>
           <div style="font-size:0.78rem">w/ <strong>${partners}</strong> vs ${opponents}</div>
         </li>`;
