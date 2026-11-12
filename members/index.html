@@ -1399,6 +1399,8 @@ function renderWormChart() {
 
   // Gather all players with history, sorted by current rating
   const q = document.getElementById('rating-search')?.value.toLowerCase() || '';
+  // When a search is active, ignore any legend selection — show all matching players
+  if (q) _wormSelected = null;
   const players = Object.values(ratings)
     .filter(p => !p.hidden && p.hist && p.hist.length >= 2)
     .filter(p => !q || p.name.toLowerCase().includes(q))
