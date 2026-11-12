@@ -1280,10 +1280,60 @@ window.saveMember = async () => {
     })(),
     updatedAt: new Date().toISOString(),
   };
-  await update(ref(db, `members/${drawerMemberId}`), updates);
-  Object.assign(members[drawerMemberId], updates);
-  // If name changed, rebuild match cache so the new name is indexed correctly
-  if (updates.name !== m.name) _buildMatchCache();
+  const oldName = m.name;
+  const newName = updates.name;
+  const nameChanged = newName !== oldName;
+  const newId = newName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const idChanged = nameChanged && newId !== drawerMemberId;
+
+  if (idChanged) {
+    // --- Full rename: new ID needed ---
+    // 1. Scan all match records and rename player strings in teamA/teamB
+    // 2. Write new member record under new ID
+    // 3. Delete old member record
+    // All in one atomic batch
+    const matchesSnap = await get(ref(db, 'openPlayMatches'));
+    const allMatches = matchesSnap.val() || {};
+    const batch = {};
+    for (const [mid, mx] of Object.entries(allMatches)) {
+      const fixTeam = arr => arr ? arr.map(p => p === oldName ? newName : p) : arr;
+      const newA = fixTeam(mx.teamA);
+      const newB = fixTeam(mx.teamB);
+      if (JSON.stringify(newA) !== JSON.stringify(mx.teamA)) batch[`openPlayMatches/${mid}/teamA`] = newA;
+      if (JSON.stringify(newB) !== JSON.stringify(mx.teamB)) batch[`openPlayMatches/${mid}/teamB`] = newB;
+    }
+    // New member record with updated id field
+    batch[`members/${newId}`] = { ...m, ...updates, id: newId };
+    // Remove old record
+    batch[`members/${drawerMemberId}`] = null;
+    await update(ref(db), batch);
+    // Update in-memory members map
+    delete members[drawerMemberId];
+    members[newId] = { ...m, ...updates, id: newId };
+    drawerMemberId = newId;
+  } else if (nameChanged) {
+    // --- Name changed but ID stays the same ---
+    // Still need to rename player strings in match records
+    const matchesSnap = await get(ref(db, 'openPlayMatches'));
+    const allMatches = matchesSnap.val() || {};
+    const batch = { [`members/${drawerMemberId}`]: { ...m, ...updates } };
+    for (const [mid, mx] of Object.entries(allMatches)) {
+      const fixTeam = arr => arr ? arr.map(p => p === oldName ? newName : p) : arr;
+      const newA = fixTeam(mx.teamA);
+      const newB = fixTeam(mx.teamB);
+      if (JSON.stringify(newA) !== JSON.stringify(mx.teamA)) batch[`openPlayMatches/${mid}/teamA`] = newA;
+      if (JSON.stringify(newB) !== JSON.stringify(mx.teamB)) batch[`openPlayMatches/${mid}/teamB`] = newB;
+    }
+    await update(ref(db), batch);
+    Object.assign(members[drawerMemberId], updates);
+  } else {
+    // --- No name change — simple field update ---
+    await update(ref(db, `members/${drawerMemberId}`), updates);
+    Object.assign(members[drawerMemberId], updates);
+  }
+
+  // Rebuild match cache and ratings with updated data
+  _buildMatchCache();
   computeAllRatings();
   renderMembers();
   renderRatings();
@@ -1296,7 +1346,7 @@ window.saveMember = async () => {
   document.getElementById('drawer-edit-btn').style.display = '';
   document.getElementById('drawer-body').innerHTML = renderDrawerView(members[drawerMemberId], r, playerSessions);
   document.getElementById('save-bar').style.display = 'none';
-  showToast('Member updated ✓', 'ok');
+  showToast(idChanged ? 'Member renamed & history updated ✓' : 'Member updated ✓', 'ok');
 };
 
 // ===== Ratings tab =====
