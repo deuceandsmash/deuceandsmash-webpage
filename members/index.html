@@ -1139,7 +1139,7 @@ function renderDrawerView(m, r, playerSessions) {
     ${buildPlayerSpotlight(m.name)}`;
 }
 
-function renderDrawerEdit(m) {
+function renderDrawerEdit(m, firstMatchDate) {
   const LEVELS = ['Beginner','Beginner+','Intermediate','Intermediate+','Advanced','Advanced High','Elite'];
   const MEMBERSHIPS = ['Monthly','Annual','Trial'];
   return `
@@ -1197,9 +1197,9 @@ function renderDrawerEdit(m) {
         <div style="display:flex;gap:8px;align-items:center;flex:1">
           <input class="field-edit" id="edit-rating-date" type="date"
             style="max-width:160px"
-            value="${m.ratingAssessedAt || new Date().toISOString().slice(0,10)}"
+            value="${m.ratingAssessedAt || firstMatchDate || new Date().toISOString().slice(0,10)}"
             max="${new Date().toISOString().slice(0,10)}">
-          <span style="font-size:0.78rem;color:var(--muted)">Matches from this date onward count from the seed</span>
+          <span style="font-size:0.78rem;color:var(--muted)">${firstMatchDate && !m.ratingAssessedAt ? `Auto-set to first recorded match (${firstMatchDate}) — ` : ''}Matches from this date onward count from the seed</span>
         </div>
       </div>
       <p class="pin-note" style="margin-left:118px">Enter 0–7 to set a point-in-time assessment. DSR will evolve from this starting point based on match results from the assessment date onward. Set a past date to backdate the seed. Clear the rating to let DSR calculate automatically from full match history.</p>
@@ -1227,7 +1227,12 @@ window.openDrawer = (id) => {
 window.enterEditMode = () => {
   const m = members[drawerMemberId];
   if (!m) return;
-  document.getElementById('drawer-body').innerHTML = renderDrawerEdit(m);
+  // Find this player's earliest recorded match date to use as the default assessment date
+  const playerMatches = (_playerMatchCache[m.name]?.open || []);
+  const firstMatchDate = playerMatches.length
+    ? playerMatches.map(mx => mx.date).filter(Boolean).sort()[0]
+    : null;
+  document.getElementById('drawer-body').innerHTML = renderDrawerEdit(m, firstMatchDate);
   document.getElementById('drawer-edit-btn').style.display = 'none';
   document.getElementById('save-bar').style.display = 'flex';
 };
