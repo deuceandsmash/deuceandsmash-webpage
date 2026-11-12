@@ -1192,7 +1192,17 @@ function renderDrawerEdit(m) {
           <button class="btn btn-secondary" type="button" onclick="openAssess('edit')" title="Run skill assessment" style="padding:6px 12px;font-size:0.82rem;white-space:nowrap">🎯 Assess</button>
         </div>
       </div>
-      <p class="pin-note" style="margin-left:118px">Enter 0–7 to set a point-in-time assessment. DSR will evolve from this starting point based on match results from that date onward. Clear the field to let DSR calculate automatically from full match history.</p>
+      <div class="field-row">
+        <span class="field-label">Assessment Date</span>
+        <div style="display:flex;gap:8px;align-items:center;flex:1">
+          <input class="field-edit" id="edit-rating-date" type="date"
+            style="max-width:160px"
+            value="${m.ratingAssessedAt || new Date().toISOString().slice(0,10)}"
+            max="${new Date().toISOString().slice(0,10)}">
+          <span style="font-size:0.78rem;color:var(--muted)">Matches from this date onward count from the seed</span>
+        </div>
+      </div>
+      <p class="pin-note" style="margin-left:118px">Enter 0–7 to set a point-in-time assessment. DSR will evolve from this starting point based on match results from the assessment date onward. Set a past date to backdate the seed. Clear the rating to let DSR calculate automatically from full match history.</p>
     </div>`;
 }
 
@@ -1261,15 +1271,12 @@ window.saveMember = async () => {
     })(),
     ratingAssessedAt: (() => {
       const v = document.getElementById('edit-rating')?.value;
-      if (v === '' || v == null) return (m?.ratingAssessedAt || '');
+      if (v === '' || v == null) return '';
       const n = parseFloat(v);
-      if (isNaN(n)) return (m?.ratingAssessedAt || '');
-      // If value changed from stored, stamp today; otherwise keep existing date
-      const existing = m?.ratingOverride;
-      if (existing == null || existing === '' || parseFloat(existing) !== n) {
-        return new Date().toISOString().slice(0, 10);
-      }
-      return m?.ratingAssessedAt || new Date().toISOString().slice(0, 10);
+      if (isNaN(n)) return '';
+      // Use the explicitly chosen date from the date picker; fall back to today
+      const d = document.getElementById('edit-rating-date')?.value;
+      return d || new Date().toISOString().slice(0, 10);
     })(),
     updatedAt: new Date().toISOString(),
   };
