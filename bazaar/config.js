@@ -76,4 +76,7 @@ export function usedShown(u, now = Date.now()) {
   return true;
 }
 
+/** Photos shown on the shop: all images except the ones an owner has hidden. */
+export const shownImages = x => { const h = new Set(list(x && x.imagesHidden)); return list(x && x.images).filter(r => !h.has(r)); };
+
 export const productTitle = p => [p.brand, p.model].filter(Boolean).join(' ');

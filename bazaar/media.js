@@ -62,13 +62,13 @@ export async function uploadPhoto(db, file) {
   if (full.kb > 450) full = await encode(src, 1000, 0.65);
   const thumb = await encode(src, 480, 0.72);
   if (src.close) src.close();
-  const r = push(ref(db, 'catalog/media'));
-  await set(r, { t: thumb.d, f: full.d, w: full.w, h: full.h, kb: full.kb + thumb.kb, at: Date.now() });
+  const r = push(ref(db, 'catalog/media')), at = Date.now(), kb = Math.round((full.d.length + thumb.d.length) / 1024);
+  await update(ref(db), { [`catalog/media/${r.key}`]: { t: thumb.d, f: full.d, w: full.w, h: full.h, kb, at }, [`catalog/mediaIndex/${r.key}`]: { kb, at } });
   primeMedia(r.key, thumb.d, full.d);
   return 'db:' + r.key;
 }
 /** Delete uploaded photos (ignores normal paths). */
 export function deletePhotos(db, refs) {
-  const upd = {}; (refs || []).filter(isDb).forEach(r => { upd[`catalog/media/${mediaId(r)}`] = null; });
+  const upd = {}; (refs || []).filter(isDb).forEach(r => { upd[`catalog/media/${mediaId(r)}`] = null; upd[`catalog/mediaIndex/${mediaId(r)}`] = null; });
   return Object.keys(upd).length ? update(ref(db), upd) : Promise.resolve();
 }

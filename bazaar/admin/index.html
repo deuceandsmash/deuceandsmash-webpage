@@ -129,13 +129,18 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--blueText)}
 .checks label{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13.5px;cursor:pointer}
 .checks input{accent-color:var(--yellow)}
 .imgprev{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.phm{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin-bottom:8px}
+.phm{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:8px;margin-bottom:8px}
 .ph-t{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:var(--well);border:1px solid var(--line)}
 .ph-t img{width:100%;height:100%;object-fit:cover}
 .ph-t .cov{position:absolute;left:5px;top:5px;background:var(--yellow);color:var(--page);font-family:var(--body);font-weight:700;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:5px}
+.ph-t.hid img{opacity:.35;filter:grayscale(1)}
+.ph-t .hb{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);background:rgba(14,14,44,.9);color:var(--text);font-family:var(--body);font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px}
+.meter{height:10px;border-radius:99px;background:var(--card2);overflow:hidden;margin:8px 0 6px}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--yellow))}
 .ph-t .web{position:absolute;right:5px;top:5px;background:rgba(14,14,44,.8);color:#fff;font-size:10.5px;padding:2px 5px;border-radius:5px}
 .ph-a{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;background:linear-gradient(transparent,rgba(5,5,20,.85));padding:14px 4px 4px}
-.ph-a button{background:rgba(14,14,44,.85);border:1px solid #44448a;color:#fff;border-radius:7px;width:30px;height:28px;font-size:13px;padding:0}
+.ph-a{gap:2px}
+.ph-a button{background:rgba(14,14,44,.85);border:1px solid #44448a;color:#fff;border-radius:7px;width:25px;height:28px;font-size:12px;padding:0}
 .ph-a button:disabled{opacity:.3}
 .ph-a button[data-x]{color:var(--red)}
 .ph-t.up{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--card2);color:var(--text2);font-size:12px}
@@ -219,6 +224,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, onValue, get, set, update, remove, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { mediaImg, autoHydrate, uploadPhoto, deletePhotos, isDb } from "../media.js";
+import { shownImages } from "../config.js";
 import { firebaseConfig, OWNERS, WHATSAPP, LEVELS, GRADES, CATEGORY_TYPES, STARTER_CATEGORIES, esc, inr, discount, slug, list, newStock, stockLabel, usedShown, productTitle } from "../config.js";
 
 const fbApp = initializeApp(firebaseConfig);
@@ -232,6 +238,7 @@ let R = {};          // requests
 let D = [];          // drafts from the repo
 let K = { products: {}, used: {} };   // buying prices (private, owners only)
 let S = {};          // sales log (private, owners only)
+let M = {};          // catalog/mediaIndex: uploaded photo sizes (tiny)
 let tab = 'inventory';
 const UI = { invQ: '', invCat: '', reqF: 'open', usedF: 'available', mPeriod: 'all' };
 const unsubs = [];
@@ -247,26 +254,28 @@ function editPhotos(kind, id) {
   const x = kind === 'used' ? C.used[id] : C.products[id], p = kind === 'used' ? (C.products[x.productId] || {}) : x;
   openModal(`<h3>Photos</h3><p class="hint" style="margin-bottom:10px">${kind === 'used' ? 'Pre-Loved ' : ''}${esc(productTitle(p))}</p><div id="qpPhotos"></div>
     <div class="ferr" id="qpErr"></div><div class="foot"><button class="btn" id="qpNo">Cancel</button><button class="btn pri" id="qpGo">Save photos</button></div>`, true);
-  const pm = photoMgr($('#qpPhotos'), list(x.images), kind === 'used' ? 'Shoot front, back, both edges and any marks.' : 'Product photos.');
+  const pm = photoMgr($('#qpPhotos'), list(x.images), kind === 'used' ? 'Shoot front, back, both edges and any marks.' : 'Product photos.', list(x.imagesHidden));
   $('#qpNo').onclick = closeModal;
   $('#qpGo').onclick = async () => {
     if (pm.busy) return ($('#qpErr').textContent = 'Wait for the photos to finish uploading.');
-    if (await save(`catalog/${kind}/${id}`, { images: pm.list(), updatedAt: Date.now() }, 'Photos saved')) { await pm.commit(); closeModal(); }
+    if (await save(`catalog/${kind}/${id}`, { images: pm.list(), imagesHidden: pm.hidden(), updatedAt: Date.now() }, 'Photos saved')) { await pm.commit(); closeModal(); }
   };
 }
 
 /* ───────── PHOTO MANAGER (upload from phone/computer; stored in catalog/media) ───────── */
-function photoMgr(el, initial, hint) {
-  const st = { list: [...initial], init: new Set(initial), added: new Set(), busy: 0, done: false };
+function photoMgr(el, initial, hint, hidden = []) {
+  const st = { list: [...initial], init: new Set(initial), added: new Set(), hid: new Set(hidden), busy: 0, done: false };
   const draw = () => {
-    el.innerHTML = `<div class="phm">${st.list.map((r, i) => `<div class="ph-t">${mediaImg(r, 't', 'alt=""')}${i === 0 ? '<span class="cov">Cover</span>' : ''}${isDb(r) ? '' : '<span class="web">web</span>'}
-        <div class="ph-a"><button type="button" data-m="${i}" data-d="-1" ${i ? '' : 'disabled'} aria-label="Move left">◀</button><button type="button" data-x="${i}" aria-label="Remove">✕</button><button type="button" data-m="${i}" data-d="1" ${i < st.list.length - 1 ? '' : 'disabled'} aria-label="Move right">▶</button></div></div>`).join('')}
+    const cover = st.list.find(r => !st.hid.has(r));
+    el.innerHTML = `<div class="phm">${st.list.map((r, i) => { const h = st.hid.has(r); return `<div class="ph-t ${h ? 'hid' : ''}">${mediaImg(r, 't', 'alt=""')}${r === cover ? '<span class="cov">Cover</span>' : ''}${h ? '<span class="hb">Hidden</span>' : ''}${isDb(r) ? '' : '<span class="web">web</span>'}
+        <div class="ph-a"><button type="button" data-m="${i}" data-d="-1" ${i ? '' : 'disabled'} aria-label="Move left">◀</button><button type="button" data-h="${i}" aria-label="${h ? 'Show on shop' : 'Hide from shop'}" title="${h ? 'Show on shop' : 'Hide from shop'}">${h ? '🙈' : '👁'}</button><button type="button" data-x="${i}" aria-label="Remove">✕</button><button type="button" data-m="${i}" data-d="1" ${i < st.list.length - 1 ? '' : 'disabled'} aria-label="Move right">▶</button></div></div>`; }).join('')}
       ${Array.from({ length: st.busy }, () => '<div class="ph-t up"><div class="spinner"></div><span>Uploading…</span></div>').join('')}
       <label class="ph-add"><input type="file" accept="image/*" multiple hidden><b>＋</b><span>Add photos</span></label></div>
       <div class="ph-url"><input class="in" placeholder="…or paste an image link" id="phUrl"><button type="button" class="btn sm" id="phUrlAdd">Add link</button></div>
-      <span class="hint">${hint} First photo is the cover. Photos are resized and compressed automatically.</span>`;
+      <span class="hint">${hint} The first visible photo is the cover. 👁 hides a photo from the shop without deleting it; ✕ removes it. Uploads are resized and compressed automatically.</span>`;
     el.querySelector('input[type=file]').onchange = e => { const fs = [...e.target.files]; e.target.value = ''; addFiles(fs); };
-    el.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { st.list.splice(+b.dataset.x, 1); draw(); });
+    el.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { st.hid.delete(st.list[+b.dataset.x]); st.list.splice(+b.dataset.x, 1); draw(); });
+    el.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { const r = st.list[+b.dataset.h]; st.hid.has(r) ? st.hid.delete(r) : st.hid.add(r); draw(); });
     el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { const i = +b.dataset.m, j = i + +b.dataset.d; [st.list[i], st.list[j]] = [st.list[j], st.list[i]]; draw(); });
     el.querySelector('#phUrlAdd').onclick = () => { const v = el.querySelector('#phUrl').value.trim(); if (!/^(https?:\/\/|\/)/.test(v)) return toast('Paste a full https:// link or a /bazaar/img path', true); st.list.push(v); draw(); };
   };
@@ -280,7 +289,7 @@ function photoMgr(el, initial, hint) {
   }
   draw();
   const api = {
-    get busy() { return st.busy > 0; }, get done() { return st.done; }, list: () => [...st.list],
+    get busy() { return st.busy > 0; }, get done() { return st.done; }, list: () => [...st.list], hidden: () => st.list.filter(r => st.hid.has(r)),
     commit() { st.done = true; return deletePhotos(db, [...new Set([...st.init, ...st.added])].filter(r => !st.list.includes(r))); },
     discard() { st.done = true; return deletePhotos(db, [...st.added]); }
   };
@@ -332,6 +341,7 @@ onAuthStateChanged(auth, user => {
 
 function start() {
   // each part separately, so uploaded photos (catalog/media) are never pulled down in bulk
+  unsubs.push(onValue(ref(db, 'catalog/mediaIndex'), s => { M = s.val() || {}; if (tab === 'used') render(); }));
   ['categories', 'products', 'used'].forEach(k => unsubs.push(onValue(ref(db, 'catalog/' + k), s => { C[k] = s.val() || {}; badges(); render(); },
     e => toast('Catalog: ' + (e.code || e.message), true))));
   unsubs.push(onValue(ref(db, 'requests'), s => { R = s.val() || {}; badges(); if (tab === 'requests') render(); },
@@ -402,7 +412,7 @@ function invRow(id, p) {
   const n = newStock(p), s = stockLabel(n), usedN = Object.values(C.used).filter(u => u.productId === id && u.status !== 'sold').length;
   const d = discount(p.mrp, p.price), cost = K.products[id];
   return `<div class="r ${p.visible ? '' : 'off'}" data-id="${esc(id)}">
-    ${thumb(list(p.images)[0])}
+    ${thumb(shownImages(p)[0] || list(p.images)[0])}
     <div class="t"><b>${esc(productTitle(p))}</b><span>${esc(catName(p.categoryId))}${usedN ? ` · ${usedN} pre-loved` : ''}${s ? ` · ${s.text}` : ' · not sold new'}${d ? ` · ${d}% off` : ''}${n !== null ? marginHTML(p.price, cost) : ''}</span></div>
     <label class="f">MRP ₹<input class="in" data-f="mrp" inputmode="numeric" value="${p.mrp ?? ''}"></label>
     <label class="f">Buying ₹ 🔒<input class="in" data-c="1" inputmode="numeric" value="${cost ?? ''}" title="Only owners can see this"></label>
@@ -561,12 +571,12 @@ function editProduct(id) {
   <div class="foot">${id ? `<button class="btn danger left" id="pfDel">Delete</button>` : ''}<button class="btn" id="pfCancel">Cancel</button><button class="btn pri" id="pfSave">Save</button></div>`);
   const typeUI = () => { const ty = catType($('#pfCat').value); $('#varFld').classList.toggle('hidden', ty !== 'apparel' && !vars); $('#scoreFld').classList.toggle('hidden', ty !== 'racket'); };
   $('#pfCat').onchange = typeUI; typeUI();
-  const pm = photoMgr($('#pfPhotos'), list(p.images), 'Product photos.');
+  const pm = photoMgr($('#pfPhotos'), list(p.images), 'Product photos.', list(p.imagesHidden));
   $('#pfCancel').onclick = closeModal;
   if (id) $('#pfDel').onclick = async () => {
     const units = Object.values(C.used).filter(u => u.productId === id).length;
     if (units) return toast(`Remove its ${units} pre-loved racket(s) first`, true);
-    if (await confirmBox('Delete product?', `<b>${esc(productTitle(p))}</b> will be removed from the shop and admin. This can't be undone. To take it off the shop for now, use the Live switch instead.`)) {
+    if (await confirmBox('Delete product?', `<b>${esc(productTitle(p))}</b> will be removed from the shop and admin, and its uploaded photos permanently deleted. This can't be undone. To take it off the shop for now, use the Live switch instead.`)) {
       try { await remove(ref(db, `catalog/products/${id}`)); await deletePhotos(db, list(p.images)); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); }
     }
   };
@@ -583,7 +593,7 @@ function editProduct(id) {
       mrp: num(g('mrp')), price: num(g('price')),
       stock: Object.keys(variants).length ? null : num(g('stock')),
       variants: Object.keys(variants).length ? variants : null,
-      images: pm.list(),
+      images: pm.list(), imagesHidden: pm.hidden(),
       hook: g('hook') || null, why: [0, 1, 2, 3, 4].map(i => g('why' + i)).filter(Boolean),
       summary: g('summary') || null, description: g('description') || null,
       tech: g('tech').split('\n').map(l => { const i = l.indexOf(':'); return i > 0 ? { name: l.slice(0, i).trim(), text: l.slice(i + 1).trim() } : (l.trim() ? { name: l.trim(), text: '' } : null); }).filter(Boolean),
@@ -613,8 +623,8 @@ function usedHTML() {
       const p = C.products[u.productId] || {}, g = GRADES[u.grade], sold = u.status === 'sold';
       const shown = usedShown(u) && p.visible, cost = K.used[id];
       return `<div class="r ${shown ? '' : 'off'}" data-id="${esc(id)}">
-        ${thumb(list(u.images)[0] || list(p.images)[0])}
-        <div class="t"><b>${esc(productTitle(p) || u.productId)}</b><span>${g ? `<span class="pill" style="background:${g.color};color:#0E0E2C">${g.label}</span> ` : ''}${u.monthsUsed ? u.monthsUsed + ' mo used · ' : ''}${list(u.images).length} photo${list(u.images).length === 1 ? '' : 's'}${sold ? ` · sold ${ago(u.soldAt)}` : ''}${!p.visible ? ' · model hidden' : ''}${marginHTML(u.price, cost)}</span></div>
+        ${thumb(shownImages(u)[0] || shownImages(p)[0])}
+        <div class="t"><b>${esc(productTitle(p) || u.productId)}</b><span>${g ? `<span class="pill" style="background:${g.color};color:#0E0E2C">${g.label}</span> ` : ''}${u.monthsUsed ? u.monthsUsed + ' mo used · ' : ''}${shownImages(u).length ? `📷 ${shownImages(u).length} own photo${shownImages(u).length === 1 ? '' : 's'}` : '<span style="color:var(--yellow)">no own photos yet</span>'}${sold ? ` · sold ${ago(u.soldAt)}` : ''}${!p.visible ? ' · model hidden' : ''}${marginHTML(u.price, cost)}</span></div>
         <label class="f">MRP ₹<input class="in" data-f="mrp" inputmode="numeric" value="${u.mrp ?? ''}"></label>
         <label class="f">Bought for ₹ 🔒<input class="in" data-c="1" inputmode="numeric" value="${cost ?? ''}" title="Only owners can see this"></label>
         <label class="f">Asking ₹<input class="in" data-f="price" inputmode="numeric" value="${u.price ?? ''}"></label>
@@ -622,12 +632,39 @@ function usedHTML() {
         <div class="acts">
           <button class="btn sm ${sold ? '' : 'pri'}" data-act="sold">${sold ? 'Mark available' : 'Mark sold'}</button>
           <label class="sw"><input type="checkbox" data-act="vis" ${u.visible !== false ? 'checked' : ''}>Show</label>
-          <button class="btn sm" data-act="photos" title="Add or change photos">📷</button><button class="btn sm" data-act="edit">Edit</button>
+          <button class="btn sm" data-act="photos" title="Add or change photos">📷</button><button class="btn sm" data-act="edit">Edit</button>${sold ? `<button class="btn sm danger" data-act="remove" title="Remove this sold racket and delete its photos">Remove</button>` : ''}
         </div></div>`;
-    }).join('')}</div>`}`;
+    }).join('')}</div>`}
+    ${storageHTML()}`;
+}
+/* Photo storage meter (reads only the tiny index, never the photos) */
+const FREE_MB = 1024;
+function photoRefs() { const s = new Set(); [...Object.values(C.products), ...Object.values(C.used)].forEach(x => list(x.images).forEach(r => isDb(r) && s.add(r.slice(3)))); return s; }
+function storageHTML() {
+  const ids = Object.keys(M), used = photoRefs(), cutoff = Date.now() - 30 * 6e4;
+  const totalKb = ids.reduce((a, k) => a + (M[k].kb || 0), 0);
+  const orphans = ids.filter(k => !used.has(k) && (M[k].at || 0) < cutoff), orphKb = orphans.reduce((a, k) => a + (M[k].kb || 0), 0);
+  const mb = totalKb / 1024, pct = Math.min(100, mb / FREE_MB * 100);
+  return `<section style="margin-top:22px"><h3 class="mh">Photo storage</h3>
+    <div class="tile"><span>${ids.length} uploaded photo${ids.length === 1 ? '' : 's'} · ${mb < 10 ? mb.toFixed(1) : Math.round(mb)} MB of about ${FREE_MB} MB on the free plan</span>
+      <div class="meter"><i style="width:${Math.max(pct, ids.length ? 0.6 : 0)}%"></i></div>
+      <small>Web photos don't count. Deleting a product or a pre-loved racket deletes its uploaded photos too.</small>
+      ${orphans.length ? `<div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="hint" style="color:var(--yellow)">${orphans.length} uploaded photo${orphans.length === 1 ? ' isn\'t' : 's aren\'t'} used by any listing (${(orphKb / 1024).toFixed(1)} MB).</span><button class="btn sm" id="freeUp">Free up space</button></div>` : ''}
+    </div></section>`;
+}
+async function removeUsed(id) {
+  const u = C.used[id], p = C.products[u.productId] || {}, mine = list(u.images).filter(isDb), linked = Object.values(S).some(x => x.usedId === id);
+  if (!(await confirmBox('Remove this racket?', `<b>Pre-Loved ${esc(productTitle(p))}</b> is taken off the shop and the admin${mine.length ? `, and its <b>${mine.length} uploaded photo${mine.length === 1 ? ' is' : 's are'} permanently deleted</b> to free up space` : ''}. ${linked ? 'Its recorded sale stays in Margins.' : ''} This can't be undone.`, 'Remove'))) return;
+  try { await remove(ref(db, `catalog/used/${id}`)); await deletePhotos(db, mine); toast(mine.length ? `Removed · ${mine.length} photo${mine.length === 1 ? '' : 's'} deleted` : 'Removed'); }
+  catch (e) { toast(e.code || e.message, true); }
 }
 function wireUsed() {
   $('#usedF').onchange = e => { UI.usedF = e.target.value; render(); };
+  const fu = $('#freeUp'); if (fu) fu.onclick = async () => {
+    const used = photoRefs(), cutoff = Date.now() - 30 * 6e4, orphans = Object.keys(M).filter(k => !used.has(k) && (M[k].at || 0) < cutoff);
+    if (!(await confirmBox('Free up space?', `${orphans.length} uploaded photo${orphans.length === 1 ? '' : 's'} not used by any listing will be permanently deleted.`, 'Delete unused photos'))) return;
+    try { await deletePhotos(db, orphans.map(k => 'db:' + k)); toast('Space freed'); } catch (e) { toast(e.code || e.message, true); }
+  };
   const a = $('#addUsed'); if (a) a.onclick = () => editUsed(null);
   $$('.r[data-id]').forEach(row => {
     const id = row.dataset.id;
@@ -646,6 +683,7 @@ function wireUsed() {
     row.querySelector('[data-act="vis"]').onchange = e => save(`catalog/used/${id}`, { visible: e.target.checked });
     row.querySelector('[data-act="edit"]').onclick = () => editUsed(id);
     row.querySelector('[data-act="photos"]').onclick = () => editPhotos('used', id);
+    const rm = row.querySelector('[data-act="remove"]'); if (rm) rm.onclick = () => removeUsed(id);
   });
 }
 function editUsed(id) {
@@ -671,10 +709,10 @@ function editUsed(id) {
   <div class="foot">${id ? `<button class="btn danger left" id="ufDel">Delete</button>` : ''}<button class="btn" id="ufCancel">Cancel</button><button class="btn pri" id="ufSave">Save</button></div>`);
   const fillMrp = () => { if (!$('#ufMrp').value) { const p = C.products[$('#ufProd').value]; if (p && p.mrp) $('#ufMrp').value = p.mrp; } };
   $('#ufProd').onchange = fillMrp; if (!id) fillMrp();
-  const pm = photoMgr($('#ufPhotos'), list(u.images), 'Shoot front, back, both edges and any marks. Until this racket has its own photos, the shop shows the model photos and says so.');
+  const pm = photoMgr($('#ufPhotos'), list(u.images), 'Shoot front, back, both edges and any marks. Until this racket has its own photos, the shop shows the model photos and says so.', list(u.imagesHidden));
   $('#ufCancel').onclick = closeModal;
   if (id) $('#ufDel').onclick = async () => {
-    if (await confirmBox('Delete this unit?', `It will disappear from the shop straight away. To record a sale, use <b>Mark sold</b> instead so it shows the Sold badge.`)) {
+    if (await confirmBox('Delete this racket?', `It disappears from the shop straight away and its uploaded photos are permanently deleted. To record a sale, use <b>Mark sold</b> instead so it shows the Sold badge.`)) {
       try { const imgs = list(C.used[id].images); await remove(ref(db, `catalog/used/${id}`)); await deletePhotos(db, imgs); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); }
     }
   };
@@ -686,7 +724,7 @@ function editUsed(id) {
       productId: g('productId'), grade: g('grade'), monthsUsed: num(g('monthsUsed')), gripReplaced: !!g('gripReplaced'),
       mrp: num(g('mrp')), price: num(g('price')),
       damage: { frame: g('d_frame') || null, face: g('d_face') || null, edge: g('d_edge') || null, grip: g('d_grip') || null },
-      notes: g('notes') || null, images: pm.list(), updatedAt: Date.now()
+      notes: g('notes') || null, images: pm.list(), imagesHidden: pm.hidden(), updatedAt: Date.now()
     };
     let uid = id;
     if (!uid) { uid = 'u-' + slug(data.productId).slice(0, 40) + '-' + Date.now().toString(36); data.createdAt = Date.now(); data.status = 'available'; data.visible = true; }
@@ -795,7 +833,7 @@ function wireImp() {
     const imp = row.querySelector('[data-act="imp"]'); if (imp) imp.onclick = () => importDraft(d);
   });
 }
-const OWNER_FIELDS = ['mrp', 'price', 'stock', 'variants', 'visible', 'featured', 'status', 'soldAt'];
+const OWNER_FIELDS = ['mrp', 'price', 'stock', 'variants', 'visible', 'featured', 'status', 'soldAt', 'images', 'imagesHidden'];
 const STARTER_IDS = Object.fromEntries(STARTER_CATEGORIES.map((c, i) => [slug(c.name), { ...c, order: (i + 1) * 10 }]));
 async function importDraft(d, quiet) {
   const x = d.data || {};

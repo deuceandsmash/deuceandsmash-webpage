@@ -296,6 +296,7 @@ footer b{color:var(--text2)}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { mediaImg, autoHydrate } from "./media.js";
+import { shownImages } from "./config.js";
 import { firebaseConfig, WHATSAPP, SITE, LEVELS, GRADES, esc, inr, discount, list, newStock, stockLabel, usedShown, productTitle } from "./config.js";
 
 const db = getDatabase(initializeApp(firebaseConfig));
@@ -329,12 +330,12 @@ function items() {
   const out = [];
   for (const p of visibleProducts()) {
     const n = newStock(p);
-    if (n !== null) out.push({ kind: 'new', id: p.id, p, stock: n, price: p.price, mrp: p.mrp, img: (list(p.images)[0]) });
+    if (n !== null) out.push({ kind: 'new', id: p.id, p, stock: n, price: p.price, mrp: p.mrp, img: shownImages(p)[0] });
   }
   for (const [id, u] of Object.entries(C.used)) {
     const p = C.products[u.productId];
     if (!p || !p.visible || !usedShown(u)) continue;
-    out.push({ kind: 'used', id, u, p: { id: u.productId, ...p }, price: u.price, mrp: u.mrp ?? p.mrp, img: list(u.images)[0] || list(p.images)[0], real: !!list(u.images).length, sold: u.status === 'sold' });
+    out.push({ kind: 'used', id, u, p: { id: u.productId, ...p }, price: u.price, mrp: u.mrp ?? p.mrp, img: shownImages(u)[0] || shownImages(p)[0], real: !!shownImages(u).length, sold: u.status === 'sold' });
   }
   return out;
 }
@@ -522,7 +523,7 @@ function renderProduct(id) {
   $('#detailView').innerHTML = `
     <a class="back" href="#/">← All gear</a>
     <div class="d-grid">
-      ${gallery(list(p.images), false)}
+      ${gallery(shownImages(p), false)}
       <div>
         <div class="d-brand">${esc(p.brand || '')}${cat(p).name ? ' · ' + esc(cat(p).name) : ''}${p.year ? ' · ' + esc(p.year) : ''}</div>
         <h1 class="d-name">${esc(p.model || '')}</h1>
@@ -531,7 +532,7 @@ function renderProduct(id) {
         ${vars.length ? `<div class="sizes" id="sizes">${vars.map(v => `<button class="size ${v.key === sel.variant ? 'on' : ''} ${v.stock > 0 ? '' : 'out'}" data-k="${esc(v.key)}">${esc(v.size || v.color)}${v.size && v.color ? `<small>${esc(v.color)}</small>` : ''}</button>`).join('')}</div>` : ''}
         ${n !== null ? ctaHTML({ title, label: vSel ? vLabel(vSel) : '', available }) : ''}
         ${units.length ? `<div class="sec"><h3>Bazaar Resale · Pre-Loved</h3><div class="units">${units.map(([uid, u]) => {
-          const g = GRADES[u.grade]; const img = list(u.images)[0] || list(p.images)[0];
+          const g = GRADES[u.grade]; const img = shownImages(u)[0] || shownImages(p)[0];
           return `<a class="unit" href="#/u/${encodeURIComponent(uid)}">${img ? mediaImg(img, 't', 'alt=""') : ''}<div class="u-m"><div class="name" style="font-size:17px">${g ? g.label : 'Pre-Loved'}${u.status === 'sold' ? ' · Sold' : ''}</div><div class="note">${u.monthsUsed ? `${u.monthsUsed} month${u.monthsUsed == 1 ? '' : 's'} used` : ''}</div></div><div class="u-p">${inr(u.price)}</div></a>`;
         }).join('')}</div></div>` : ''}
         ${contentHTML(p)}
@@ -549,14 +550,14 @@ function renderUsed(uid) {
   const u = C.used[uid], p0 = u && C.products[u.productId];
   if (!u || !p0 || !p0.visible || !usedShown(u)) return notFound();
   const p = { id: u.productId, ...p0 }, g = GRADES[u.grade], title = productTitle(p), sold = u.status === 'sold';
-  const imgs = list(u.images).length ? list(u.images) : list(p.images);
+  const imgs = shownImages(u).length ? shownImages(u) : shownImages(p);
   const mrp = u.mrp ?? p.mrp, dmg = u.damage || {};
   const dmgRows = [['Frame', dmg.frame], ['Face', dmg.face], ['Edge guard', dmg.edge], ['Grip', dmg.grip]].filter(([, v]) => v);
   document.title = `Pre-Loved ${title} — Bazaar Resale — Deuce & Smash`;
   $('#detailView').innerHTML = `
     <a class="back" href="#/">← All gear</a>
     <div class="d-grid">
-      ${gallery(imgs, !!list(u.images).length)}
+      ${gallery(imgs, !!shownImages(u).length)}
       <div>
         <div class="d-brand">Bazaar Resale · Pre-Loved · ${esc(p.brand || '')}${p.year ? ' · ' + esc(p.year) : ''}</div>
         <h1 class="d-name">${esc(p.model || '')}</h1>
@@ -569,7 +570,7 @@ function renderUsed(uid) {
           ${u.monthsUsed ? `<div class="fact"><span>Used for</span><b>${esc(u.monthsUsed)} month${u.monthsUsed == 1 ? '' : 's'}</b></div>` : ''}
           <div class="fact"><span>Grip</span><b>${u.gripReplaced ? 'Replaced, fresh' : 'Original'}</b></div>
         </div>
-        ${!list(u.images).length ? `<p class="note" style="margin-top:8px">Photos show the model. Ask us for photos of this exact racket.</p>` : ''}
+        ${!shownImages(u).length ? `<p class="note" style="margin-top:8px">Photos show the model. Ask us for photos of this exact racket.</p>` : ''}
         ${sold ? `<div class="pay" style="margin-top:16px"><span>✅</span><span>This one has been sold. ${newStock(p) > 0 ? `<a href="#/p/${encodeURIComponent(p.id)}">It's also available new.</a>` : 'Message us and we\'ll tell you when another comes in.'}</span></div>
                <div class="ctas"><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hi Deuce & Smash! Do you have another pre-loved ${title} in Bazaar Resale?`)}">${WA_ICON} Ask on WhatsApp</a></div>`
              : ctaHTML({ title: `pre-loved ${title}`, label: g ? g.label + ', ' + inr(u.price) : inr(u.price), available: true })}
