@@ -129,6 +129,22 @@ input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--blueText)}
 .checks label{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13.5px;cursor:pointer}
 .checks input{accent-color:var(--yellow)}
 .imgprev{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.phm{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;margin-bottom:8px}
+.ph-t{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:var(--well);border:1px solid var(--line)}
+.ph-t img{width:100%;height:100%;object-fit:cover}
+.ph-t .cov{position:absolute;left:5px;top:5px;background:var(--yellow);color:var(--page);font-family:var(--body);font-weight:700;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:5px}
+.ph-t .web{position:absolute;right:5px;top:5px;background:rgba(14,14,44,.8);color:#fff;font-size:10.5px;padding:2px 5px;border-radius:5px}
+.ph-a{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;background:linear-gradient(transparent,rgba(5,5,20,.85));padding:14px 4px 4px}
+.ph-a button{background:rgba(14,14,44,.85);border:1px solid #44448a;color:#fff;border-radius:7px;width:30px;height:28px;font-size:13px;padding:0}
+.ph-a button:disabled{opacity:.3}
+.ph-a button[data-x]{color:var(--red)}
+.ph-t.up{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--card2);color:var(--text2);font-size:12px}
+.ph-add{aspect-ratio:1/1;border:2px dashed #44448a;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--yellow);gap:2px}
+.ph-add b{font-size:30px;line-height:1}
+.ph-add span{font-family:var(--body);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.04em}
+.ph-add:hover{border-color:var(--yellow)}
+.ph-url{display:flex;gap:6px;margin-bottom:6px}
+.ph-url .in{flex:1}
 .imgprev img{width:54px;height:54px;object-fit:cover;border-radius:7px;background:var(--well)}
 .sheet .foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
 .sheet .foot .left{margin-right:auto}
@@ -202,6 +218,7 @@ table.mt tr:last-child td{border-bottom:0}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getDatabase, ref, onValue, get, set, update, remove, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { mediaImg, autoHydrate, uploadPhoto, deletePhotos, isDb } from "../media.js";
 import { firebaseConfig, OWNERS, WHATSAPP, LEVELS, GRADES, CATEGORY_TYPES, STARTER_CATEGORIES, esc, inr, discount, slug, list, newStock, stockLabel, usedShown, productTitle } from "../config.js";
 
 const fbApp = initializeApp(firebaseConfig);
@@ -223,7 +240,52 @@ const unsubs = [];
 let tt;
 function toast(msg, err) { const t = $('#toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : ''); clearTimeout(tt); tt = setTimeout(() => t.className = '', 1800); }
 function openModal(html, narrow) { $('#sheet').className = 'sheet' + (narrow ? ' narrow' : ''); $('#sheet').innerHTML = html; $('#modal').classList.add('open'); }
-function closeModal() { $('#modal').classList.remove('open'); }
+let PM = null; // active photo manager in an open editor
+function closeModal() { if (PM && !PM.done) PM.discard(); PM = null; $('#modal').classList.remove('open'); }
+
+function editPhotos(kind, id) {
+  const x = kind === 'used' ? C.used[id] : C.products[id], p = kind === 'used' ? (C.products[x.productId] || {}) : x;
+  openModal(`<h3>Photos</h3><p class="hint" style="margin-bottom:10px">${kind === 'used' ? 'Pre-Loved ' : ''}${esc(productTitle(p))}</p><div id="qpPhotos"></div>
+    <div class="ferr" id="qpErr"></div><div class="foot"><button class="btn" id="qpNo">Cancel</button><button class="btn pri" id="qpGo">Save photos</button></div>`, true);
+  const pm = photoMgr($('#qpPhotos'), list(x.images), kind === 'used' ? 'Shoot front, back, both edges and any marks.' : 'Product photos.');
+  $('#qpNo').onclick = closeModal;
+  $('#qpGo').onclick = async () => {
+    if (pm.busy) return ($('#qpErr').textContent = 'Wait for the photos to finish uploading.');
+    if (await save(`catalog/${kind}/${id}`, { images: pm.list(), updatedAt: Date.now() }, 'Photos saved')) { await pm.commit(); closeModal(); }
+  };
+}
+
+/* ───────── PHOTO MANAGER (upload from phone/computer; stored in catalog/media) ───────── */
+function photoMgr(el, initial, hint) {
+  const st = { list: [...initial], init: new Set(initial), added: new Set(), busy: 0, done: false };
+  const draw = () => {
+    el.innerHTML = `<div class="phm">${st.list.map((r, i) => `<div class="ph-t">${mediaImg(r, 't', 'alt=""')}${i === 0 ? '<span class="cov">Cover</span>' : ''}${isDb(r) ? '' : '<span class="web">web</span>'}
+        <div class="ph-a"><button type="button" data-m="${i}" data-d="-1" ${i ? '' : 'disabled'} aria-label="Move left">◀</button><button type="button" data-x="${i}" aria-label="Remove">✕</button><button type="button" data-m="${i}" data-d="1" ${i < st.list.length - 1 ? '' : 'disabled'} aria-label="Move right">▶</button></div></div>`).join('')}
+      ${Array.from({ length: st.busy }, () => '<div class="ph-t up"><div class="spinner"></div><span>Uploading…</span></div>').join('')}
+      <label class="ph-add"><input type="file" accept="image/*" multiple hidden><b>＋</b><span>Add photos</span></label></div>
+      <div class="ph-url"><input class="in" placeholder="…or paste an image link" id="phUrl"><button type="button" class="btn sm" id="phUrlAdd">Add link</button></div>
+      <span class="hint">${hint} First photo is the cover. Photos are resized and compressed automatically.</span>`;
+    el.querySelector('input[type=file]').onchange = e => { const fs = [...e.target.files]; e.target.value = ''; addFiles(fs); };
+    el.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { st.list.splice(+b.dataset.x, 1); draw(); });
+    el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { const i = +b.dataset.m, j = i + +b.dataset.d; [st.list[i], st.list[j]] = [st.list[j], st.list[i]]; draw(); });
+    el.querySelector('#phUrlAdd').onclick = () => { const v = el.querySelector('#phUrl').value.trim(); if (!/^(https?:\/\/|\/)/.test(v)) return toast('Paste a full https:// link or a /bazaar/img path', true); st.list.push(v); draw(); };
+  };
+  async function addFiles(files) {
+    st.busy += files.length; draw();
+    for (const f of files) {
+      try { const r = await uploadPhoto(db, f); st.list.push(r); st.added.add(r); if (st.done) deletePhotos(db, [r]); }
+      catch (e) { console.error(e); toast(e.message.length < 140 ? e.message : 'Upload failed: ' + (e.code || 'error'), true); }
+      st.busy--; if (!st.done) draw();
+    }
+  }
+  draw();
+  const api = {
+    get busy() { return st.busy > 0; }, get done() { return st.done; }, list: () => [...st.list],
+    commit() { st.done = true; return deletePhotos(db, [...new Set([...st.init, ...st.added])].filter(r => !st.list.includes(r))); },
+    discard() { st.done = true; return deletePhotos(db, [...st.added]); }
+  };
+  PM = api; return api;
+}
 function confirmBox(title, text, okLabel = 'Delete') {
   return new Promise(res => {
     openModal(`<h3>${esc(title)}</h3><p style="color:var(--text2)">${text}</p>
@@ -254,6 +316,7 @@ async function doSignIn() {
     if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') { $('#gateMsg').textContent = 'Sign-in failed: ' + (err.message || err.code); $('#gateMsg').className = 'gate-msg err'; }
   }
 }
+autoHydrate(db);
 getRedirectResult(auth).catch(err => { $('#gateMsg').textContent = 'Sign-in failed: ' + (err.message || err.code); $('#gateMsg').className = 'gate-msg err'; });
 $('#signOutBtn').onclick = () => signOut(auth);
 
@@ -268,8 +331,9 @@ onAuthStateChanged(auth, user => {
 });
 
 function start() {
-  unsubs.push(onValue(ref(db, 'catalog'), s => { const v = s.val() || {}; C = { categories: v.categories || {}, products: v.products || {}, used: v.used || {} }; badges(); render(); },
-    e => toast('Catalog: ' + (e.code || e.message), true)));
+  // each part separately, so uploaded photos (catalog/media) are never pulled down in bulk
+  ['categories', 'products', 'used'].forEach(k => unsubs.push(onValue(ref(db, 'catalog/' + k), s => { C[k] = s.val() || {}; badges(); render(); },
+    e => toast('Catalog: ' + (e.code || e.message), true))));
   unsubs.push(onValue(ref(db, 'requests'), s => { R = s.val() || {}; badges(); if (tab === 'requests') render(); },
     e => toast('Requests: ' + (e.code || e.message), true)));
   unsubs.push(onValue(ref(db, 'private/cost'), s => { const v = s.val() || {}; K = { products: v.products || {}, used: v.used || {} }; if (['inventory', 'used', 'margins'].includes(tab)) render(); },
@@ -309,7 +373,7 @@ function render() {
 /* ───────── helpers ───────── */
 const catName = id => (C.categories[id] || {}).name || '—';
 const catType = id => (C.categories[id] || {}).type || 'accessory';
-const thumb = src => src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<div class="ni">no photo</div>`;
+const thumb = src => src ? mediaImg(src, 't', 'alt="" loading="lazy"') : `<div class="ni">no photo</div>`;
 const num = v => { if (v === '' || v === null || v === undefined) return null; const n = Number(String(v).replace(/[^\d.]/g, '')); return isNaN(n) ? null : n; };
 const ago = t => { const s = (Date.now() - t) / 1000; if (s < 3600) return Math.max(1, Math.round(s / 60)) + ' min ago'; if (s < 86400) return Math.round(s / 3600) + ' h ago'; if (s < 86400 * 7) return Math.round(s / 86400) + ' d ago'; return new Date(t).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }); };
 const catOptions = (sel) => Object.entries(C.categories).sort((a, b) => (a[1].order ?? 99) - (b[1].order ?? 99)).map(([id, c]) => `<option value="${esc(id)}" ${id === sel ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
@@ -349,7 +413,7 @@ function invRow(id, p) {
       ${n !== null ? `<button class="btn sm pri" data-act="sell" ${n > 0 ? '' : 'disabled'} title="Record a sale and take it out of stock">Sell</button>` : ''}
       <button class="star ${p.featured ? 'on' : ''}" data-act="feat" title="Feature at the top">★</button>
       <label class="sw"><input type="checkbox" data-act="vis" ${p.visible ? 'checked' : ''}>${p.visible ? 'Live' : 'Hidden'}</label>
-      <button class="btn sm" data-act="edit">Edit</button>
+      <button class="btn sm" data-act="photos" title="Add or change photos">📷</button><button class="btn sm" data-act="edit">Edit</button>
     </div></div>`;
 }
 function wireInv() {
@@ -374,6 +438,7 @@ function wireInv() {
     };
     row.querySelector('[data-act="feat"]').onclick = () => save(`catalog/products/${id}`, { featured: !C.products[id].featured });
     row.querySelector('[data-act="edit"]').onclick = () => editProduct(id);
+    row.querySelector('[data-act="photos"]').onclick = () => editPhotos('products', id);
     const sz = row.querySelector('[data-act="sizes"]'); if (sz) sz.onclick = () => editSizes(id);
     const sl = row.querySelector('[data-act="sell"]'); if (sl) sl.onclick = () => sellItem(id);
   });
@@ -474,7 +539,7 @@ function editProduct(id) {
     <div class="fld c6" id="varFld"><label>Sizes, one per line: Size | Colour | Stock</label><textarea class="in" name="variants" placeholder="M | Black | 3&#10;L | Black | 2">${esc(vars)}</textarea><span class="hint">If you fill this in, stock is counted per size and the single stock box is ignored.</span></div>
 
     <div class="legend">Photos</div>
-    <div class="fld c6"><label>Image paths, one per line (first is the cover)</label><textarea class="in" name="images" id="pfImgs" placeholder="/bazaar/img/product-id/1.webp">${esc(list(p.images).join('\n'))}</textarea><div class="imgprev" id="pfPrev"></div></div>
+    <div class="fld c6" id="pfPhotos"></div>
 
     <div class="legend">Description</div>
     <div class="fld c6"><label>Hook (one line)</label><input class="in" name="hook" maxlength="160" value="${esc(p.hook || '')}"></div>
@@ -496,19 +561,19 @@ function editProduct(id) {
   <div class="foot">${id ? `<button class="btn danger left" id="pfDel">Delete</button>` : ''}<button class="btn" id="pfCancel">Cancel</button><button class="btn pri" id="pfSave">Save</button></div>`);
   const typeUI = () => { const ty = catType($('#pfCat').value); $('#varFld').classList.toggle('hidden', ty !== 'apparel' && !vars); $('#scoreFld').classList.toggle('hidden', ty !== 'racket'); };
   $('#pfCat').onchange = typeUI; typeUI();
-  const prev = () => $('#pfPrev').innerHTML = $('#pfImgs').value.split('\n').map(s => s.trim()).filter(Boolean).map(s => `<img src="${esc(s)}" alt="">`).join('');
-  $('#pfImgs').oninput = prev; prev();
+  const pm = photoMgr($('#pfPhotos'), list(p.images), 'Product photos.');
   $('#pfCancel').onclick = closeModal;
   if (id) $('#pfDel').onclick = async () => {
     const units = Object.values(C.used).filter(u => u.productId === id).length;
     if (units) return toast(`Remove its ${units} pre-loved racket(s) first`, true);
     if (await confirmBox('Delete product?', `<b>${esc(productTitle(p))}</b> will be removed from the shop and admin. This can't be undone. To take it off the shop for now, use the Live switch instead.`)) {
-      try { await remove(ref(db, `catalog/products/${id}`)); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); }
+      try { await remove(ref(db, `catalog/products/${id}`)); await deletePhotos(db, list(p.images)); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); }
     }
   };
   $('#pfSave').onclick = async () => {
     const f = new FormData($('#pf')), g = k => (f.get(k) || '').toString().trim();
     if (!g('brand') || !g('model')) return ($('#pfErr').textContent = 'Brand and model are needed.');
+    if (pm.busy) return ($('#pfErr').textContent = 'Wait for the photos to finish uploading.');
     const variants = {};
     g('variants').split('\n').map(l => l.split('|').map(x => x.trim())).filter(a => a[0] || a[1]).forEach(([size, color, stock]) => { variants[slug([size, color].filter(Boolean).join('-')) || 'v' + Object.keys(variants).length] = { size: size || '', color: color || '', stock: num(stock) || 0 }; });
     const specsArr = g('specs').split('\n').map(l => { const i = l.indexOf(':'); return i > 0 ? { k: l.slice(0, i).trim(), v: l.slice(i + 1).trim() } : null; }).filter(Boolean);
@@ -518,7 +583,7 @@ function editProduct(id) {
       mrp: num(g('mrp')), price: num(g('price')),
       stock: Object.keys(variants).length ? null : num(g('stock')),
       variants: Object.keys(variants).length ? variants : null,
-      images: g('images').split('\n').map(s => s.trim()).filter(Boolean),
+      images: pm.list(),
       hook: g('hook') || null, why: [0, 1, 2, 3, 4].map(i => g('why' + i)).filter(Boolean),
       summary: g('summary') || null, description: g('description') || null,
       tech: g('tech').split('\n').map(l => { const i = l.indexOf(':'); return i > 0 ? { name: l.slice(0, i).trim(), text: l.slice(i + 1).trim() } : (l.trim() ? { name: l.trim(), text: '' } : null); }).filter(Boolean),
@@ -530,7 +595,7 @@ function editProduct(id) {
     };
     let pid = id;
     if (!pid) { pid = slug(`${data.brand} ${data.model} ${data.year || ''}`); if (C.products[pid]) pid += '-' + Date.now().toString(36).slice(-4); data.createdAt = Date.now(); }
-    if (await save(`catalog/products/${pid}`, data)) { if (num(g('cost')) !== (K.products[pid] ?? null)) await saveCost('products', pid, num(g('cost'))); closeModal(); }
+    if (await save(`catalog/products/${pid}`, data)) { await pm.commit(); if (num(g('cost')) !== (K.products[pid] ?? null)) await saveCost('products', pid, num(g('cost'))); closeModal(); }
   };
 }
 
@@ -557,7 +622,7 @@ function usedHTML() {
         <div class="acts">
           <button class="btn sm ${sold ? '' : 'pri'}" data-act="sold">${sold ? 'Mark available' : 'Mark sold'}</button>
           <label class="sw"><input type="checkbox" data-act="vis" ${u.visible !== false ? 'checked' : ''}>Show</label>
-          <button class="btn sm" data-act="edit">Edit</button>
+          <button class="btn sm" data-act="photos" title="Add or change photos">📷</button><button class="btn sm" data-act="edit">Edit</button>
         </div></div>`;
     }).join('')}</div>`}`;
 }
@@ -580,6 +645,7 @@ function wireUsed() {
     };
     row.querySelector('[data-act="vis"]').onchange = e => save(`catalog/used/${id}`, { visible: e.target.checked });
     row.querySelector('[data-act="edit"]').onclick = () => editUsed(id);
+    row.querySelector('[data-act="photos"]').onclick = () => editPhotos('used', id);
   });
 }
 function editUsed(id) {
@@ -599,33 +665,32 @@ function editUsed(id) {
     ${[['frame', 'Frame'], ['face', 'Face'], ['edge', 'Edge guard'], ['grip', 'Grip']].map(([k, l]) => `<div class="fld c3"><label>${l}</label><input class="in" name="d_${k}" maxlength="160" value="${esc(dm[k] || '')}" placeholder="e.g. no cracks, light scuffs"></div>`).join('')}
     <div class="fld c6"><label>Other notes</label><textarea class="in" name="notes" maxlength="300">${esc(u.notes || '')}</textarea></div>
     <div class="legend">Photos of this exact racket</div>
-    <div class="fld c6"><label>Image paths, one per line (front, back, edges, any damage)</label><textarea class="in" name="images" id="ufImgs">${esc(list(u.images).join('\n'))}</textarea><div class="imgprev" id="ufPrev"></div>
-    <span class="hint">Send me the photos in chat and I'll add them. Without its own photos, the listing shows the model photos and says so.</span></div>
+    <div class="fld c6" id="ufPhotos"></div>
   </form>
   <div class="ferr" id="ufErr"></div>
   <div class="foot">${id ? `<button class="btn danger left" id="ufDel">Delete</button>` : ''}<button class="btn" id="ufCancel">Cancel</button><button class="btn pri" id="ufSave">Save</button></div>`);
   const fillMrp = () => { if (!$('#ufMrp').value) { const p = C.products[$('#ufProd').value]; if (p && p.mrp) $('#ufMrp').value = p.mrp; } };
   $('#ufProd').onchange = fillMrp; if (!id) fillMrp();
-  const prev = () => $('#ufPrev').innerHTML = $('#ufImgs').value.split('\n').map(s => s.trim()).filter(Boolean).map(s => `<img src="${esc(s)}" alt="">`).join('');
-  $('#ufImgs').oninput = prev; prev();
+  const pm = photoMgr($('#ufPhotos'), list(u.images), 'Shoot front, back, both edges and any marks. Until this racket has its own photos, the shop shows the model photos and says so.');
   $('#ufCancel').onclick = closeModal;
   if (id) $('#ufDel').onclick = async () => {
     if (await confirmBox('Delete this unit?', `It will disappear from the shop straight away. To record a sale, use <b>Mark sold</b> instead so it shows the Sold badge.`)) {
-      try { await remove(ref(db, `catalog/used/${id}`)); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); }
+      try { const imgs = list(C.used[id].images); await remove(ref(db, `catalog/used/${id}`)); await deletePhotos(db, imgs); toast('Deleted'); } catch (e) { toast(e.code || e.message, true); }
     }
   };
   $('#ufSave').onclick = async () => {
     const f = new FormData($('#uf')), g = k => (f.get(k) || '').toString().trim();
     if (!g('price')) return ($('#ufErr').textContent = 'Add an asking price.');
+    if (pm.busy) return ($('#ufErr').textContent = 'Wait for the photos to finish uploading.');
     const data = {
       productId: g('productId'), grade: g('grade'), monthsUsed: num(g('monthsUsed')), gripReplaced: !!g('gripReplaced'),
       mrp: num(g('mrp')), price: num(g('price')),
       damage: { frame: g('d_frame') || null, face: g('d_face') || null, edge: g('d_edge') || null, grip: g('d_grip') || null },
-      notes: g('notes') || null, images: g('images').split('\n').map(s => s.trim()).filter(Boolean), updatedAt: Date.now()
+      notes: g('notes') || null, images: pm.list(), updatedAt: Date.now()
     };
     let uid = id;
     if (!uid) { uid = 'u-' + slug(data.productId).slice(0, 40) + '-' + Date.now().toString(36); data.createdAt = Date.now(); data.status = 'available'; data.visible = true; }
-    if (await save(`catalog/used/${uid}`, data)) { if (num(g('cost')) !== (K.used[uid] ?? null)) await saveCost('used', uid, num(g('cost'))); closeModal(); }
+    if (await save(`catalog/used/${uid}`, data)) { await pm.commit(); if (num(g('cost')) !== (K.used[uid] ?? null)) await saveCost('used', uid, num(g('cost'))); closeModal(); }
   };
 }
 

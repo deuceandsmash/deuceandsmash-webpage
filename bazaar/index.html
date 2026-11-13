@@ -295,6 +295,7 @@ footer b{color:var(--text2)}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { mediaImg, autoHydrate } from "./media.js";
 import { firebaseConfig, WHATSAPP, SITE, LEVELS, GRADES, esc, inr, discount, list, newStock, stockLabel, usedShown, productTitle } from "./config.js";
 
 const db = getDatabase(initializeApp(firebaseConfig));
@@ -305,16 +306,19 @@ let C = { categories: {}, products: {}, used: {} };
 let loaded = false;
 const F = { sport: 'all', cond: 'all', cat: 'all', brand: '', level: '', q: '' };
 
-onValue(ref(db, 'catalog'), snap => {
-  const v = snap.val() || {};
-  C = { categories: v.categories || {}, products: v.products || {}, used: v.used || {} };
+// Listen to each part separately so photos (catalog/media) are never downloaded in bulk.
+const got = new Set();
+['categories', 'products', 'used'].forEach(k => onValue(ref(db, 'catalog/' + k), snap => {
+  C[k] = snap.val() || {}; got.add(k);
+  if (got.size < 3) return;
   loaded = true;
   buildFilters();
   route();
 }, err => {
   $('#listView').innerHTML = `<div class="empty"><h3>Couldn't load the Bazaar</h3><p>Please refresh in a moment.</p></div>`;
   console.error(err);
-});
+}));
+autoHydrate(db);
 
 /* ───────── data shaping ───────── */
 const cat = p => C.categories[p.categoryId] || {};
@@ -430,7 +434,7 @@ function cardHTML(it) {
     status = `<span class="stk ${s.cls}">${s.text}</span>`;
   }
   return `<a class="card ${it.sold ? 'is-sold' : ''}" href="${href}">
-    <div class="ph ${it.real ? 'real' : ''}">${it.img ? `<img src="${esc(it.img)}" alt="${esc(productTitle(p))}" loading="lazy">` : `<span class="noimg">${esc(p.brand || 'D&S')}</span>`}
+    <div class="ph ${it.real ? 'real' : ''}">${it.img ? mediaImg(it.img, 't', `alt="${esc(productTitle(p))}" loading="lazy"`) : `<span class="noimg">${esc(p.brand || 'D&S')}</span>`}
       <div class="badges">${badges}</div></div>
     <div class="meta">
       <div class="brand">${esc(p.brand || '')}${cat(p).name ? ' · ' + esc(cat(p).name) : ''}</div>
@@ -456,8 +460,8 @@ function renderList() {
 /* ───────── detail ───────── */
 function gallery(imgs, real) {
   if (!imgs.length) return `<div class="gal"><div class="gal-main"><div class="slide"><span class="noimg">No photo yet</span></div></div></div>`;
-  return `<div class="gal"><div class="gal-main" id="galMain">${imgs.map((src, i) => `<div class="slide ${real ? 'real' : ''}"><img src="${esc(src)}" alt="Photo ${i + 1}" ${i ? 'loading="lazy"' : ''}></div>`).join('')}</div>
-    ${imgs.length > 1 ? `<div class="thumbs" id="thumbs">${imgs.map((src, i) => `<button class="${i ? '' : 'on'}" data-i="${i}" aria-label="Photo ${i + 1}"><img src="${esc(src)}" alt=""></button>`).join('')}</div>` : ''}</div>`;
+  return `<div class="gal"><div class="gal-main" id="galMain">${imgs.map((src, i) => `<div class="slide ${real ? 'real' : ''}">${mediaImg(src, 'f', `alt="Photo ${i + 1}" ${i ? 'loading="lazy"' : ''}`)}</div>`).join('')}</div>
+    ${imgs.length > 1 ? `<div class="thumbs" id="thumbs">${imgs.map((src, i) => `<button class="${i ? '' : 'on'}" data-i="${i}" aria-label="Photo ${i + 1}">${mediaImg(src, 't', 'alt=""')}</button>`).join('')}</div>` : ''}</div>`;
 }
 function wireGallery() {
   const main = $('#galMain'), th = $('#thumbs'); if (!main || !th) return;
@@ -528,7 +532,7 @@ function renderProduct(id) {
         ${n !== null ? ctaHTML({ title, label: vSel ? vLabel(vSel) : '', available }) : ''}
         ${units.length ? `<div class="sec"><h3>Bazaar Resale · Pre-Loved</h3><div class="units">${units.map(([uid, u]) => {
           const g = GRADES[u.grade]; const img = list(u.images)[0] || list(p.images)[0];
-          return `<a class="unit" href="#/u/${encodeURIComponent(uid)}">${img ? `<img src="${esc(img)}" alt="">` : ''}<div class="u-m"><div class="name" style="font-size:17px">${g ? g.label : 'Pre-Loved'}${u.status === 'sold' ? ' · Sold' : ''}</div><div class="note">${u.monthsUsed ? `${u.monthsUsed} month${u.monthsUsed == 1 ? '' : 's'} used` : ''}</div></div><div class="u-p">${inr(u.price)}</div></a>`;
+          return `<a class="unit" href="#/u/${encodeURIComponent(uid)}">${img ? mediaImg(img, 't', 'alt=""') : ''}<div class="u-m"><div class="name" style="font-size:17px">${g ? g.label : 'Pre-Loved'}${u.status === 'sold' ? ' · Sold' : ''}</div><div class="note">${u.monthsUsed ? `${u.monthsUsed} month${u.monthsUsed == 1 ? '' : 's'} used` : ''}</div></div><div class="u-p">${inr(u.price)}</div></a>`;
         }).join('')}</div></div>` : ''}
         ${contentHTML(p)}
       </div>
