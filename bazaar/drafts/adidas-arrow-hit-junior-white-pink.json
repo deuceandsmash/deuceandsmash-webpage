@@ -1,11 +1,10 @@
 {
  "kind": "product",
  "id": "adidas-arrow-hit-junior-white-pink",
- "rev": 1,
+ "rev": 2,
  "data": {
   "brand": "adidas",
   "model": "Arrow Hit Junior",
-  "year": "2026",
   "categoryId": "padel-rackets",
   "sport": "padel",
   "stock": 1,

@@ -537,7 +537,7 @@ function editProduct(id) {
   <form id="pf" class="fg" autocomplete="off">
     <div class="fld c2"><label>Brand</label><input class="in" name="brand" value="${esc(p.brand || '')}" required></div>
     <div class="fld c3"><label>Model</label><input class="in" name="model" value="${esc(p.model || '')}" required></div>
-    <div class="fld" style="grid-column:span 1"><label>Year</label><input class="in" name="year" value="${esc(p.year || '')}"></div>
+    <div class="fld" style="grid-column:span 1"><label title="For your reference only. Never shown on the shop.">Year 🔒</label><input class="in" name="year" value="${esc(p.year || '')}" placeholder="admin only"></div>
     <div class="fld c3"><label>Category</label><select class="in" name="categoryId" id="pfCat">${catOptions(p.categoryId)}</select></div>
     <div class="fld c3"><label>Sport</label><select class="in" name="sport"><option value="">Same as category</option>${['padel', 'pickleball', 'both'].map(s => `<option ${p.sport === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
 
@@ -604,7 +604,7 @@ function editProduct(id) {
       visible: !!f.get('visible'), updatedAt: Date.now()
     };
     let pid = id;
-    if (!pid) { pid = slug(`${data.brand} ${data.model} ${data.year || ''}`); if (C.products[pid]) pid += '-' + Date.now().toString(36).slice(-4); data.createdAt = Date.now(); }
+    if (!pid) { pid = slug(`${data.brand} ${data.model}`); if (C.products[pid]) pid += '-' + Date.now().toString(36).slice(-4); data.createdAt = Date.now(); }
     if (await save(`catalog/products/${pid}`, data)) { await pm.commit(); if (num(g('cost')) !== (K.products[pid] ?? null)) await saveCost('products', pid, num(g('cost'))); closeModal(); }
   };
 }

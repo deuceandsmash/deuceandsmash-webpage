@@ -1,11 +1,10 @@
 {
  "kind": "product",
  "id": "adidas-metalbone-master-ltd-ale-galan",
- "rev": 1,
+ "rev": 2,
  "data": {
   "brand": "adidas",
   "model": "Metalbone Master LTD · Ale Galán",
-  "year": "2022",
   "categoryId": "padel-rackets",
   "sport": "padel",
   "stock": 1,

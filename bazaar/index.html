@@ -321,6 +321,10 @@ const got = new Set();
 }));
 autoHydrate(db);
 
+/* ───────── year-free links ───────── */
+const linkId = id => String(id).replace(/-(19|20)\d\d(?=-|$)/g, '');
+const findId = (obj, key) => obj[key] !== undefined ? key : Object.keys(obj).find(k => linkId(k) === key);
+
 /* ───────── data shaping ───────── */
 const cat = p => C.categories[p.categoryId] || {};
 const sportOf = p => p.sport || cat(p).sport || 'both';
@@ -423,7 +427,7 @@ function priceHTML(price, mrp, cls = 'price', used = false) {
 }
 
 function cardHTML(it) {
-  const p = it.p, href = it.kind === 'used' ? `#/u/${encodeURIComponent(it.id)}` : `#/p/${encodeURIComponent(it.id)}`;
+  const p = it.p, href = it.kind === 'used' ? `#/u/${encodeURIComponent(linkId(it.id))}` : `#/p/${encodeURIComponent(linkId(it.id))}`;
   let badges = '', status = '';
   if (it.kind === 'used') {
     const g = GRADES[it.u.grade];
@@ -484,8 +488,9 @@ function contentHTML(p) {
 }
 
 /* Full-width deep dive below the fold: specs, description, technologies, Q&A, feature chips */
+const isYear = v => /^(19|20)\d\d$/.test(String(v || '').trim());
 function deepHTML(p) {
-  const specs = list(p.specs).filter(s => s && s.k), tech = list(p.tech).filter(t => t && t.name), faq = list(p.faq).filter(f => f && f.q), tags = list(p.tags).filter(Boolean);
+  const specs = list(p.specs).filter(s => s && s.k && !/^(season|year|model year)$/i.test(s.k.trim()) && !isYear(s.v)), tech = list(p.tech).filter(t => t && t.name), faq = list(p.faq).filter(f => f && f.q), tags = list(p.tags).filter(t => t && !isYear(t));
   const paras = String(p.description || '').split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
   const title = productTitle(p);
   if (!specs.length && !p.summary && !paras.length && !tech.length && !faq.length && !tags.length) return '';
@@ -525,7 +530,7 @@ function renderProduct(id) {
     <div class="d-grid">
       ${gallery(shownImages(p), false)}
       <div>
-        <div class="d-brand">${esc(p.brand || '')}${cat(p).name ? ' · ' + esc(cat(p).name) : ''}${p.year ? ' · ' + esc(p.year) : ''}</div>
+        <div class="d-brand">${esc(p.brand || '')}${cat(p).name ? ' · ' + esc(cat(p).name) : ''}</div>
         <h1 class="d-name">${esc(p.model || '')}</h1>
         ${p.hook ? `<p class="hook">${esc(p.hook)}</p>` : ''}
         ${n !== null ? `${priceHTML(p.price, p.mrp, 'd-price')}<span class="stk ${s.cls}">${s.text}${vSel ? ` in ${esc(vLabel(vSel))}` : ''}</span>` : `<p class="note" style="margin-top:14px">Not stocked new right now. See Bazaar Resale below.</p>`}
@@ -533,7 +538,7 @@ function renderProduct(id) {
         ${n !== null ? ctaHTML({ title, label: vSel ? vLabel(vSel) : '', available }) : ''}
         ${units.length ? `<div class="sec"><h3>Bazaar Resale · Pre-Loved</h3><div class="units">${units.map(([uid, u]) => {
           const g = GRADES[u.grade]; const img = shownImages(u)[0] || shownImages(p)[0];
-          return `<a class="unit" href="#/u/${encodeURIComponent(uid)}">${img ? mediaImg(img, 't', 'alt=""') : ''}<div class="u-m"><div class="name" style="font-size:17px">${g ? g.label : 'Pre-Loved'}${u.status === 'sold' ? ' · Sold' : ''}</div><div class="note">${u.monthsUsed ? `${u.monthsUsed} month${u.monthsUsed == 1 ? '' : 's'} used` : ''}</div></div><div class="u-p">${inr(u.price)}</div></a>`;
+          return `<a class="unit" href="#/u/${encodeURIComponent(linkId(uid))}">${img ? mediaImg(img, 't', 'alt=""') : ''}<div class="u-m"><div class="name" style="font-size:17px">${g ? g.label : 'Pre-Loved'}${u.status === 'sold' ? ' · Sold' : ''}</div><div class="note">${u.monthsUsed ? `${u.monthsUsed} month${u.monthsUsed == 1 ? '' : 's'} used` : ''}</div></div><div class="u-p">${inr(u.price)}</div></a>`;
         }).join('')}</div></div>` : ''}
         ${contentHTML(p)}
       </div>
@@ -559,7 +564,7 @@ function renderUsed(uid) {
     <div class="d-grid">
       ${gallery(imgs, !!shownImages(u).length)}
       <div>
-        <div class="d-brand">Bazaar Resale · Pre-Loved · ${esc(p.brand || '')}${p.year ? ' · ' + esc(p.year) : ''}</div>
+        <div class="d-brand">Bazaar Resale · Pre-Loved · ${esc(p.brand || '')}</div>
         <h1 class="d-name">${esc(p.model || '')}</h1>
         ${p.hook ? `<p class="hook">${esc(p.hook)}</p>` : ''}
         ${priceHTML(u.price, mrp, 'd-price', true)}
@@ -571,11 +576,11 @@ function renderUsed(uid) {
           <div class="fact"><span>Grip</span><b>${u.gripReplaced ? 'Replaced, fresh' : 'Original'}</b></div>
         </div>
         ${!shownImages(u).length ? `<p class="note" style="margin-top:8px">Photos show the model. Ask us for photos of this exact racket.</p>` : ''}
-        ${sold ? `<div class="pay" style="margin-top:16px"><span>✅</span><span>This one has been sold. ${newStock(p) > 0 ? `<a href="#/p/${encodeURIComponent(p.id)}">It's also available new.</a>` : 'Message us and we\'ll tell you when another comes in.'}</span></div>
+        ${sold ? `<div class="pay" style="margin-top:16px"><span>✅</span><span>This one has been sold. ${newStock(p) > 0 ? `<a href="#/p/${encodeURIComponent(linkId(p.id))}">It's also available new.</a>` : 'Message us and we\'ll tell you when another comes in.'}</span></div>
                <div class="ctas"><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hi Deuce & Smash! Do you have another pre-loved ${title} in Bazaar Resale?`)}">${WA_ICON} Ask on WhatsApp</a></div>`
              : ctaHTML({ title: `pre-loved ${title}`, label: g ? g.label + ', ' + inr(u.price) : inr(u.price), available: true })}
         ${(dmgRows.length || u.notes) ? `<div class="sec"><h3>Condition notes</h3>${dmgRows.length ? `<table class="specs">${dmgRows.map(([k, v]) => `<tr><td>${k}</td><td>${esc(v)}</td></tr>`).join('')}</table>` : ''}${u.notes ? `<p class="style" style="margin-top:10px">${esc(u.notes)}</p>` : ''}</div>` : ''}
-        ${newStock(p) !== null && !sold ? `<p class="note" style="margin-top:16px"><a href="#/p/${encodeURIComponent(p.id)}">Prefer new? See the new ${esc(title)} →</a></p>` : ''}
+        ${newStock(p) !== null && !sold ? `<p class="note" style="margin-top:16px"><a href="#/p/${encodeURIComponent(linkId(p.id))}">Prefer new? See the new ${esc(title)} →</a></p>` : ''}
         ${contentHTML(p)}
       </div>
     </div>
@@ -649,10 +654,11 @@ function route() {
   const h = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
   const [kind, id] = h.split('/');
   if (kind === 'resale') { history.replaceState(null, '', '#/'); document.body.classList.remove('view-detail'); document.title = 'Bazaar Resale — Deuce & Smash'; setCond('used'); return; }
+  if ((kind === 'p' || kind === 'u') && id && linkId(id) !== id) history.replaceState(null, '', `#/${kind}/${encodeURIComponent(linkId(id))}`);
   if ((kind === 'p' || kind === 'u') && id) {
     if (!document.body.classList.contains('view-detail')) lastListScroll = scrollY;
     document.body.classList.add('view-detail');
-    kind === 'p' ? renderProduct(id) : renderUsed(id);
+    kind === 'p' ? renderProduct(findId(C.products, id) || id) : renderUsed(findId(C.used, id) || id);
     scrollTo(0, 0);
   } else {
     const wasDetail = document.body.classList.contains('view-detail');

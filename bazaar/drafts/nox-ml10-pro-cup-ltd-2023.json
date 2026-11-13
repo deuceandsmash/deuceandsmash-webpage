@@ -1,11 +1,10 @@
 {
  "kind": "product",
  "id": "nox-ml10-pro-cup-ltd-2023",
- "rev": 2,
+ "rev": 3,
  "data": {
   "brand": "NOX",
   "model": "ML10 Pro Cup LTD",
-  "year": "2023",
   "categoryId": "padel-rackets",
   "sport": "padel",
   "stock": null,
@@ -71,7 +70,7 @@
     "v": "Limited, presentation pack"
    }
   ],
-  "summary": "The ML10 Pro Cup is one of the best-known control rackets in padel. This limited-edition 2023 version upgrades it with 18K carbon faces and the HR3 core for a solid, comfortable feel with more punch.",
+  "summary": "The ML10 Pro Cup is one of the best-known control rackets in padel. This limited-edition version upgrades it with 18K carbon faces and the HR3 core for a solid, comfortable feel with more punch.",
   "description": "Round shape, low balance and a very wide sweet spot make the ML10 easy to place and forgiving on off-centre hits. It is a favourite for defending from the back and building points.\n\nThe LTD version adds NOX's finest 18K carbon on the faces, a high-memory HR3 core for extra hitting power, and the Spin+ surface for bite. It came as a limited-edition pack in a presentation box.",
   "tech": [
    {

@@ -1,11 +1,10 @@
 {
  "kind": "product",
  "id": "bullpadel-xplo-comfort-2026",
- "rev": 1,
+ "rev": 2,
  "data": {
   "brand": "Bullpadel",
   "model": "XPLO Comfort",
-  "year": "2026",
   "categoryId": "padel-rackets",
   "sport": "padel",
   "stock": 1,
@@ -145,8 +144,7 @@
    "Balance: High",
    "Power",
    "Comfort",
-   "Martín Di Nenno",
-   "2026"
+   "Martín Di Nenno"
   ],
   "clubTake": "Brand new, unused. A great step up if you want more punch overhead without the arm buzz of a hard carbon racket.",
   "images": [

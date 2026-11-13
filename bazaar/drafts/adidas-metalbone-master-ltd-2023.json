@@ -1,15 +1,14 @@
 {
  "kind": "product",
  "id": "adidas-metalbone-master-ltd-2023",
- "rev": 2,
+ "rev": 3,
  "data": {
   "brand": "adidas",
   "model": "Metalbone Master LTD",
-  "year": "2023",
   "categoryId": "padel-rackets",
   "sport": "padel",
   "stock": null,
-  "hook": "The 2023 limited edition Ale Galán used to rule the tour: diamond power, adjustable balance.",
+  "hook": "Ale Galán's limited-edition Metalbone: diamond power, adjustable balance, pro-level feel.",
   "why": [
    "Limited edition built around world No. 1 Ale Galán",
    "Weight & Balance System to tune the feel from power to control",
@@ -68,14 +67,10 @@
    {
     "k": "Level",
     "v": "Advanced"
-   },
-   {
-    "k": "Season",
-    "v": "2023"
    }
   ],
-  "summary": "Get a feeling of what it's like to be number one. The Metalbone Master LTD 2023 is the exclusive, limited-edition racket made with the essence of Ale Galán's game: diamond power, adjustable balance and a premium carbon build.",
-  "description": "A racket made for the best. The diamond shape keeps the weight high for punch on smashes, while the Weight & Balance System lets you move it towards the handle for more control.\n\nAluminized carbon faces and a soft EVA core give a powerful, comfortable hit. It came in exclusive packaging made for this limited edition, and Ale Galán used it on tour that season.",
+  "summary": "Get a feeling of what it's like to be number one. The Metalbone Master LTD is the exclusive, limited-edition racket made with the essence of Ale Galán's game: diamond power, adjustable balance and a premium carbon build.",
+  "description": "A racket made for the best. The diamond shape keeps the weight high for punch on smashes, while the Weight & Balance System lets you move it towards the handle for more control.\n\nAluminized carbon faces and a soft EVA core give a powerful, comfortable hit. It came in exclusive packaging made for this limited edition, and it was built around Ale Galán's own game.",
   "tech": [
    {
     "name": "Weight & Balance System",
@@ -118,8 +113,7 @@
    "Limited edition",
    "Ale Galán",
    "Shape: Diamond",
-   "Power",
-   "2023"
+   "Power"
   ],
   "clubTake": "Bazaar Resale: pre-loved, in excellent condition. Ale Galán-level spec at a fraction of the new price.",
   "images": [
