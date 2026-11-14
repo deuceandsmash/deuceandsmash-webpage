@@ -26,6 +26,8 @@
 
   /* Header */
   .header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+  .brand-logo { display:block; height:34px; width:auto; }
+  .pin-logo { display:block; width:220px; max-width:80%; height:auto; margin:0 auto 14px; }
   .header-logo{font-size:1.3rem;font-weight:800;}
   .header-logo span{color:var(--accent);}
   .nav-links{margin-left:auto;display:flex;gap:8px;}
@@ -127,7 +129,8 @@
 <!-- PIN overlay -->
 <div id="pin-overlay">
   <div class="pin-box">
-    <h2>🏓 Tournament Admin</h2>
+    <img class="pin-logo" src="/assets/deuce-and-smash-logo.png" alt="Deuce &amp; Smash">
+    <h2>Tournament Admin</h2>
     <p id="gate-msg">Club staff: sign in with your approved Google account</p>
     <button class="pin-btn" id="gate-signin" onclick="staffSignIn()">Sign in with Google</button>
     <button class="pin-btn" id="gate-signout" onclick="staffSignOut()" style="display:none;background:transparent;color:var(--muted);border:1px solid var(--border)">Use a different account</button>
@@ -137,7 +140,7 @@
 
 <!-- Header -->
 <div class="header" style="display:none" id="main-header">
-  <div class="header-logo">Deuce &amp; <span>Smash</span></div>
+  <div class="header-logo"><img class="brand-logo" src="/assets/deuce-and-smash-logo.png" alt="Deuce &amp; Smash"></div>
   <div class="nav-links">
     <a class="nav-link" href="scoreboard.html" target="_blank">📺 Scoreboard</a>
     <a class="nav-link" href="../admin/">👥 Members</a>
