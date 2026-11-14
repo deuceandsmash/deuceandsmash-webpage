@@ -140,7 +140,7 @@
   <div class="header-logo">Deuce &amp; <span>Smash</span></div>
   <div class="nav-links">
     <a class="nav-link" href="scoreboard.html" target="_blank">📺 Scoreboard</a>
-    <a class="nav-link" href="../members/">👥 Members</a>
+    <a class="nav-link" href="../admin/">👥 Members</a>
   </div>
 </div>
 
@@ -598,7 +598,11 @@ function renderSelectedPlayers() {
 window.addGuest = async () => {
   const name = document.getElementById('guest-name').value.trim();
   if (!name) return;
-  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g,'');
+  // Reuse an existing member with this name; otherwise create one under a free (permanent) key
+  const _n = s => String(s||'').trim().toLowerCase();
+  const sameName = Object.keys(members).find(k => _n(members[k].name) === _n(name));
+  const baseId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g,'') || 'member';
+  let id = sameName || baseId, _i = 2; if (!sameName) while (members[id]) id = `${baseId}-${_i++}`;
   if (!members[id]) {
     const newM = { id, name, source: 'manual', sport: 'Padel', levelOverride:'', phone:'', email:'', fullName:'', membership:'', notes:'', whatsappName:'', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), active: true };
     await set(ref(db, `members/${id}`), newM);
@@ -1506,8 +1510,9 @@ window.submitRound = async (ri) => {
       .map(idx => players[idx]).filter(Boolean);
     if (!teamA.length || !teamB.length) continue;
     const matchId = `${t.id}-r${ri+1}-m${mi+1}`;
+    const _idOf = nm => Object.keys(members).find(k => String(members[k].name||'').trim().toLowerCase() === String(nm||'').trim().toLowerCase()) || '';
     await set(ref(db, `openPlayMatches/${matchId}`), {
-      teamA, teamB, a: sa, b: sb,
+      teamA, teamB, teamAIds: teamA.map(_idOf), teamBIds: teamB.map(_idOf), a: sa, b: sb,
       date:         tDate,
       source:       'tournament',
       tournamentId: t.id,

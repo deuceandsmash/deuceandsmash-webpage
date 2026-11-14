@@ -1020,7 +1020,8 @@ async function writeGames(e, id) {
     const sc = parseScore(g.score); if (!sc) continue;
     const matchId = g.matchId || `${e.date}-desk-${uid()}`;
     const teamA = [nameOf(g.a1), nameOf(g.a2)], teamB = [nameOf(g.b1), nameOf(g.b2)];
-    await set(ref(clubDb, `openPlayMatches/${matchId}`), { date: e.date, format: 'openplay', teamA, teamB, a: sc.a, b: sc.b, score: sc.score, sets: sc.sets, setsData: sc.setsData,
+    const mid_ = k => (MEMBERS[k] ? k : '');
+    await set(ref(clubDb, `openPlayMatches/${matchId}`), { date: e.date, format: 'openplay', teamA, teamB, teamAIds: [mid_(g.a1), mid_(g.a2)], teamBIds: [mid_(g.b1), mid_(g.b2)], a: sc.a, b: sc.b, score: sc.score, sets: sc.sets, setsData: sc.setsData,
       status: 'confirmed', enteredAt: now, note: `Desk — ${teamA.join(' & ')} vs ${teamB.join(' & ')}`, source: 'desk', bookingId: id, court: e.courts.join(','), session: e.type === 'open_play' ? 'desk-' + id : '' });
     g.matchId = matchId; g._saved = sig; wrote++;
   }

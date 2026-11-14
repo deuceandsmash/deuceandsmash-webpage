@@ -5,7 +5,9 @@ Static site, published by Vercel from this repo. **Every push to `main` goes liv
 | Path | What it is |
 |---|---|
 | `/` (`index.html`) | Public landing page |
-| `/members/` | Members portal & Smash Ratings |
+| `/smashdex/` | SmashDex: member-facing app (SDX Rating, Matchup Dex). Holding page for now |
+| `/members/` | Redirects to `/smashdex/` |
+| `/admin/` | Club staff tool: member database, Smash/SDX ratings, open-play entry (PIN) |
 | `/tournaments/` | Tournament admin & scoreboards |
 | `/ops/` | Owners-only ops dashboard (Google sign-in) |
 | `/ops/entry/` | Front-desk booking entry (club account + owners) |
@@ -20,4 +22,12 @@ Static site, published by Vercel from this repo. **Every push to `main` goes liv
    (this happened on 29 Oct 2026).
 2. **Do not add a `vercel.json` with a catch-all route** (`"/(.*)" → "/index.html"`).
    It sends `/members`, `/tournaments` and `/ops` to the landing page.
-3. After a push, check `/`, `/members/`, `/tournaments/`, `/ops/`, `/ops/entry/` and `/bazaar/` all load.
+3. After a push, check `/`, `/smashdex/`, `/members/` (redirect), `/admin/`, `/tournaments/`, `/ops/`, `/ops/entry/` and `/bazaar/` all load.
+
+## Member IDs (since 14 Nov 2026)
+
+Every match in `openPlayMatches` stores `teamAIds` / `teamBIds` (member keys) next to `teamA` / `teamB` (names),
+and every open-play session stores `playerIds`. Member keys never change, even on rename. The staff tool heals
+missing/stale IDs on load and shows names from the IDs, so renaming a member keeps their history.
+Each member has a permanent public `dexNo` (shown as "Dex #0042"); `meta/dexCounter` holds the last issued number.
+Pre-migration backup: `backups/2026-11-14-pre-smashdex` in the `deuceandsmash-club` database.
