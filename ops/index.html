@@ -31,6 +31,10 @@ a{color:var(--yellow)}
 /* ── Gate ─────────────────────────────────────────── */
 #gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
 .gate-card{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:40px 32px;text-align:center}
+.brand-gate{display:block;width:280px;max-width:82%;height:auto;margin:0 auto}
+.brand-top{display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
+.brand-top img{height:30px;width:auto;display:block}
+@media (max-width:600px){.brand-top img{height:22px}}
 .brand{font-family:var(--head);letter-spacing:.04em;line-height:.9}
 .gate-card .brand{font-size:44px}
 .gate-card .brand b{color:var(--yellow);font-weight:400}
@@ -219,7 +223,7 @@ select{background:var(--card);border:1px solid var(--line);color:var(--text);bor
 <!-- Sign-in gate -->
 <section id="gate">
   <div class="gate-card">
-    <div class="brand">DEUCE <b>&amp;</b> SMASH</div>
+    <img src="/assets/deuce-and-smash-logo.png" alt="Deuce &amp; Smash" class="brand-gate">
     <div class="brand" style="font-size:26px;color:var(--text2);margin-top:6px">OPS DASHBOARD</div>
     <p class="gate-sub">Owners only. Sign in with your Google account.</p>
     <div id="gateBody">
@@ -233,7 +237,7 @@ select{background:var(--card);border:1px solid var(--line);color:var(--text);bor
 <div id="app" class="hidden">
   <header class="top">
     <div class="top-row">
-      <div class="brand">D<b>&amp;</b>S OPS</div>
+      <div class="brand brand-top"><img src="/assets/deuce-and-smash-logo.png" alt="Deuce &amp; Smash">OPS</div>
       <div class="sync" id="sync"></div>
       <a class="btn btn-sm" href="/ops/entry/" style="text-decoration:none">Front desk</a>
       <button class="btn btn-sm" id="refreshBtn" title="Reload data from the database">Refresh</button>

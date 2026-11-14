@@ -25,6 +25,10 @@ input,select,textarea{font-family:var(--ui);font-size:16px;color:var(--text);bac
 input:focus,select:focus,textarea:focus{outline:2px solid var(--yellow);outline-offset:-1px;border-color:transparent}
 input[type=checkbox]{width:auto}
 .hidden{display:none!important}
+.brand-gate{display:block;width:280px;max-width:82%;height:auto;margin:0 auto}
+.brand-top{display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
+.brand-top img{height:30px;width:auto;display:block}
+@media (max-width:600px){.brand-top img{height:22px}}
 .brand{font-family:var(--head);letter-spacing:.04em;line-height:.9}
 .brand b{color:var(--yellow);font-weight:400}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:999px;padding:10px 18px;font-size:17px;font-weight:600;letter-spacing:.02em;min-height:44px;white-space:nowrap}
@@ -285,7 +289,7 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 </head>
 <body>
 <section id="gate"><div class="gate-card">
-  <div class="brand" style="font-size:44px">DEUCE <b>&amp;</b> SMASH</div>
+  <img src="/assets/deuce-and-smash-logo.png" alt="Deuce &amp; Smash" class="brand-gate">
   <div class="brand" style="font-size:26px;color:var(--text2);margin-top:6px">FRONT DESK</div>
   <p style="color:var(--text2);margin:14px 0 26px;font-size:18px">Sign in with the club Google account.</p>
   <div id="gateBody"><div class="spinner"></div></div>
@@ -294,7 +298,7 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 
 <div id="app" class="hidden">
   <header class="top"><div class="top-row">
-    <div class="brand">D<b>&amp;</b>S DESK</div>
+    <div class="brand brand-top"><img src="/assets/deuce-and-smash-logo.png" alt="Deuce &amp; Smash">DESK</div>
     <div class="daynav">
       <button class="round" id="prevDay" aria-label="Previous day">‹</button>
       <h2 id="dayTitle"></h2>
