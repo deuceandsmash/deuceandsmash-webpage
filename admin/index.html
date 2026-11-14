@@ -325,6 +325,7 @@
 
 <!-- Members tab -->
 <div class="section active" id="tab-members">
+  <div id="sdx-requests" style="display:none;background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;margin:0 0 12px"></div>
   <div class="search-row">
     <input type="search" class="search-input" id="search-input" placeholder="Search by name or phone…" oninput="renderMembers()">
     <select class="filter-select" id="filter-level" onchange="renderMembers()">
@@ -528,6 +529,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, get, set, update, push, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { DSR } from "/shared/dsr.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ============================================================
@@ -549,22 +551,7 @@ const db = getDatabase(app);
 const auth = getAuth(app);
 
 // ===== Smash Rating Engine (embedded) =====
-const DSR = {
-  SCALE:7/1000,DIVISOR:400,
-  K:{provisional:60,established:32,veteran:20},
-  ZONES:[{name:"Growth",lo:0,hi:3,gain:1.3,loss:0.9},{name:"Qualification",lo:3,hi:4,gain:0.65,loss:1.0},{name:"Elite",lo:4,hi:99,gain:0.35,loss:1.15}],
-  QUALITY_GATE:{from:4.5,oppBelow:3.5,gain:0.15},
-  TOP_DAMPENER:{above:6.5,factor:0.5},
-  W:{league:1,openplay:1,competitive:1,americano:0.25},
-  PROVISIONAL:{sets:8,partners:4,opponents:6},
-  BREAK:{faster:90,provisional:180,hidden:365},
-  BANDS:[["Beginner",0],["Beginner+",1],["Intermediate",2],["Intermediate+",3],["Intermediate High",4],["Advanced",5],["Elite",6]],
-  TAG_SEED:{"Beginner":0.75,"Beginner / Beginner+":1.0,"Beginner+":1.5,"Beginner+ / Inter":2.0,"Inter":2.5,"Inter / Inter+":3.0,"Strong Inter":3.5,"Inter+":3.5},
-  TAG_ORDER:["Beginner","Beginner / Beginner+","Beginner+","Beginner+ / Inter","Inter","Inter / Inter+","Strong Inter","Inter+"],
-  SEED_FLOOR:0.5,SEED_CAP:4.0,DEFAULT_SEED:0.5,
-};
-DSR.band=r=>{let b=DSR.BANDS[0][0];for(const[n,lo]of DSR.BANDS)if(r>=lo-1e-9)b=n;return b;};
-DSR.zone=r=>DSR.ZONES.find(z=>r>=z.lo-1e-9&&r<z.hi)||DSR.ZONES[0];
+// Smash Rating engine lives in /shared/dsr.js (shared with SmashDex)
 // Band colour — consistent across all views (matches guide table tier colours)
 const BAND_STYLE = {
   'Beginner':          { color: '#aaa',    bg: 'rgba(150,150,150,0.15)', cls: 'badge-init' },
@@ -580,72 +567,6 @@ function bandChip(band) {
   const s = bandColor(band);
   return `<span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:0.72rem;font-weight:700;background:${s.bg};color:${s.color}">${band}</span>`;
 }
-DSR.expected=(ra,rb)=>1/(1+Math.pow(10,-((ra-rb)/DSR.SCALE)/DSR.DIVISOR));
-const dayNum=d=>Math.round(new Date(d+"T00:00:00Z").getTime()/864e5);
-DSR.setsIn=m=>m.sets||String(m.score||"").split(",").filter(s=>s.trim()).length||1;
-DSR.isProvisional=p=>p.sets<DSR.PROVISIONAL.sets||p.partners.size<DSR.PROVISIONAL.partners||p.opps.size<DSR.PROVISIONAL.opponents;
-DSR.seedFromHistory=(games,today)=>{
-  const t=dayNum(today);const g=games.filter(x=>x.level in DSR.TAG_SEED&&t-dayNum(x.date)<=183);
-  if(!g.length)return null;
-  const cnt={};g.forEach(x=>cnt[x.level]=(cnt[x.level]||0)+1);
-  const order=DSR.TAG_ORDER;let tag=null,atOrAbove=0;
-  for(let i=order.length-1;i>=0;i--){const c=cnt[order[i]]||0;atOrAbove+=c;if(c>=3||(c&&atOrAbove/g.length>=0.4)){tag=order[i];break;}}
-  if(!tag)tag=g[g.length-1].level;
-  let seed=DSR.TAG_SEED[tag],why=`Seeded from ${tag} open plays`;
-  const higher=order.slice(order.indexOf(tag)+1).filter(l=>DSR.TAG_SEED[l]>DSR.TAG_SEED[tag]).reduce((s,l)=>s+(cnt[l]||0),0);
-  if(higher>=3){seed+=0.25;why+="; +0.25 for 3+ games a level up";}
-  if(g.length<3){seed-=0.25;why+="; −0.25 for fewer than 3 games";}
-  return{seed:Math.min(DSR.SEED_CAP,Math.max(DSR.SEED_FLOOR,seed)),tag,why};
-};
-DSR.compute=(seeds,matches,today)=>{
-  const S={};
-  const get=n=>S[n]||(S[n]={name:n,seed:seeds[n]?.seed??DSR.DEFAULT_SEED,r:seeds[n]?.seed??DSR.DEFAULT_SEED,me:0,sets:0,matches:0,last:null,partners:new Set(),opps:new Set(),hist:[]});
-  Object.keys(seeds).forEach(get);
-  const list=matches.filter(m=>m.status==="confirmed"&&DSR.W[m.format]).slice().sort((x,y)=>x.date.localeCompare(y.date)||String(x.enteredAt||"").localeCompare(String(y.enteredAt||"")));
-  for(const m of list){
-    const A=m.teamA.map(get),B=m.teamB.map(get);
-    const W=DSR.W[m.format];const d=dayNum(m.date);
-    // Parse individual sets when available (score like "6-3, 4-6"), else treat as one set
-    const setScores=(()=>{
-      if(m.setsData&&Array.isArray(m.setsData)&&m.setsData.length)return m.setsData.map(s=>({a:s.a,b:s.b}));
-      const parts=String(m.score||"").split(/[,;]/).map(s=>s.trim()).filter(s=>/^\d{1,2}-\d{1,2}$/.test(s));
-      if(parts.length>1)return parts.map(s=>{const[a,b]=s.split('-').map(Number);return{a,b};});
-      return[{a:m.a,b:m.b}];
-    })();
-    const nSets=setScores.length;
-    const apply=(p,team,opp,oppAvg,surprise,isFirst)=>{
-      // Skip this match for a player whose staff assessment started after the match date
-      if(seeds[p.name]?.assessedAt&&m.date<seeds[p.name].assessedAt)return;
-      const away=p.last==null?0:d-p.last;
-      let status=DSR.isProvisional(p)?"provisional":p.me<30?"established":"veteran";
-      if(away>=DSR.BREAK.provisional)status="provisional";
-      else if(away>=DSR.BREAK.faster&&status==="veteran")status="established";
-      let K=DSR.K[status];if(p.r>DSR.TOP_DAMPENER.above)K*=DSR.TOP_DAMPENER.factor;
-      const z=DSR.zone(p.r);let mult=surprise>=0?z.gain:z.loss;
-      if(surprise>0&&p.r>=DSR.QUALITY_GATE.from&&oppAvg<DSR.QUALITY_GATE.oppBelow)mult=DSR.QUALITY_GATE.gain;
-      const delta=K*mult*W*surprise*DSR.SCALE;const before=p.r;
-      p.r=Math.min(7,Math.max(0,p.r+delta));
-      if(isFirst){p.me+=W;p.sets+=nSets*W;p.matches++;p.last=d;
-        team.filter(x=>x!==p).forEach(x=>p.partners.add(x.name));opp.forEach(x=>p.opps.add(x.name));}
-      p.hist.push({date:m.date,r:p.r,delta:p.r-before,id:m.id});
-    };
-    setScores.forEach((ss,si)=>{
-      const ra=(A[0].r+A[1].r)/2,rb=(B[0].r+B[1].r)/2;
-      const E=DSR.expected(ra,rb);const Sa=ss.a/(ss.a+ss.b);
-      const isFirst=si===0;
-      A.forEach(p=>apply(p,A,B,rb,Sa-E,isFirst));B.forEach(p=>apply(p,B,A,ra,E-Sa,isFirst));
-    });
-  }
-  const t=dayNum(today);
-  Object.values(S).forEach(p=>{
-    const away=p.last==null?null:t-p.last;
-    p.badge=(DSR.isProvisional(p)||(away!=null&&away>=DSR.BREAK.provisional))?"Provisional":p.me<30?"Established":"Veteran";
-    p.hidden=away!=null&&away>DSR.BREAK.hidden;
-    p.band=DSR.band(p.r);p.zone=DSR.zone(p.r).name;
-    p.trend=p.hist.slice(-5).reduce((s,h)=>s+h.delta,0);
-  });
-  return{players:S};
-};
 
 // ===== State =====
 let members = {};       // id -> member object
@@ -699,13 +620,11 @@ function idByName(name) {
   return '';
 }
 const idsFor = arr => (arr || []).map(idByName);
-// Pick the right ID for one slot: a stored name that matches a current member wins
-// (fixes stale IDs); otherwise keep the stored ID if it still exists (covers renames).
+// Pick the right ID for one slot: a stored ID that still exists always wins (renames,
+// including members renaming themselves in SmashDex); the name is only used to fill a gap.
 function healSlot(name, storedId) {
-  const byName = idByName(name);
-  if (byName) return byName;
   if (storedId && members[storedId]) return storedId;
-  return '';
+  return idByName(name);
 }
 const _sameArr = (x, y) => Array.isArray(x) && Array.isArray(y) && x.length === y.length && x.every((v, i) => v === y[i]);
 window.dexLabel = m => (m && m.dexNo) ? `Dex #${String(m.dexNo).padStart(4, '0')}` : '';
@@ -770,11 +689,15 @@ async function loadAll() {
   // Fetch members, matches and tournament meta in parallel.
   // openPlaySessions is only needed when a member has neither ratingOverride nor levelOverride;
   // we fetch it lazily after the main data is ready to avoid blocking first render.
-  const [mSnap, matchSnap, trnMetaSnap] = await Promise.all([
+  const [mSnap, matchSnap, trnMetaSnap, adjSnap, lrSnap] = await Promise.all([
     get(ref(db, 'members')),
     get(ref(db, 'openPlayMatches')),
     get(ref(db, 'tournaments/_meta')),
+    get(ref(db, 'adjustments')).catch(() => null),
+    get(ref(db, 'linkRequests')).catch(() => null),
   ]);
+  adjustments = (adjSnap && adjSnap.val()) || {};
+  linkRequests = (lrSnap && lrSnap.val()) || {};
   members = mSnap.val() || {};
   opMatches = matchSnap.val() || {};
   trnMeta = trnMetaSnap.val() || {};
@@ -791,6 +714,9 @@ async function loadAll() {
     sessions = sSnap.val() || {};
     await healAndResolve(opMatches, sessions, true);
     computeAllRatings();
+    _profilesReady = true;
+    publishProfiles();
+    renderLinkRequests();
     renderMembers();
     renderRatings();
   }).catch(() => {}); // non-critical
@@ -838,10 +764,71 @@ function computeAllRatings() {
   }
   // All matches
   const allMatches = Object.entries(opMatches).map(([id, m]) => ({ id, ...m }));
-  const result = DSR.compute(seeds, allMatches, today);
+  const result = DSR.compute(seeds, allMatches, today, adjustmentList());
   ratings = result.players;
+  _lastSeeds = seeds;
+  // Keep SmashDex profiles in step with every staff change (debounced)
+  if (_profilesReady) { clearTimeout(_publishTimer); _publishTimer = setTimeout(publishProfiles, 1200); }
   // No post-compute pin — ratingOverride is a DSR seed only (point-in-time assessment)
 }
+
+// ===== SmashDex bridge =====
+// adjustments/{memberId}/self = one-time self-lowering by the member; adjustments/{memberId}/admin/{push} = staff changes
+let adjustments = {};
+let _lastSeeds = {};
+let _profilesReady = false, _publishTimer = null;
+let linkRequests = {};
+function adjustmentList() {
+  const out = [];
+  for (const [mid, a] of Object.entries(adjustments || {})) {
+    const name = members[mid]?.name; if (!name) continue;
+    if (a.self) out.push({ ...a.self, name, by: 'self', id: `${mid}-self` });
+    for (const [k, x] of Object.entries(a.admin || {})) out.push({ ...x, name, by: 'admin', id: `${mid}-${k}` });
+  }
+  return out;
+}
+const DEFAULT_CLUBS = ['Deuce & Smash', 'Rally 7', '7 Padel', 'Padel Haus', 'Padel Hub', 'Courtiers Club', 'Hindu Gymkhana', 'Courtside', 'Paddle Pulse', 'Serve Society'];
+const _slug = s => String(s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+// Publish the member-safe profile each SmashDex user can see (no phones/emails/notes)
+async function publishProfiles() {
+  try {
+    const [pSnap, cSnap] = await Promise.all([get(ref(db, 'profiles')), get(ref(db, 'clubs'))]);
+    const cur = pSnap.val() || {}, batch = {};
+    for (const [id, m] of Object.entries(members)) {
+      const sd = _lastSeeds[m.name] || {};
+      const want = { dexNo: m.dexNo || null, name: m.name || '', seed: sd.seed ?? null, seedFrom: sd.assessedAt || null, active: m.active !== false };
+      for (const [k, v] of Object.entries(want)) if ((cur[id] || {})[k] !== v && !(cur[id]?.[k] == null && v == null)) batch[`profiles/${id}/${k}`] = v;
+    }
+    for (const id of Object.keys(cur)) if (!members[id]) batch[`profiles/${id}`] = null;
+    if (!cSnap.exists()) DEFAULT_CLUBS.forEach((n, i) => { batch[`clubs/${_slug(n)}`] = { name: n, approved: true, order: i + 1 }; });
+    if (Object.keys(batch).length) { await update(ref(db), batch); console.log(`[SmashDex] published ${Object.keys(batch).length} profile fields`); }
+  } catch (e) { console.warn('[SmashDex] publish failed', e); }
+}
+// ----- SmashDex sign-in requests (members asking to link their Google/email login to a Dex record)
+function renderLinkRequests() {
+  const box = document.getElementById('sdx-requests'); if (!box) return;
+  const reqs = Object.entries(linkRequests || {});
+  if (!reqs.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const opts = Object.entries(members).sort((a, b) => (a[1].name || '').localeCompare(b[1].name || ''))
+    .map(([id, m]) => `<option value="${id}">${m.name}${m.dexNo ? ' · ' + dexLabel(m) : ''}</option>`).join('');
+  box.style.display = 'block';
+  box.innerHTML = `<div style="font-weight:700;margin-bottom:8px">SmashDex sign-in requests (${reqs.length})</div>` + reqs.map(([uid, r]) => {
+    const guess = (r.dexNo && Object.keys(members).find(id => +members[id].dexNo === +r.dexNo)) || idByName(r.name) || '';
+    return `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--border)">
+      <div style="flex:1;min-width:220px"><b>${r.name || '—'}</b> <span style="color:var(--muted)">${r.email || ''}${r.phone ? ' · ' + r.phone : ''}${r.dexNo ? ' · says Dex #' + String(r.dexNo).padStart(4, '0') : ''}</span>${r.note ? `<div style="color:var(--muted);font-size:.8rem">${String(r.note).replace(/</g, '&lt;')}</div>` : ''}</div>
+      <select class="filter-select" id="lr-${uid}"><option value="">Choose member…</option>${opts}</select>
+      <button class="btn btn-primary btn-sm" onclick="approveLink('${uid}')">Link</button>
+      <button class="btn btn-sm" onclick="rejectLink('${uid}')">Dismiss</button></div>`
+      .replace(`<option value="${guess}">`, `<option value="${guess}" selected>`);
+  }).join('');
+}
+window.approveLink = async uid => {
+  const mid = document.getElementById(`lr-${uid}`).value; if (!mid) return showToast('Choose the member first', 'err');
+  const r = linkRequests[uid] || {};
+  await update(ref(db), { [`links/${uid}`]: mid, [`members/${mid}/smashdexUid`]: uid, [`members/${mid}/smashdexEmail`]: r.email || '', [`linkRequests/${uid}`]: null });
+  delete linkRequests[uid]; renderLinkRequests(); showToast(`Linked to ${members[mid].name}`, 'ok');
+};
+window.rejectLink = async uid => { await update(ref(db), { [`linkRequests/${uid}`]: null }); delete linkRequests[uid]; renderLinkRequests(); };
 
 // ===== Members tab =====
 window.renderMembers = () => {

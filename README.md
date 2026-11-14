@@ -5,7 +5,7 @@ Static site, published by Vercel from this repo. **Every push to `main` goes liv
 | Path | What it is |
 |---|---|
 | `/` (`index.html`) | Public landing page |
-| `/smashdex/` | SmashDex: member-facing app (SDX Rating, Matchup Dex). Holding page for now |
+| `/smashdex/` | SmashDex: member-facing app. Sign-in, account linking, My Profile, SDX explainer, one-time self-lowering |
 | `/members/` | Redirects to `/smashdex/` |
 | `/admin/` | Club staff tool: member database, Smash/SDX ratings, open-play entry (PIN) |
 | `/tournaments/` | Tournament admin & scoreboards |
@@ -31,3 +31,13 @@ and every open-play session stores `playerIds`. Member keys never change, even o
 missing/stale IDs on load and shows names from the IDs, so renaming a member keeps their history.
 Each member has a permanent public `dexNo` (shown as "Dex #0042"); `meta/dexCounter` holds the last issued number.
 Pre-migration backup: `backups/2026-11-14-pre-smashdex` in the `deuceandsmash-club` database.
+
+## Rating engine (since 15 Nov 2026)
+
+`shared/dsr.js` is the only copy of the Smash/SDX rating engine. Both `/admin` and `/smashdex` import it, so
+ratings are identical everywhere. Manual adjustments live in `adjustments/{memberId}` (`self` = the member's
+one-time lowering; `admin/{push}` = staff changes) and sit on the same timeline as matches.
+
+The staff tool publishes a member-safe `profiles/{memberId}` (Dex number, name, rating seed; no contact details)
+every time it loads or a staff change is saved. SmashDex computes everything live from `profiles`,
+`openPlayMatches` and `adjustments`. Database rules are in `firebase-rules.json` (paste into the Firebase console).

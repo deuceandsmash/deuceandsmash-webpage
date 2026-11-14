@@ -2,24 +2,68 @@
   "rules": {
     // Club database (deuceandsmash-club). Paste into Firebase console → Realtime Database → Rules → Publish.
     //
-    // Staff = a signed-in Google account listed under /admins (email with "." replaced by ",").
-    // Staff can read and write everything. The public can read only what the
-    // tournament index and scoreboards need. Everything else is closed.
+    // STAFF  = signed-in Google account listed under /admins (email with "." replaced by ","): read/write everything.
+    // PUBLIC = tournaments + match scores (scoreboards).
+    // MEMBER = signed-in SmashDex user whose login is linked to a member under /links/{uid}.
 
     ".read":  "auth != null && auth.token.email_verified == true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
     ".write": "auth != null && auth.token.email_verified == true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
 
-    // Each signed-in user may check whether their own email is on the staff list
     "admins": {
       "$emailKey": {
         ".read": "auth != null && auth.token.email_verified == true && $emailKey === auth.token.email.toLowerCase().replace('.', ',')"
       }
     },
 
-    // Public: tournament list, live scoreboards and match scores (names + scores only)
     "tournaments":     { ".read": true },
-    "openPlayMatches": { ".read": true }
+    "openPlayMatches": { ".read": true },
 
-    // members (phones, emails), openPlaySessions, visits, meta, backups: staff only (root rules above)
+    // Which member a login belongs to (written by staff when approving a request)
+    "links": {
+      "$uid": { ".read": "auth != null && auth.uid === $uid" }
+    },
+
+    // A not-yet-linked user asks staff to link them to their Dex record
+    "linkRequests": {
+      "$uid": {
+        ".read":  "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && !root.child('links').child($uid).exists()",
+        ".validate": "!newData.exists() || newData.hasChildren(['name', 'at'])"
+      }
+    },
+
+    // Member-safe profile (no phone/email/notes). Readable by any signed-in SmashDex user.
+    "profiles": {
+      ".read": "auth != null",
+      "$mid": {
+        "name":  { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid", ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
+        "prefs": { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid" },
+        "seenHonours": { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid" }
+      }
+    },
+
+    // Private member record: the linked member can read/edit only their own contact fields
+    "members": {
+      "$mid": {
+        "$field": {
+          ".read":  "auth != null && root.child('links').child(auth.uid).val() === $mid && ($field === 'name' || $field === 'fullName' || $field === 'phone' || $field === 'email' || $field === 'dexNo')",
+          ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid && ($field === 'name' || $field === 'fullName' || $field === 'phone' || $field === 'email')"
+        }
+      }
+    },
+
+    // Manual rating changes. A member may lower their own rating exactly once ("self"); anything else is staff-only.
+    "adjustments": {
+      ".read": "auth != null",
+      "$mid": {
+        "self": {
+          ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['from', 'to', 'date', 'at']) && newData.child('to').isNumber() && newData.child('from').isNumber() && newData.child('to').val() >= 0 && newData.child('to').val() < newData.child('from').val()"
+        }
+      }
+    },
+
+    // Club list for score entry (staff curate; members can suggest in a later release)
+    "clubs": { ".read": "auth != null" }
   }
 }
