@@ -190,7 +190,7 @@ const FIREBASE_CONFIG = {
 const app = initializeApp(FIREBASE_CONFIG);
 const db  = getDatabase(app);
 const auth = getAuth(app);
-signInAnonymously(auth).catch(e => console.warn('Anon auth:', e));
+// Public page: reads need no sign-in
 
 const urlId = new URLSearchParams(location.search).get('id');
 let _activeTab = 'standings';

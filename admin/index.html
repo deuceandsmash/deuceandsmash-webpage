@@ -297,9 +297,9 @@
 <div id="pin-overlay">
   <div class="pin-box">
     <h2>🏓 D&S Members</h2>
-    <p>Staff access only — enter your PIN</p>
-    <input type="password" class="pin-input" id="pin-input" maxlength="6" placeholder="••••••" inputmode="numeric">
-    <button class="pin-btn" onclick="checkPin()">Enter</button>
+    <p id="gate-msg">Club staff: sign in with your approved Google account</p>
+    <button class="pin-btn" id="gate-signin" onclick="staffSignIn()">Sign in with Google</button>
+    <button class="pin-btn" id="gate-signout" onclick="staffSignOut()" style="display:none;background:transparent;color:var(--muted);border:1px solid var(--border)">Use a different account</button>
     <div class="pin-error" id="pin-error"></div>
   </div>
 </div>
@@ -525,7 +525,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, get, set, update, push, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ============================================================
 //  CONFIG — replace with your deuceandsmash-club Firebase config
@@ -539,15 +539,11 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "953747553630",
   appId: "1:953747553630:web:316645b323ae12019fa3cf"
 };
-const ADMIN_PIN = "062026";
 // ============================================================
 
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getDatabase(app);
 const auth = getAuth(app);
-
-// Sign in anonymously so Firebase security rules allow reads
-signInAnonymously(auth).catch(e => console.warn('Anon auth failed:', e));
 
 // ===== Smash Rating Engine (embedded) =====
 const DSR = {
@@ -660,22 +656,32 @@ let drawerEdits = {};
 let currentTab = 'members';
 let _renderDebounce = null;
 
-// ===== PIN =====
-window.checkPin = () => {
-  const v = document.getElementById('pin-input').value;
-  if (v === ADMIN_PIN) {
-    document.getElementById('pin-overlay').style.display = 'none';
-    document.getElementById('main-header').style.display = 'flex';
-    document.getElementById('main-tabs').style.display = 'flex';
-    document.getElementById('tab-members').classList.add('active');
-    loadAll();
-  } else {
-    document.getElementById('pin-error').textContent = 'Incorrect PIN — try again';
-    document.getElementById('pin-input').value = '';
-    document.getElementById('pin-input').focus();
+// ===== Staff sign-in (Google; approved accounts listed under /admins) =====
+const _provider = new GoogleAuthProvider(); _provider.setCustomParameters({ prompt: 'select_account' });
+const _emailKey = e => String(e || '').trim().toLowerCase().replace(/\./g, ',');
+let _staffStarted = false;
+window.staffSignIn = async () => {
+  document.getElementById('pin-error').textContent = '';
+  try { await signInWithPopup(auth, _provider); }
+  catch (e) {
+    if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(e.code)) return signInWithRedirect(auth, _provider);
+    if (!['auth/popup-closed-by-user', 'auth/cancelled-popup-request'].includes(e.code)) document.getElementById('pin-error').textContent = 'Sign-in failed: ' + (e.code || e.message);
   }
 };
-document.getElementById('pin-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPin(); });
+window.staffSignOut = () => signOut(auth);
+getRedirectResult(auth).catch(() => {});
+onAuthStateChanged(auth, async user => {
+  const msg = document.getElementById('gate-msg'), si = document.getElementById('gate-signin'), so = document.getElementById('gate-signout');
+  if (!user) { document.getElementById('pin-overlay').style.display = 'flex'; msg.textContent = 'Club staff: sign in with your approved Google account'; si.style.display = ''; so.style.display = 'none'; return; }
+  msg.textContent = 'Checking access…'; si.style.display = 'none';
+  let ok = false;
+  try { ok = (await get(ref(db, `admins/${_emailKey(user.email)}`))).val() === true; } catch (e) { console.warn('admin check failed', e); }
+  if (!ok) { msg.textContent = `${user.email} isn't approved for staff access. Ask an owner to add it.`; so.style.display = ''; return; }
+  document.getElementById('pin-overlay').style.display = 'none';
+  document.getElementById('main-header').style.display = 'flex';
+  document.getElementById('main-tabs').style.display = 'flex';
+  if (!_staffStarted) { _staffStarted = true; document.getElementById('tab-members').classList.add('active'); loadAll(); }
+});
 
 // ===== Member IDs & Dex numbers =====
 // Every match / session stores member IDs (teamAIds, teamBIds, playerIds) alongside names.

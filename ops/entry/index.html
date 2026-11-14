@@ -608,17 +608,29 @@ document.addEventListener('click', async ev => {
     catch (err) { if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(err.code)) return signInWithRedirect(auth, provider);
       if (!['auth/popup-closed-by-user', 'auth/cancelled-popup-request'].includes(err.code)) gate(signInBtn, 'Sign-in failed: ' + (err.message || err.code), true); }
   }
-  if (ev.target.closest('#signOutBtn') || ev.target.closest('#gateSignOut')) { await signOut(auth); }
+  if (ev.target.closest('#clubSignInBtn')) {
+    const p2 = new GoogleAuthProvider(); p2.setCustomParameters({ login_hint: USER_PENDING || '' });
+    try { await signInWithPopup(clubAuth, p2); location.reload(); }
+    catch (err) { if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(err.code)) return signInWithRedirect(clubAuth, p2);
+      if (!['auth/popup-closed-by-user', 'auth/cancelled-popup-request'].includes(err.code)) $('#gateMsg').textContent = 'Couldn\'t connect: ' + (err.message || err.code); }
+  }
+  if (ev.target.closest('#signOutBtn') || ev.target.closest('#gateSignOut')) { await signOut(auth); await signOut(clubAuth).catch(() => {}); }
 });
 getRedirectResult(auth).catch(() => {});
+getRedirectResult(clubAuth).catch(() => {});
+let USER_PENDING = '';
 onAuthStateChanged(auth, async user => {
   if (!user) return gate(signInBtn);
   const email = (user.email || '').toLowerCase();
   if (!OWNERS.includes(email) && !DESK.includes(email)) return gate(`<button class="btn" id="gateSignOut">Sign out</button>`, `${email} isn't set up for the front desk.`, true);
-  USER = email; IS_OWNER = OWNERS.includes(email);
+  USER = email; USER_PENDING = email; IS_OWNER = OWNERS.includes(email);
   gate('<div class="spinner"></div>', 'Loading…');
   try {
-    await signInAnonymously(clubAuth).catch(() => {});
+    // Members database (deuceandsmash-club) needs its own Google sign-in, once per device
+    await clubAuth.authStateReady();
+    if ((clubAuth.currentUser?.email || '').toLowerCase() !== email) {
+      return gate(`<button class="btn btn-primary" id="clubSignInBtn">Connect members database</button> <button class="btn" id="gateSignOut">Sign out</button>`, `One-time step on this device: confirm ${email} for the members database.`);
+    }
     const [cfgSnap, memSnap] = await Promise.all([get(ref(db, 'config')), get(ref(clubDb, 'members')).catch(() => null)]);
     const cfg = cfgSnap.val();
     if (cfg) CFG = { rates: { ...DEFAULT_CONFIG.rates, ...(cfg.rates || {}) }, items: cfg.items || DEFAULT_CONFIG.items, sources: cfg.sources || DEFAULT_CONFIG.sources };
