@@ -146,7 +146,7 @@ document.getElementById('tournamentsGrid').innerHTML =
 // Listen for live updates from Firebase _meta
 onValue(ref(db, 'tournaments/_meta'), snap => {
   const data = snap.val() || {};
-  TOURNAMENTS = Object.values(data).sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  TOURNAMENTS = Object.entries(data).map(([key, t]) => ({ ...t, _key: key })).sort((a,b) => (b.date||'').localeCompare(a.date||''));
   renderGrid(currentFilter);
 });
 
@@ -170,7 +170,7 @@ function renderGrid(filter = 'all') {
   }
 
   grid.innerHTML = filtered.map(t => `
-    <a class="t-card" href="${t.slug}.html" data-status="${t.status}" data-sport="${t.sport}">
+    <a class="t-card" href="${t.slug ? t.slug + '.html' : 'scoreboard.html?id=' + encodeURIComponent(t._key)}" data-status="${t.status}" data-sport="${t.sport}">
       <div class="t-card-header">
         <div class="t-card-top">
           <span class="t-format-badge">${t.format || 'Mexicano'}</span>
