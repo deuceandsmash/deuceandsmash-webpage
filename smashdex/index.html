@@ -8,6 +8,8 @@
 <meta property="og:title" content="SmashDex — by Deuce & Smash">
 <meta property="og:description" content="Your SDX Rating. Your rivals. Your record.">
 <meta name="theme-color" content="#0E0E2C">
+<link rel="icon" type="image/png" href="/assets/smashdex/favicon-64.png">
+<link rel="apple-touch-icon" href="/assets/smashdex/apple-touch-icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,6 +28,32 @@ button{cursor:pointer}
 a{color:var(--yellow)}
 :focus-visible{outline:2px solid var(--yellow);outline-offset:2px;border-radius:6px}
 .hidden{display:none!important}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Split-flap tiles: Night Court. --h on the container sets the size */
+.tiles{display:inline-flex;align-items:center;gap:calc(var(--h) * .07);--top:#2A2A60;--bot:#1E1E4A;--fg:#E2E41F}
+.flap{--r:calc(var(--h) * .087);--half:144ms;position:relative;display:inline-block;flex:none;width:calc(var(--h) * .69);height:var(--h);perspective:calc(var(--h) * 4)}
+.flap.dx{--fg:#5AA6F7} .flap.dg{--fg:#F5D628} .flap.gapL{margin-left:calc(var(--h) * .1)}
+.flap>span{position:absolute;left:0;right:0;height:50%;overflow:hidden}
+.flap>.t,.flap>.ft{top:0;background:var(--top);border-radius:var(--r) var(--r) 0 0}
+.flap>.b,.flap>.fb{bottom:0;background:var(--bot);border-radius:0 0 var(--r) var(--r)}
+.flap>.b{box-shadow:0 2px 0 rgba(0,0,0,.45)}
+.flap i{display:flex;align-items:center;justify-content:center;height:var(--h);padding-top:calc(var(--h) * .09);box-sizing:border-box;font:400 calc(var(--h) * .885)/1 var(--head);font-style:normal;color:var(--fg)}
+.flap>.b i,.flap>.fb i{margin-top:calc(var(--h) / -2)}
+.flap>.ft{transform-origin:50% 100%;backface-visibility:hidden}
+.flap>.fb{transform-origin:50% 0;backface-visibility:hidden}
+.flap::after{content:"";position:absolute;left:0;right:0;top:calc(50% - 1px);height:2px;background:#07071A}
+.flap.go>.ft{animation:flapT var(--half) cubic-bezier(.55,0,.9,.4) both}
+.flap.go>.fb{animation:flapB var(--half) cubic-bezier(.2,.9,.35,1.15) var(--half) both}
+@keyframes flapT{from{transform:rotateX(0deg);filter:brightness(1)}to{transform:rotateX(-90deg);filter:brightness(.5)}}
+@keyframes flapB{from{transform:rotateX(90deg);filter:brightness(1.4)}to{transform:rotateX(0deg);filter:brightness(1)}}
+@media (prefers-reduced-motion:reduce){.flap.go>.ft,.flap.go>.fb{animation:none}}
+.tiles .dot{flex:none;width:calc(var(--h) * .22);height:var(--h);display:flex;align-items:flex-end;justify-content:center;padding-bottom:calc(var(--h) * .12);box-sizing:border-box}
+.tiles .dot::before{content:"";width:calc(var(--h) * .13);height:calc(var(--h) * .13);border-radius:2px;background:#F5D628}
+.gate-logo{--h:min(58px, calc((100vw - 64px) / 6.3));margin:14px 0 10px}
+.bar .tiles{--h:22px}
+@media (max-width:370px){.bar img{display:none}}
+.sdx .score .tiles{--h:clamp(42px, 12.4vw, 62px)}
 .wrap{max-width:520px;margin:0 auto;padding:0 18px calc(96px + env(safe-area-inset-bottom))}
 
 .bar{position:sticky;top:0;z-index:20;background:rgba(14,14,44,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
@@ -78,10 +106,8 @@ fieldset.q legend{font-size:14px;color:var(--muted);margin-bottom:6px}
 .sdx{position:relative;display:block;width:100%;text-align:left;border:1px solid rgba(245,214,40,.35);border-radius:22px;padding:22px 22px 18px;background:linear-gradient(180deg,rgba(26,111,212,.18),rgba(14,14,44,0) 70%),var(--deep);overflow:hidden;color:var(--text)}
 .sdx svg.court{position:absolute;inset:0;width:100%;height:100%;opacity:.16;pointer-events:none}
 .sdx .k{position:relative;font-size:15px;color:var(--muted)}
-.sdx .score{position:relative;display:flex;align-items:flex-end;flex-wrap:wrap;gap:4px 12px;margin:2px 0 6px}
-.sdx .num{font-family:var(--head);font-size:clamp(76px,22vw,104px);line-height:.82;color:var(--yellow);letter-spacing:.01em}
-.sdx .num small{font-size:.38em;color:var(--text);margin-right:8px;letter-spacing:.04em}
-.sdx .mv{font-family:var(--head);font-size:28px;line-height:1;padding-bottom:8px}
+.sdx .score{position:relative;display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin:8px 0 10px}
+.sdx .mv{font-family:var(--head);font-size:28px;line-height:1;padding-top:4px}
 .up{color:var(--green)} .down{color:#ff8a4c}
 .sdx .persona{position:relative;font-weight:700;font-size:18px}
 .sdx .line{position:relative;color:var(--muted);font-size:15px}
@@ -191,7 +217,8 @@ fieldset.q legend{font-size:14px;color:var(--muted);margin-bottom:6px}
 <section id="gate" class="gate">
   <div class="gate-in">
     <img class="logo" src="/assets/deuce-and-smash-logo.png" alt="Deuce &amp; Smash">
-    <h1>Smash<b>Dex</b></h1>
+    <h1 class="sr">SmashDex</h1>
+    <div id="gateLogo"></div>
     <p class="lead">Your SDX Rating, your matches and your rivals, all in one place.</p>
     <div id="gateBody"><div class="spinner"></div></div>
     <div class="msg" id="gateMsg"></div>
@@ -201,7 +228,7 @@ fieldset.q legend{font-size:14px;color:var(--muted);margin-bottom:6px}
 <div id="app" class="hidden">
   <header class="bar"><div class="bar-in">
     <img src="/assets/deuce-and-smash-logo.png" alt="Deuce &amp; Smash">
-    <span class="app">Smash<b>Dex</b></span>
+    <span id="barLogo"></span>
     <span class="sp"></span>
     <button class="icon-btn" data-act="signout">Sign out</button>
   </div></header>
@@ -266,6 +293,63 @@ const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00:00Z') - new Date(
 const avg = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
 function toast(t, ms = 2600) { document.querySelectorAll('.toast').forEach(x => x.remove()); const el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), ms); }
 const waLink = text => `https://wa.me/${CLUB_WA}?text=${encodeURIComponent(text)}`;
+
+/* ── Split-flap logo and score (Night Court, 300 ms per flip) ── */
+const FLIP_MS = 300, IDLE_AFTER_MS = 10000, IDLE_EVERY_MS = 20000, IDLE_MAX_RUNS = 5;
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const flapHTML = (ch, cls = '') => `<span class="flap ${cls}" data-c="${ch}"><span class="t"><i>${ch}</i></span><span class="b"><i>${ch}</i></span><span class="ft"><i>${ch}</i></span><span class="fb"><i>${ch}</i></span></span>`;
+const logoHTML = cls => `<span class="tiles ${cls}" role="img" aria-label="SmashDex">${'SMASHDEX'.split('').map((c, i) => flapHTML(c, (i < 5 ? '' : 'dx') + (i === 5 ? ' gapL' : ''))).join('')}</span>`;
+const digitsHTML = str => str.split('').map(c => c === '.' ? '<span class="dot"></span>' : flapHTML(c, 'dg')).join('');
+function setFlap(el, ch) {
+  const prev = el.dataset.c, [t, b, ft, fb] = el.children;
+  t.firstChild.textContent = ch; fb.firstChild.textContent = ch;
+  b.firstChild.textContent = REDUCED ? ch : prev; ft.firstChild.textContent = REDUCED ? ch : prev;
+  el.dataset.c = ch;
+  if (REDUCED) return;
+  el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+}
+const _flapTimers = new Map();
+function playFlap(el, seq, start) {
+  (_flapTimers.get(el) || []).forEach(clearTimeout);
+  _flapTimers.set(el, seq.map((ch, k) => setTimeout(() => setFlap(el, ch), start + k * FLIP_MS)));
+}
+let _lastLogoRun = 0, _idleRuns = 0, _lastInput = Date.now();
+function runLogo(root) {
+  if (!root || REDUCED) return;
+  _lastLogoRun = Date.now();
+  const AZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  root.querySelectorAll('.flap').forEach((el, i) => {
+    const final = 'SMASHDEX'[i];
+    const seq = Array.from({ length: 3 + i }, () => AZ[Math.floor(Math.random() * 26)]).concat(final);
+    playFlap(el, seq, i * 70);
+  });
+}
+// SDX digits flip only when the score changes, counting through the digits in between
+function animateSdx(target) {
+  const box = document.getElementById('sdxDigits'); if (!box) return;
+  const shown = S.shownSdx; S.shownSdx = target;
+  if (shown == null || shown === target) return;
+  const up = +target > +shown;
+  box.querySelectorAll('.flap').forEach((el, k) => {
+    const pos = [0, 2, 3, 4][k], from = shown[pos], to = target[pos];
+    if (from === to) return;
+    const seq = []; let c = +from;
+    while (String(c) !== to && seq.length < 10) { c = (c + (up ? 1 : 9)) % 10; seq.push(String(c)); }
+    playFlap(el, seq, k * 90);
+  });
+}
+$('#gateLogo').outerHTML = logoHTML('gate-logo');
+$('#barLogo').outerHTML = logoHTML('bar-logo');
+runLogo($('.gate-logo'));
+// Idle re-flip: every 20 s, only while the page is on screen and untouched for 10 s; pauses after 5 idle flips until the next tap or scroll
+['pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll'].forEach(ev => addEventListener(ev, () => { _lastInput = Date.now(); _idleRuns = 0; }, { passive: true }));
+setInterval(() => {
+  if (document.visibilityState !== 'visible' || !$('#sheet').classList.contains('hidden')) return;
+  const now = Date.now();
+  if (now - _lastInput < IDLE_AFTER_MS || now - _lastLogoRun < IDLE_EVERY_MS || _idleRuns >= IDLE_MAX_RUNS) return;
+  _idleRuns++;
+  runLogo($('#app').classList.contains('hidden') ? $('.gate-logo') : $('.bar-logo'));
+}, 1000);
 
 /* ── Usage analytics (counts only; read by club staff in /admin) ── */
 const _ss = { get(k) { try { return sessionStorage.getItem(k); } catch { return null; } }, set(k, v) { try { sessionStorage.setItem(k, v); } catch {} } };
@@ -422,8 +506,10 @@ function compute() {
   S.ratings = DSR.compute(seeds, ms, todayUTC(), adj).players;
   S.ms = ms;
   buildOutcomes();
+  const firstShow = $('#app').classList.contains('hidden');
   $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden');
   render();
+  if (firstShow) runLogo($('.bar-logo'));
 }
 const myName = () => S.profiles[S.mid]?.name || S.mine.name || '';
 const playerOf = name => S.ratings[name] || { name, r: DSR.DEFAULT_SEED, seed: DSR.DEFAULT_SEED, sets: 0, me: 0, matches: 0, last: null, partners: new Set(), opps: new Set(), hist: [], trend: 0, lastDelta: 0, confidence: 0 };
@@ -470,6 +556,7 @@ function render() {
   v.innerHTML = profileHTML();
   drawChart();
   watchSections();
+  animateSdx(sdx(playerOf(myName()).r));
 }
 
 function myMatches() {
@@ -506,7 +593,7 @@ function profileHTML() {
       <line x1="70" y1="115" x2="330" y2="115" stroke="#EDEDF7" stroke-width="1.5"/>
     </svg>
     <div class="k">Your SDX Rating</div>
-    <div class="score"><span class="num"><small>SDX</small>${sdx(p.r)}</span>${played ? `<span class="mv ${ld >= 0 ? 'up' : 'down'}" title="Change after your last match">${ld >= 0 ? '▲' : '▼'} ${Math.abs(ld).toFixed(3)}</span>` : ''}</div>
+    <div class="score" role="img" aria-label="SDX ${sdx(p.r)}"><span class="tiles" aria-hidden="true">${flapHTML('S')}${flapHTML('D', 'dx')}${flapHTML('X', 'dx')}</span><span class="tiles" id="sdxDigits" aria-hidden="true">${digitsHTML(S.shownSdx ?? sdx(p.r))}</span>${played ? `<span class="mv ${ld >= 0 ? 'up' : 'down'}" title="Change after your last match">${ld >= 0 ? '▲' : '▼'} ${Math.abs(ld).toFixed(3)}</span>` : ''}</div>
     <div class="persona">${esc(b.persona)} <span style="color:var(--muted);font-weight:500">· ${esc(b.band)}</span></div>
     <div class="line">${esc(b.quip)}</div>
     <div class="foot">Confidence ${conf}% <span class="chip ${cl}">${cl}</span><span class="more">What does this mean?</span></div>
