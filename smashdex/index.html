@@ -104,7 +104,6 @@ fieldset.q legend{font-size:14px;color:var(--muted);margin-bottom:6px}
 
 /* The SDX scorecard: the one loud element on the page */
 .sdx{position:relative;display:block;width:100%;text-align:left;border:1px solid rgba(245,214,40,.35);border-radius:22px;padding:22px 22px 18px;background:linear-gradient(180deg,rgba(26,111,212,.18),rgba(14,14,44,0) 70%),var(--deep);overflow:hidden;color:var(--text)}
-.sdx svg.court{position:absolute;inset:0;width:100%;height:100%;opacity:.16;pointer-events:none}
 .sdx .k{position:relative;font-size:15px;color:var(--muted)}
 .sdx .score{position:relative;display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin:8px 0 10px}
 .sdx .mv{font-family:var(--head);font-size:28px;line-height:1;padding-top:4px}
@@ -295,12 +294,13 @@ function toast(t, ms = 2600) { document.querySelectorAll('.toast').forEach(x => 
 const waLink = text => `https://wa.me/${CLUB_WA}?text=${encodeURIComponent(text)}`;
 
 /* ── Split-flap logo and score (Night Court, 300 ms per flip) ── */
-const FLIP_MS = 300, IDLE_AFTER_MS = 10000, IDLE_EVERY_MS = 20000, IDLE_MAX_RUNS = 5;
+const FLIP_MS = 300, INTRO_FLIP_MS = 110, INTRO_HOLD_MS = 2000, IDLE_AFTER_MS = 10000, IDLE_EVERY_MS = 20000, IDLE_MAX_RUNS = 5;
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const flapHTML = (ch, cls = '') => `<span class="flap ${cls}" data-c="${ch}"><span class="t"><i>${ch}</i></span><span class="b"><i>${ch}</i></span><span class="ft"><i>${ch}</i></span><span class="fb"><i>${ch}</i></span></span>`;
 const logoHTML = cls => `<span class="tiles ${cls}" role="img" aria-label="SmashDex">${'SMASHDEX'.split('').map((c, i) => flapHTML(c, (i < 5 ? '' : 'dx') + (i === 5 ? ' gapL' : ''))).join('')}</span>`;
 const digitsHTML = str => str.split('').map(c => c === '.' ? '<span class="dot"></span>' : flapHTML(c, 'dg')).join('');
-function setFlap(el, ch) {
+function setFlap(el, ch, ms = FLIP_MS) {
+  el.style.setProperty('--half', Math.round(ms / 2) - 6 + 'ms');
   const prev = el.dataset.c, [t, b, ft, fb] = el.children;
   t.firstChild.textContent = ch; fb.firstChild.textContent = ch;
   b.firstChild.textContent = REDUCED ? ch : prev; ft.firstChild.textContent = REDUCED ? ch : prev;
@@ -309,20 +309,25 @@ function setFlap(el, ch) {
   el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
 }
 const _flapTimers = new Map();
-function playFlap(el, seq, start) {
+function playFlap(el, seq, start, ms = FLIP_MS) {
   (_flapTimers.get(el) || []).forEach(clearTimeout);
-  _flapTimers.set(el, seq.map((ch, k) => setTimeout(() => setFlap(el, ch), start + k * FLIP_MS)));
+  _flapTimers.set(el, seq.map((ch, k) => setTimeout(() => setFlap(el, ch, ms), start + k * ms)));
+  return start + seq.length * ms;
 }
 let _lastLogoRun = 0, _idleRuns = 0, _lastInput = Date.now();
-function runLogo(root) {
-  if (!root || REDUCED) return;
+// Returns how long until the last tile lands (ms)
+function runLogo(root, { intro = false } = {}) {
+  if (!root || REDUCED) return 0;
   _lastLogoRun = Date.now();
-  const AZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const AZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', ms = intro ? INTRO_FLIP_MS : FLIP_MS;
+  let end = 0;
   root.querySelectorAll('.flap').forEach((el, i) => {
     const final = 'SMASHDEX'[i];
-    const seq = Array.from({ length: 3 + i }, () => AZ[Math.floor(Math.random() * 26)]).concat(final);
-    playFlap(el, seq, i * 70);
+    const n = intro ? 2 + Math.floor(i / 2) : 3 + i;
+    const seq = Array.from({ length: n }, () => AZ[Math.floor(Math.random() * 26)]).concat(final);
+    end = Math.max(end, playFlap(el, seq, i * (intro ? 45 : 70), ms));
   });
+  return end;
 }
 // SDX digits flip only when the score changes, counting through the digits in between
 function animateSdx(target) {
@@ -340,7 +345,7 @@ function animateSdx(target) {
 }
 $('#gateLogo').outerHTML = logoHTML('gate-logo');
 $('#barLogo').outerHTML = logoHTML('bar-logo');
-runLogo($('.gate-logo'));
+const _introReadyAt = Date.now() + runLogo($('.gate-logo'), { intro: true }) + (REDUCED ? 0 : INTRO_HOLD_MS);
 // Idle re-flip: every 20 s, only while the page is on screen and untouched for 10 s; pauses after 5 idle flips until the next tap or scroll
 ['pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll'].forEach(ev => addEventListener(ev, () => { _lastInput = Date.now(); _idleRuns = 0; }, { passive: true }));
 setInterval(() => {
@@ -507,9 +512,11 @@ function compute() {
   S.ms = ms;
   buildOutcomes();
   const firstShow = $('#app').classList.contains('hidden');
+  // First time in: let the landed logo sit for a moment before opening the profile
+  const wait = firstShow ? _introReadyAt - Date.now() : 0;
+  if (wait > 0) { clearTimeout(_t); _t = setTimeout(compute, wait); return; }
   $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden');
   render();
-  if (firstShow) runLogo($('.bar-logo'));
 }
 const myName = () => S.profiles[S.mid]?.name || S.mine.name || '';
 const playerOf = name => S.ratings[name] || { name, r: DSR.DEFAULT_SEED, seed: DSR.DEFAULT_SEED, sets: 0, me: 0, matches: 0, last: null, partners: new Set(), opps: new Set(), hist: [], trend: 0, lastDelta: 0, confidence: 0 };
@@ -586,12 +593,6 @@ function profileHTML() {
   </section>
 
   <button class="sdx" data-open="sdx" aria-label="Your SDX rating is ${sdx(p.r)}. Open the explanation.">
-    <svg class="court" viewBox="0 0 400 230" preserveAspectRatio="none" aria-hidden="true">
-      <rect x="10" y="10" width="380" height="210" rx="6" fill="none" stroke="#EDEDF7" stroke-width="2"/>
-      <line x1="200" y1="10" x2="200" y2="220" stroke="#F5D628" stroke-width="3"/>
-      <line x1="70" y1="10" x2="70" y2="220" stroke="#EDEDF7" stroke-width="1.5"/><line x1="330" y1="10" x2="330" y2="220" stroke="#EDEDF7" stroke-width="1.5"/>
-      <line x1="70" y1="115" x2="330" y2="115" stroke="#EDEDF7" stroke-width="1.5"/>
-    </svg>
     <div class="k">Your SDX Rating</div>
     <div class="score" role="img" aria-label="SDX ${sdx(p.r)}"><span class="tiles" aria-hidden="true">${flapHTML('S')}${flapHTML('D', 'dx')}${flapHTML('X', 'dx')}</span><span class="tiles" id="sdxDigits" aria-hidden="true">${digitsHTML(S.shownSdx ?? sdx(p.r))}</span>${played ? `<span class="mv ${ld >= 0 ? 'up' : 'down'}" title="Change after your last match">${ld >= 0 ? '▲' : '▼'} ${Math.abs(ld).toFixed(3)}</span>` : ''}</div>
     <div class="persona">${esc(b.persona)} <span style="color:var(--muted);font-weight:500">· ${esc(b.band)}</span></div>
