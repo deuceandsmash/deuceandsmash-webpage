@@ -557,8 +557,8 @@ const app = initializeApp(FIREBASE_CONFIG);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-// ===== Smash Rating Engine (embedded) =====
-// Smash Rating engine lives in /shared/dsr.js (shared with SmashDex)
+// ===== SDX Rating Engine (embedded) =====
+// SDX Rating engine lives in /shared/dsr.js (shared with SmashDex)
 // Band colour — consistent across all views (matches guide table tier colours)
 const BAND_STYLE = {
   'Beginner':            { color: '#aaa',    bg: 'rgba(150,150,150,0.15)', cls: 'badge-init' },
@@ -1307,7 +1307,7 @@ function renderDrawerView(m, r, playerSessions) {
       <div class="field-row"><span class="field-label">Phone</span><span class="field-val">${val(m.phone)}</span></div>
       <div class="field-row"><span class="field-label">Email</span><span class="field-val">${val(m.email)}</span></div>
       <div class="field-row"><span class="field-label">Skill Level</span><span class="field-val">${val(m.levelOverride, 'Not set')}</span></div>
-      <div class="field-row"><span class="field-label">Assessment</span><span class="field-val">${m.ratingOverride != null && m.ratingOverride !== '' ? `🎯 ${parseFloat(m.ratingOverride).toFixed(2)}${m.ratingAssessedAt ? ` <span style="color:var(--muted);font-size:0.8em">(set ${m.ratingAssessedAt})</span>` : ''}` : '<span style="color:var(--muted)">Auto (DSR)</span>'}</span></div>
+      <div class="field-row"><span class="field-label">Assessment</span><span class="field-val">${m.ratingOverride != null && m.ratingOverride !== '' ? `🎯 ${parseFloat(m.ratingOverride).toFixed(2)}${m.ratingAssessedAt ? ` <span style="color:var(--muted);font-size:0.8em">(set ${m.ratingAssessedAt})</span>` : ''}` : '<span style="color:var(--muted)">Auto (SDX)</span>'}</span></div>
       <div class="field-row"><span class="field-label">Membership</span><span class="field-val">${val(m.membership, 'None')}</span></div>
       <div class="field-row"><span class="field-label">Notes</span><span class="field-val">${val(m.notes)}</span></div>
     </div>
@@ -1382,7 +1382,7 @@ function renderDrawerEdit(m, firstMatchDate) {
           <span style="font-size:0.78rem;color:var(--muted)">${firstMatchDate && !m.ratingAssessedAt ? `Auto-set to first recorded match (${firstMatchDate}) — ` : ''}Matches from this date onward count from the seed</span>
         </div>
       </div>
-      <p class="pin-note" style="margin-left:118px">Enter 0–7 to set a point-in-time assessment. DSR will evolve from this starting point based on match results from the assessment date onward. Set a past date to backdate the seed. Clear the rating to let DSR calculate automatically from full match history.</p>
+      <p class="pin-note" style="margin-left:118px">Enter 0–7 to set a point-in-time assessment. The SDX rating will evolve from this starting point based on match results from the assessment date onward. Set a past date to backdate the seed. Clear the rating to let SDX calculate automatically from full match history.</p>
     </div>`;
 }
 
@@ -2461,7 +2461,7 @@ function buildGuideTableHTML() {
   return `<div class="guide-table-wrap">
     <table class="guide-table">
       <thead><tr>
-        <th>DSR Range</th>
+        <th>SDX Range</th>
         <th>Band</th>
         <th>What it means</th>
       </tr></thead>
@@ -2469,7 +2469,7 @@ function buildGuideTableHTML() {
     </table>
   </div>
   <div style="font-size:0.72rem;color:var(--muted);margin-top:8px;padding:0 2px">
-    DSR = Deuce &amp; Smash Rating · Scale 0–7 · Aligned with Playtomic Level system
+    SDX = Smash Rating · Scale 0–7 · Aligned with Playtomic Level system
   </div>`;
 }
 
