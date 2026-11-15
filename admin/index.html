@@ -333,9 +333,11 @@
       <option value="">All levels</option>
       <option>Beginner</option>
       <option>Beginner+</option>
+      <option>Lower Intermediate</option>
       <option>Intermediate</option>
-      <option>Intermediate+</option>
+      <option>Intermediate High</option>
       <option>Advanced</option>
+      <option>Elite</option>
     </select>
     <select class="filter-select" id="filter-source" onchange="renderMembers()">
       <option value="">All sources</option>
@@ -459,10 +461,10 @@
           <option value="">Unknown / unset</option>
           <option>Beginner</option>
           <option>Beginner+</option>
+          <option>Lower Intermediate</option>
           <option>Intermediate</option>
-          <option>Intermediate+</option>
+          <option>Intermediate High</option>
           <option>Advanced</option>
-          <option>Advanced High</option>
           <option>Elite</option>
         </select>
       </div>
@@ -559,13 +561,13 @@ const auth = getAuth(app);
 // Smash Rating engine lives in /shared/dsr.js (shared with SmashDex)
 // Band colour — consistent across all views (matches guide table tier colours)
 const BAND_STYLE = {
-  'Beginner':          { color: '#aaa',    bg: 'rgba(150,150,150,0.15)', cls: 'badge-init' },
-  'Beginner+':         { color: '#ccc',    bg: 'rgba(200,200,200,0.12)', cls: 'badge-init-i' },
-  'Intermediate':      { color: '#3bffe8', bg: 'rgba(59,255,232,0.12)',  cls: 'badge-inter' },
-  'Intermediate+':     { color: '#3bffe8', bg: 'rgba(59,255,232,0.12)',  cls: 'badge-inter' },
-  'Intermediate High': { color: '#3bd9ff', bg: 'rgba(59,217,255,0.12)',  cls: 'badge-inter-h' },
-  'Advanced':          { color: '#b47dff', bg: 'rgba(180,125,255,0.15)', cls: 'badge-adv' },
-  'Elite':             { color: '#e8ff3b', bg: 'rgba(232,255,59,0.15)',  cls: 'badge-elite' },
+  'Beginner':            { color: '#aaa',    bg: 'rgba(150,150,150,0.15)', cls: 'badge-init' },
+  'Beginner+':           { color: '#ccc',    bg: 'rgba(200,200,200,0.12)', cls: 'badge-init-i' },
+  'Lower Intermediate':  { color: '#3bffe8', bg: 'rgba(59,255,232,0.12)',  cls: 'badge-lower-inter' },
+  'Intermediate':        { color: '#00e5b0', bg: 'rgba(0,229,176,0.12)',   cls: 'badge-inter' },
+  'Intermediate High':   { color: '#3bd9ff', bg: 'rgba(59,217,255,0.12)',  cls: 'badge-inter-h' },
+  'Advanced':            { color: '#b47dff', bg: 'rgba(180,125,255,0.15)', cls: 'badge-adv' },
+  'Elite':               { color: '#e8ff3b', bg: 'rgba(232,255,59,0.15)',  cls: 'badge-elite' },
 };
 function bandColor(band) { return BAND_STYLE[band] || { color: '#888', bg: 'rgba(136,136,136,0.1)', cls: '' }; }
 function bandChip(band) {
@@ -759,7 +761,7 @@ function computeAllRatings() {
       if (!isNaN(pinned)) seeds[name] = { seed: pinned, source: `Staff assessment: ${pinned}${m.ratingAssessedAt ? ` (set ${m.ratingAssessedAt})` : ''}`, assessedAt: m.ratingAssessedAt || null };
     } else if (m.levelOverride) {
       // Level → seed override takes priority over history
-      const LEVEL_MAP = { 'Beginner': 0.75, 'Beginner+': 1.5, 'Inter': 2.5, 'Intermediate': 2.5, 'Intermediate+': 3.5, 'Strong Inter': 3.5, 'Advanced': 4.5, 'Advanced High': 5.5, 'Elite': 6.5 };
+      const LEVEL_MAP = { 'Beginner': 0.75, 'Beginner+': 1.5, 'Lower Intermediate': 2.5, 'Inter': 2.5, 'Intermediate': 3.5, 'Strong Inter': 3.5, 'Intermediate High': 4.5, 'Advanced': 5.5, 'Elite': 6.5 };
       const s = LEVEL_MAP[m.levelOverride] ?? 1.5;
       seeds[name] = { seed: s, source: `Staff override: ${m.levelOverride}` };
     } else {
@@ -1318,7 +1320,7 @@ function renderDrawerView(m, r, playerSessions) {
 }
 
 function renderDrawerEdit(m, firstMatchDate) {
-  const LEVELS = ['Beginner','Beginner+','Intermediate','Intermediate+','Advanced','Advanced High','Elite'];
+  const LEVELS = ['Beginner','Beginner+','Lower Intermediate','Intermediate','Intermediate High','Advanced','Elite'];
   const MEMBERSHIPS = ['Monthly','Annual','Trial'];
   return `
     <div class="drawer-section">
@@ -2417,31 +2419,31 @@ window.trnDelete = function(key, name) {
 // Guide table — band names match DSR.BANDS exactly
 const RATING_GUIDE = [
   {
-    tier: 'tier-init',    cls: 'badge-init',    range: '0.0 – 0.9',   band: 'Beginner',
+    tier: 'tier-init',        cls: 'badge-init',        range: '0.0 – 0.9',   band: 'Beginner',
     desc: 'Never played or very first sessions. No technique, can barely make contact. Still learning grip, stance and the basics of the game.'
   },
   {
-    tier: 'tier-init-i',  cls: 'badge-init-i',  range: '1.0 – 1.9',   band: 'Beginner+',
+    tier: 'tier-init-i',      cls: 'badge-init-i',      range: '1.0 – 1.9',   band: 'Beginner+',
     desc: 'A few months of play. Developing basic forehand; backhand inconsistent. Short rallies possible. Plays 1–2× a month socially. Lots of unforced errors.'
   },
   {
-    tier: 'tier-inter',   cls: 'badge-inter',   range: '2.0 – 2.9',   band: 'Intermediate',
+    tier: 'tier-lower-inter', cls: 'badge-lower-inter', range: '2.0 – 2.9',   band: 'Lower Intermediate',
     desc: 'Can sustain a rally. Solid forehand, developing backhand. Understands basic court positioning. Some unforced errors. Regular casual/social player.'
   },
   {
-    tier: 'tier-inter',   cls: 'badge-inter',   range: '3.0 – 3.9',   band: 'Intermediate+',
-    desc: 'Consistent on both wings. Controls direction and pace. Starting to use angles, varied shots and tactics. Fewer errors, beginning to construct points.'
+    tier: 'tier-inter',       cls: 'badge-inter',       range: '3.0 – 3.9',   band: 'Intermediate',
+    desc: 'Consistent on both wings. Controls direction and pace. Starting to use angles, varied shots and tactics. Fewer errors, beginning to construct points. Earned through competing in several matches.'
   },
   {
-    tier: 'tier-inter-h', cls: 'badge-inter-h', range: '4.0 – 4.9',   band: 'Intermediate High',
+    tier: 'tier-inter-h',     cls: 'badge-inter-h',     range: '4.0 – 4.9',   band: 'Intermediate High',
     desc: 'Masters forehand and backhand with control. Very few unforced errors. Confident net play and volleys. Understands shot selection. Competes at local club tournaments.'
   },
   {
-    tier: 'tier-adv',     cls: 'badge-adv',     range: '5.0 – 5.9',   band: 'Advanced',
+    tier: 'tier-adv',         cls: 'badge-adv',         range: '5.0 – 5.9',   band: 'Advanced',
     desc: 'Good to strong tactical mindset — reads opponents, varies play, exploits weaknesses. Full shot toolkit (topspin, slice, lob, smash). Competitive at open club and ranked events.'
   },
   {
-    tier: 'tier-elite',   cls: 'badge-elite',   range: '6.0 – 7.0',   band: 'Elite',
+    tier: 'tier-elite',       cls: 'badge-elite',       range: '6.0 – 7.0',   band: 'Elite',
     desc: 'Top-tier competitive level. Near-flawless technique, elite tactical decision-making, exceptional consistency under pressure. Regional/national ranking or WPT equivalent.'
   },
 ];
@@ -2541,15 +2543,13 @@ const ASSESS_QUESTIONS = [
 ];
 
 const ASSESS_BANDS = [
-  { max: 0.8,  band: 'Initiation',            desc: 'Just starting out — never played or brand new to racquet sports' },
-  { max: 1.5,  band: 'Initiation',            desc: 'Very early stage — some exposure but still learning the very basics' },
-  { max: 2.2,  band: 'Initiation–Intermediate', desc: 'Getting started — a few months of play, developing basic consistency' },
-  { max: 3.2,  band: 'Intermediate',          desc: 'Solid foundations — can rally, basic tactical understanding' },
-  { max: 4.2,  band: 'Intermediate',          desc: 'Good intermediate player — consistent strokes, plays tactically' },
-  { max: 4.8,  band: 'Intermediate High',     desc: 'Strong player — few unforced errors, constructs points well' },
-  { max: 5.3,  band: 'Intermediate Advanced', desc: 'High-intermediate — strong tactical game, competitive at club level' },
-  { max: 6.2,  band: 'Advanced',              desc: 'Advanced player — dominates technically and tactically' },
-  { max: 7.0,  band: 'Elite',                 desc: 'Elite / Professional level' },
+  { max: 0.8,  band: 'Beginner',            desc: 'Just starting out — never played or brand new to racquet sports' },
+  { max: 1.5,  band: 'Beginner+',           desc: 'Very early stage — some exposure but still learning the very basics' },
+  { max: 2.5,  band: 'Lower Intermediate',  desc: 'Getting started — a few months of play, developing basic consistency' },
+  { max: 3.5,  band: 'Intermediate',        desc: 'Solid foundations — can rally, tactical awareness, earned through match play' },
+  { max: 4.5,  band: 'Intermediate High',   desc: 'Strong intermediate — consistent, constructs points well, few errors' },
+  { max: 5.5,  band: 'Advanced',            desc: 'Advanced player — strong tactical game, competitive at club level' },
+  { max: 7.0,  band: 'Elite',               desc: 'Elite / Professional level' },
 ];
 
 let assessTarget = 'new'; // 'new' | 'edit'

@@ -19,7 +19,7 @@ export const WHATSAPP = '919028337970';
 export const SITE = 'https://deuceandsmash.com/bazaar/';
 export const SOLD_BADGE_DAYS = 14;
 
-export const LEVELS = ['Beginner', 'Beginner+', 'Intermediate', 'Intermediate+', 'Advanced'];
+export const LEVELS = ['Beginner', 'Beginner+', 'Lower Intermediate', 'Intermediate', 'Intermediate High', 'Advanced', 'Elite'];
 
 export const GRADES = {
   like_new:  { label: 'Like New',  color: '#7DC515', text: 'Under a month of use. No visible marks.' },

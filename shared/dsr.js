@@ -11,7 +11,7 @@ const DSR = {
   W:{league:1,openplay:1,competitive:1,americano:0.25},
   PROVISIONAL:{sets:8,partners:4,opponents:6},
   BREAK:{faster:90,provisional:180,hidden:365},
-  BANDS:[["Beginner",0],["Beginner+",1],["Intermediate",2],["Intermediate+",3],["Intermediate High",4],["Advanced",5],["Elite",6]],
+  BANDS:[["Beginner",0],["Beginner+",1],["Lower Intermediate",2],["Intermediate",3],["Intermediate High",4],["Advanced",5],["Elite",6]],
   TAG_SEED:{"Beginner":0.75,"Beginner / Beginner+":1.0,"Beginner+":1.5,"Beginner+ / Inter":2.0,"Inter":2.5,"Inter / Inter+":3.0,"Strong Inter":3.5,"Inter+":3.5},
   TAG_ORDER:["Beginner","Beginner / Beginner+","Beginner+","Beginner+ / Inter","Inter","Inter / Inter+","Strong Inter","Inter+"],
   SEED_FLOOR:0.5,SEED_CAP:4.0,DEFAULT_SEED:0.5,

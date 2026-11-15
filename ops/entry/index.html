@@ -1238,7 +1238,7 @@ function newMemberForm() {
   const typed = ($('#pq') || {}).value || '';
   $('#nmForm').innerHTML = `<div class="payform" style="margin-top:12px"><div class="cat" style="margin:0">New member · saved to the members list</div>
     <div class="row" style="margin:0"><input id="nmName" placeholder="Name as players know them" value="${esc(typed.trim())}"><input id="nmFull" placeholder="Full name (optional)"></div>
-    <div class="row" style="margin:0"><input id="nmPhone" inputmode="tel" placeholder="Phone"><select id="nmLevel"><option value="">Level (if known)</option>${['Beginner', 'Beginner+', 'Intermediate', 'Intermediate+', 'Advanced', 'Advanced High', 'Elite'].map(l => `<option>${l}</option>`).join('')}</select></div>
+    <div class="row" style="margin:0"><input id="nmPhone" inputmode="tel" placeholder="Phone"><select id="nmLevel"><option value="">Level (if known)</option>${['Beginner', 'Beginner+', 'Lower Intermediate', 'Intermediate', 'Intermediate High', 'Advanced', 'Elite'].map(l => `<option>${l}</option>`).join('')}</select></div>
     <div><button class="btn btn-sm btn-primary" data-act="createmember">Add member & player</button></div><div id="nmErr" class="sub" style="color:#ffb3b3"></div></div>`;
   const dd = $('#pdd'); if (dd) dd.classList.add('hidden');
   $('#nmName').focus();
