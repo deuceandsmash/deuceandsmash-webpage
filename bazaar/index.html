@@ -296,7 +296,7 @@ footer b{color:var(--text2)}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { mediaImg, autoHydrate } from "./media.js";
-import { shownImages } from "./config.js";
+import { shownImages, resalePrice } from "./config.js";
 import { firebaseConfig, WHATSAPP, SITE, LEVELS, GRADES, esc, inr, discount, list, newStock, stockLabel, usedShown, productTitle } from "./config.js";
 
 const db = getDatabase(initializeApp(firebaseConfig));
@@ -338,8 +338,8 @@ function items() {
   }
   for (const [id, u] of Object.entries(C.used)) {
     const p = C.products[u.productId];
-    if (!p || !p.visible || !usedShown(u)) continue;
-    out.push({ kind: 'used', id, u, p: { id: u.productId, ...p }, price: u.price, mrp: u.mrp ?? p.mrp, img: shownImages(u)[0] || shownImages(p)[0], real: !!shownImages(u).length, sold: u.status === 'sold' });
+    if (!p || !usedShown(u)) continue;
+    out.push({ kind: 'used', id, u, p: { id: u.productId, ...p }, price: resalePrice(u, p), mrp: u.mrp ?? p.mrp, img: shownImages(u)[0] || shownImages(p)[0], real: !!shownImages(u).length, sold: u.status === 'sold' });
   }
   return out;
 }
@@ -392,7 +392,7 @@ const RS_STEPS = [
 ];
 const RS_PROMISES = [['✅', 'Physically checked'], ['👥', 'Members only'], ['💸', 'Well below new'], ['🤝', 'Feel it before you buy']];
 function resaleHTML(full) {
-  const n = Object.values(C.used).filter(u => u.status !== 'sold' && usedShown(u) && (C.products[u.productId] || {}).visible).length;
+  const n = Object.values(C.used).filter(u => u.status !== 'sold' && usedShown(u) && C.products[u.productId]).length;
   if (!full) return n ? `<a class="rs-teaser" href="#" data-resale>
       <div><span class="rs-kick">Bazaar Resale</span><b>Second serve. First-class rackets.</b><span class="rs-sub">Hand-picked pre-loved rackets at prices you won't see new. ${n} available right now.</span></div>
       <span class="rs-go">Shop resale →</span></a>` : '';
@@ -538,7 +538,7 @@ function renderProduct(id) {
         ${n !== null ? ctaHTML({ title, label: vSel ? vLabel(vSel) : '', available }) : ''}
         ${units.length ? `<div class="sec"><h3>Bazaar Resale · Pre-Loved</h3><div class="units">${units.map(([uid, u]) => {
           const g = GRADES[u.grade]; const img = shownImages(u)[0] || shownImages(p)[0];
-          return `<a class="unit" href="#/u/${encodeURIComponent(linkId(uid))}">${img ? mediaImg(img, 't', 'alt=""') : ''}<div class="u-m"><div class="name" style="font-size:17px">${g ? g.label : 'Pre-Loved'}${u.status === 'sold' ? ' · Sold' : ''}</div><div class="note">${u.monthsUsed ? `${u.monthsUsed} month${u.monthsUsed == 1 ? '' : 's'} used` : ''}</div></div><div class="u-p">${inr(u.price)}</div></a>`;
+          return `<a class="unit" href="#/u/${encodeURIComponent(linkId(uid))}">${img ? mediaImg(img, 't', 'alt=""') : ''}<div class="u-m"><div class="name" style="font-size:17px">${g ? g.label : 'Pre-Loved'}${u.status === 'sold' ? ' · Sold' : ''}</div><div class="note">${u.monthsUsed ? `${u.monthsUsed} month${u.monthsUsed == 1 ? '' : 's'} used` : ''}</div></div><div class="u-p">${inr(resalePrice(u, p)) || 'Ask'}</div></a>`;
         }).join('')}</div></div>` : ''}
         ${contentHTML(p)}
       </div>
@@ -553,7 +553,7 @@ const vLabel = v => [v.size, v.color].filter(Boolean).join(' · ');
 
 function renderUsed(uid) {
   const u = C.used[uid], p0 = u && C.products[u.productId];
-  if (!u || !p0 || !p0.visible || !usedShown(u)) return notFound();
+  if (!u || !p0 || !usedShown(u)) return notFound();
   const p = { id: u.productId, ...p0 }, g = GRADES[u.grade], title = productTitle(p), sold = u.status === 'sold';
   const imgs = shownImages(u).length ? shownImages(u) : shownImages(p);
   const mrp = u.mrp ?? p.mrp, dmg = u.damage || {};
@@ -567,7 +567,7 @@ function renderUsed(uid) {
         <div class="d-brand">Bazaar Resale · Pre-Loved · ${esc(p.brand || '')}</div>
         <h1 class="d-name">${esc(p.model || '')}</h1>
         ${p.hook ? `<p class="hook">${esc(p.hook)}</p>` : ''}
-        ${priceHTML(u.price, mrp, 'd-price', true)}
+        ${priceHTML(resalePrice(u, p), mrp, 'd-price', true)}
         ${mrp > 0 ? `<p class="note">Price when new: ${inr(mrp)}</p>` : ''}
         ${g ? `<div class="grade"><span class="g" style="background:${g.color}">${g.label}</span><p>${esc(g.text)}</p></div>` : ''}
         <div class="rs-mini"><b>Bazaar Resale:</b> hand-picked, physically checked by the club and offered to members only. This is the only one, so once it's gone, it's gone. <a href="#/resale">How it works</a></div>
@@ -578,7 +578,7 @@ function renderUsed(uid) {
         ${!shownImages(u).length ? `<p class="note" style="margin-top:8px">Photos show the model. Ask us for photos of this exact racket.</p>` : ''}
         ${sold ? `<div class="pay" style="margin-top:16px"><span>✅</span><span>This one has been sold. ${newStock(p) > 0 ? `<a href="#/p/${encodeURIComponent(linkId(p.id))}">It's also available new.</a>` : 'Message us and we\'ll tell you when another comes in.'}</span></div>
                <div class="ctas"><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hi Deuce & Smash! Do you have another pre-loved ${title} in Bazaar Resale?`)}">${WA_ICON} Ask on WhatsApp</a></div>`
-             : ctaHTML({ title: `pre-loved ${title}`, label: g ? g.label + ', ' + inr(u.price) : inr(u.price), available: true })}
+             : ctaHTML({ title: `pre-loved ${title}`, label: g ? g.label + ', ' + inr(resalePrice(u, p)) : inr(resalePrice(u, p)), available: true })}
         ${(dmgRows.length || u.notes) ? `<div class="sec"><h3>Condition notes</h3>${dmgRows.length ? `<table class="specs">${dmgRows.map(([k, v]) => `<tr><td>${k}</td><td>${esc(v)}</td></tr>`).join('')}</table>` : ''}${u.notes ? `<p class="style" style="margin-top:10px">${esc(u.notes)}</p>` : ''}</div>` : ''}
         ${newStock(p) !== null && !sold ? `<p class="note" style="margin-top:16px"><a href="#/p/${encodeURIComponent(linkId(p.id))}">Prefer new? See the new ${esc(title)} →</a></p>` : ''}
         ${contentHTML(p)}
