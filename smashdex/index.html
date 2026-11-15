@@ -39,7 +39,7 @@ a{color:var(--yellow)}
 .gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 20px}
 .gate-in{width:100%;max-width:380px;text-align:center}
 .gate-in .logo{width:230px;max-width:70%;display:block;margin:0 auto 4px}
-.gate-in h1{font-family:var(--head);font-weight:400;font-size:84px;line-height:.9;margin:6px 0 4px}
+.gate-in h1{font-family:var(--head);font-weight:400;font-size:clamp(56px,19vw,84px);line-height:.9;margin:6px 0 4px}
 .gate-in h1 b{color:var(--yellow);font-weight:400}
 .gate-in p.lead{color:var(--muted);margin-bottom:26px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line2);background:transparent;border-radius:12px;padding:12px 16px;font-weight:600}
@@ -55,6 +55,16 @@ a{color:var(--yellow)}
 .field input:focus,.field select:focus{border-color:var(--yellow)}
 .msg{min-height:22px;font-size:14px;margin-top:10px;color:var(--muted)}
 .msg.err{color:#ff9a6b}
+.note{font-size:13px;color:var(--muted);text-align:left;margin:-4px 0 14px;line-height:1.45}
+.step{display:inline-block;font-size:13px;font-weight:600;color:var(--navy);background:var(--yellow);border-radius:999px;padding:2px 10px;margin-bottom:10px}
+fieldset.q{border:0;text-align:left;margin:4px 0 14px}
+fieldset.q legend{font-size:14px;color:var(--muted);margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{position:relative}
+.chips input{position:absolute;opacity:0;pointer-events:none}
+.chips span{display:inline-block;border:1px solid var(--line2);border-radius:999px;padding:7px 12px;font-size:14px;cursor:pointer}
+.chips input:checked+span{border-color:var(--yellow);background:rgba(245,214,40,.12);color:var(--yellow)}
+.chips input:focus-visible+span{outline:2px solid var(--yellow);outline-offset:2px}
 .linkish{background:none;border:0;color:var(--yellow);text-decoration:underline;font-size:14px;padding:4px}
 
 .who{display:flex;align-items:center;gap:14px;padding:22px 0 16px}
@@ -208,7 +218,7 @@ a{color:var(--yellow)}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, get, set, update, onValue, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut,
   signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { DSR } from "/shared/dsr.js";
@@ -257,11 +267,45 @@ const avg = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
 function toast(t, ms = 2600) { document.querySelectorAll('.toast').forEach(x => x.remove()); const el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); el.textContent = t; document.body.appendChild(el); setTimeout(() => el.remove(), ms); }
 const waLink = text => `https://wa.me/${CLUB_WA}?text=${encodeURIComponent(text)}`;
 
+/* ── Usage analytics (counts only; read by club staff in /admin) ── */
+const _ss = { get(k) { try { return sessionStorage.getItem(k); } catch { return null; } }, set(k, v) { try { sessionStorage.setItem(k, v); } catch {} } };
+function track(ev, { once = false } = {}) {
+  try {
+    if (!S.user) return;
+    if (once) { if (_ss.get('sdx_ev_' + ev)) return; _ss.set('sdx_ev_' + ev, '1'); }
+    const day = todayLocal(), upd = { [`analytics/daily/${day}/events/${ev}`]: increment(1) };
+    if (S.mid) upd[`analytics/members/${S.mid}/events/${ev}`] = increment(1);
+    update(ref(db), upd).catch(() => {});
+  } catch {}
+}
+// A visit = opening SmashDex, or coming back after 30+ minutes away
+function trackVisit() {
+  if (!S.mid) return;
+  const last = +(_ss.get('sdx_last') || 0), nowMs = Date.now();
+  _ss.set('sdx_last', String(nowMs));
+  if (nowMs - last < 30 * 60 * 1000) return;
+  const day = todayLocal();
+  const upd = { [`analytics/members/${S.mid}/visits`]: increment(1), [`analytics/members/${S.mid}/lastSeen`]: nowMs,
+    [`analytics/daily/${day}/visits`]: increment(1), [`analytics/daily/${day}/users/${S.mid}`]: true };
+  update(ref(db), upd).catch(() => {});
+  get(ref(db, `analytics/members/${S.mid}/firstSeen`)).then(sn => { if (!sn.exists()) set(ref(db, `analytics/members/${S.mid}/firstSeen`), nowMs).catch(() => {}); }).catch(() => {});
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.mid) trackVisit(); });
+// Which profile sections people actually scroll to (once per visit)
+let _io = null;
+function watchSections() {
+  if (!('IntersectionObserver' in window)) return;
+  _io?.disconnect();
+  _io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { track('see_' + e.target.dataset.sec, { once: true }); _io.unobserve(e.target); } }), { threshold: 0.4 });
+  document.querySelectorAll('[data-sec]').forEach(el => _io.observe(el));
+}
+
 /* ── Sign-in ── */
 const provider = new GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
 let MODE = 'in';
 function gate(html, msg = '', err = false) { $('#app').classList.add('hidden'); $('#gate').classList.remove('hidden'); $('#gateBody').innerHTML = html; $('#gateMsg').textContent = msg; $('#gateMsg').className = 'msg' + (err ? ' err' : ''); }
 const signInHTML = () => `
+  <p class="note" style="text-align:center;margin:0 0 16px">Signing in for the first time? It's a one-time step that connects SmashDex to your club profile. You'll stay signed in on this device.</p>
   <button class="btn primary full" data-act="google">Continue with Google</button>
   <div class="or">or use your email</div>
   <form id="emailForm" autocomplete="on">
@@ -277,7 +321,7 @@ document.addEventListener('click', async ev => {
   const a = ev.target.closest('[data-act]')?.dataset.act; if (!a) return;
   if (a === 'signout') return signOut(auth);
   if (a === 'google') {
-    try { await signInWithPopup(auth, provider); }
+    try { await signInWithPopup(auth, provider); S._method = 'signin_google'; }
     catch (e) { if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(e.code)) return signInWithRedirect(auth, provider);
       if (!['auth/popup-closed-by-user', 'auth/cancelled-popup-request'].includes(e.code)) gate(signInHTML(), 'Google sign-in failed: ' + (e.code || e.message), true); }
   }
@@ -292,7 +336,7 @@ document.addEventListener('click', async ev => {
 document.addEventListener('submit', async ev => {
   if (ev.target.id === 'emailForm') {
     ev.preventDefault(); const f = new FormData(ev.target); const email = f.get('email').trim(), pw = f.get('password');
-    try { MODE === 'up' ? await createUserWithEmailAndPassword(auth, email, pw) : await signInWithEmailAndPassword(auth, email, pw); }
+    try { S._method = MODE === 'up' ? 'signup_email' : 'signin_email'; MODE === 'up' ? await createUserWithEmailAndPassword(auth, email, pw) : await signInWithEmailAndPassword(auth, email, pw); }
     catch (e) {
       const m = { 'auth/invalid-credential': 'Email or password is wrong.', 'auth/email-already-in-use': 'That email already has an account. Sign in instead.', 'auth/weak-password': 'Use at least 6 characters.' }[e.code];
       $('#gateMsg').textContent = m || ('Sign-in failed: ' + (e.code || e.message)); $('#gateMsg').className = 'msg err';
@@ -300,8 +344,11 @@ document.addEventListener('submit', async ev => {
   }
   if (ev.target.id === 'linkForm') {
     ev.preventDefault(); const f = new FormData(ev.target);
-    const req = { name: f.get('name').trim(), phone: f.get('phone').trim(), dexNo: +f.get('dex') || null, note: f.get('note').trim(), email: S.user.email || '', at: new Date().toISOString() };
+    const phone = f.get('phone').trim(), digits = phone.replace(/\D/g, '');
+    if (digits.length < 10) { $('#gateMsg').textContent = 'Enter your 10-digit mobile number.'; $('#gateMsg').className = 'msg err'; return; }
+    const req = { name: f.get('name').trim(), phone, dexNo: +f.get('dex') || null, playTimes: f.getAll('playTimes'), playWays: f.getAll('playWays'), email: S.user.email || '', at: new Date().toISOString() };
     if (!req.name) return;
+    track('link_request');
     try { await set(ref(db, `linkRequests/${S.user.uid}`), req); boot(S.user); }
     catch (e) { $('#gateMsg').textContent = 'Could not send: ' + (e.code || e.message); $('#gateMsg').className = 'msg err'; }
   }
@@ -326,17 +373,24 @@ async function boot(user) {
     if (req) return gate(`<p style="color:var(--muted)">Thanks, ${esc(req.name)}. Club staff will connect <b>${esc(user.email || 'this login')}</b> to your player record. You'll get straight in once they do.</p>
       <p style="margin-top:16px"><a href="${waLink(`Hi Deuce & Smash, please link my SmashDex login (${user.email}) to my player record. Name: ${req.name}`)}" target="_blank" rel="noopener">Message the club on WhatsApp</a></p>
       <p style="margin-top:18px"><button class="linkish" data-act="signout">Use a different account</button></p>`);
-    return gate(`<p style="color:var(--muted);margin-bottom:16px">Signed in as <b>${esc(user.email || '')}</b>. Tell us who you are, and club staff will connect this login to your player record and Dex number.</p>
+    track('link_form');
+    const chip = (name, v) => `<label><input type="checkbox" name="${name}" value="${v}"><span>${v}</span></label>`;
+    return gate(`<span class="step">One-time setup</span>
+      <p style="color:var(--muted);margin-bottom:16px">Signed in as <b>${esc(user.email || '')}</b>. Tell us who you are so club staff can connect this login to your club profile and Dex number. You'll only do this once.</p>
       <form id="linkForm">
-        <label class="field"><span>Your name, as the club knows you</span><input name="name" required maxlength="40" value="${esc(user.displayName || '')}"></label>
-        <label class="field"><span>Phone (optional, helps us find you)</span><input name="phone" inputmode="tel" maxlength="20"></label>
-        <label class="field"><span>Dex number, if you know it</span><input name="dex" inputmode="numeric" maxlength="4" placeholder="e.g. 42"></label>
-        <label class="field"><span>Anything else (optional)</span><input name="note" maxlength="140" placeholder="e.g. I play Tuesday open play"></label>
+        <label class="field"><span>Your name, as the club knows you</span><input name="name" required maxlength="40" autocomplete="name" value="${esc(user.displayName || '')}"></label>
+        <label class="field"><span>Mobile number</span><input name="phone" type="tel" required inputmode="tel" autocomplete="tel" maxlength="16" placeholder="e.g. 98765 43210" pattern="[+]?[0-9 ]{10,15}" title="Enter a 10-digit mobile number, with country code if outside India"></label>
+        <p class="note">Used only to match you with your club record. It is never shown to other players and never used for marketing.</p>
+        <label class="field"><span>Dex number, if you know it (optional)</span><input name="dex" inputmode="numeric" maxlength="4" placeholder="e.g. 42"></label>
+        <fieldset class="q"><legend>When do you usually play? (optional)</legend><div class="chips">${['Weekday mornings', 'Weekday evenings', 'Weekends'].map(v => chip('playTimes', v)).join('')}</div></fieldset>
+        <fieldset class="q"><legend>How do you usually play at the club? (optional)</legend><div class="chips">${['Open play', 'Bookings with friends', 'Coaching', 'Tournaments'].map(v => chip('playWays', v)).join('')}</div></fieldset>
         <button class="btn primary full" type="submit">Send to club staff</button>
       </form>
       <p style="margin-top:14px"><button class="linkish" data-act="signout">Use a different account</button></p>`);
   }
   S.mid = mid;
+  trackVisit();
+  if (S._method) { track(S._method); S._method = null; }
   const fields = ['name', 'fullName', 'phone', 'email', 'dexNo'];
   const vals = await Promise.all(fields.map(f => get(ref(db, `members/${mid}/${f}`)).then(s => s.val()).catch(() => null)));
   S.mine = Object.fromEntries(fields.map((f, i) => [f, vals[i]]));
@@ -406,7 +460,7 @@ function formLine(name) {
 }
 
 /* ── Rendering ── */
-$('.nav').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; S.tab = b.dataset.tab; document.querySelectorAll('.nav button').forEach(x => x.classList.toggle('on', x === b)); render(); scrollTo(0, 0); });
+$('.nav').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; S.tab = b.dataset.tab; track('tab_' + S.tab); document.querySelectorAll('.nav button').forEach(x => x.classList.toggle('on', x === b)); render(); scrollTo(0, 0); });
 const soon = (t, d) => `<div class="soon"><h3>${t}</h3><p>${d}</p><p style="margin-top:14px;color:var(--yellow)">Coming next</p></div>`;
 function render() {
   const v = $('#view');
@@ -415,6 +469,7 @@ function render() {
   if (S.tab === 'honours') return v.innerHTML = soon('Honours', 'Earned on court, never bought. Your club honours board is being built.');
   v.innerHTML = profileHTML();
   drawChart();
+  watchSections();
 }
 
 function myMatches() {
@@ -464,18 +519,18 @@ function profileHTML() {
     <div><b>${clubs.length || 1}</b><span>${(clubs.length || 1) === 1 ? 'Club' : 'Clubs'}</span></div>
   </div>
 
-  <section class="sec">
+  <section class="sec" data-sec="chart">
     <div class="sec-h"><h3>SDX progression</h3><span class="aside"><span class="seg" id="seg">${[5, 10, 0].map(n => `<button data-n="${n}" class="${S.chartN === n ? 'on' : ''}">${n ? n + ' results' : 'All'}</button>`).join('')}</span></span></div>
     <div class="chart" id="chart"></div>
   </section>
 
-  <section class="sec">
+  <section class="sec" data-sec="matches">
     <div class="sec-h"><h3>Matches</h3>${mine.length ? `<span class="aside">${Math.min(mine.length, shown)} of ${mine.length}</span>` : ''}</div>
     ${mine.length ? mine.slice(0, shown).map(matchRow).join('') + (mine.length > shown ? `<button class="btn full" style="margin-top:12px" data-act="allmatches">Show all ${mine.length} matches</button>` : '')
       : `<p class="empty">No matches yet. Play an open-play session or a tournament and they'll appear here.</p>`}
   </section>
 
-  <section class="sec">
+  <section class="sec" data-sec="stats">
     <div class="sec-h"><h3>Statistics</h3></div>
     <div class="stat">
       ${ring(eff)}
@@ -489,18 +544,18 @@ function profileHTML() {
     <p style="font-size:14px;color:var(--muted);margin-top:6px">Ring shows your win rate over your last ${last10.length || 0} matches.</p>
   </section>
 
-  <section class="sec">
+  <section class="sec" data-sec="prefs">
     <div class="sec-h"><h3>Player preferences</h3><span class="aside"><button class="linkish" data-open="prefs">Edit</button></span></div>
     ${prefRow('✋', 'Best hand', prefs.hand)}${prefRow('📍', 'Court side', prefs.side)}${prefRow('🎯', 'Match type', prefs.matchType)}${prefRow('🕖', 'Preferred time to play', prefs.time)}
   </section>
 
-  <section class="sec">
+  <section class="sec" data-sec="people">
     <div class="sec-h"><h3>People you play most with</h3></div>
     ${partners.length ? `<div class="people">${partners.map(([n, c]) => { const q = bandOf(playerOf(n).r); return `<button class="person" data-player="${esc(n)}"><div class="av sm" aria-hidden="true">${esc(initials(n))}</div><div class="nm">${esc(n)}</div><div class="ps">${esc(q.persona)}</div><div class="ps">${c} match${c > 1 ? 'es' : ''} together</div></button>`; }).join('')}</div>`
       : `<p class="empty">Your regular partners will show up here.</p>`}
   </section>
 
-  <section class="sec">
+  <section class="sec" data-sec="clubs">
     <div class="sec-h"><h3>Your clubs</h3></div>
     <div class="clubs">${(clubs.length ? clubs : [['deuce-and-smash', 0]]).map(([c, n], i) => { const name = S.clubs[c]?.name || (c === 'deuce-and-smash' ? 'Deuce & Smash' : c); return `<div class="club ${i === 0 ? 'home' : ''}"><span class="ini" aria-hidden="true">${esc(initials(name))}</span><span>${esc(name)}${n ? ` <span style="color:var(--muted);font-size:13px">${n} match${n > 1 ? 'es' : ''}</span>` : ''}</span></div>`; }).join('')}</div>
   </section>`;
@@ -559,7 +614,7 @@ function drawChart() {
       ? `<g data-i="${i}" style="cursor:pointer" role="button" aria-label="Manual adjustment"><line x1="${X(i)}" y1="${pad}" x2="${X(i)}" y2="${Hh - pad}" stroke="#ff8a4c" stroke-dasharray="3 4" stroke-width="1.5"/><circle cx="${X(i)}" cy="${Y(q.r)}" r="${i === selIdx ? 11 : 8}" fill="#ff8a4c"/><text x="${X(i)}" y="${Y(q.r) + 4}" text-anchor="middle" font-size="11" font-weight="700" fill="#0E0E2C">M</text></g>`
       : `<circle data-i="${i}" cx="${X(i)}" cy="${Y(q.r)}" r="${i === selIdx ? 9 : 4.5}" fill="${i === selIdx ? '#F5D628' : '#6FA8F0'}" stroke="${i === selIdx ? 'rgba(245,214,40,.35)' : 'transparent'}" stroke-width="10" style="cursor:pointer"/>`).join('')}
   </svg><div class="tip" aria-live="polite">${tipHTML(pts[selIdx])}</div>`;
-  el.querySelectorAll('[data-i]').forEach(n => n.addEventListener('click', () => { S.sel = +n.dataset.i; drawChart(); }));
+  el.querySelectorAll('[data-i]').forEach(n => n.addEventListener('click', () => { S.sel = +n.dataset.i; track('chart_point'); drawChart(); }));
 }
 function tipHTML(q) {
   if (q.start) return `<div class="t1"><b>Where this view starts</b><span class="d">SDX ${sdx(q.r)}</span></div>`;
@@ -571,8 +626,9 @@ function tipHTML(q) {
     <div style="color:var(--muted)">With ${mates.map(esc).join(' & ') || '—'} against ${opp.map(esc).join(' & ')}, ${sc}. SDX ${sdx(q.r)} afterwards.</div>`;
 }
 document.addEventListener('click', e => {
-  const n = e.target.closest('#seg [data-n]'); if (n) { S.chartN = +n.dataset.n; S.sel = null; render(); }
-  if (e.target.closest('[data-act=allmatches]')) { S.showAll = true; render(); }
+  const n = e.target.closest('#seg [data-n]'); if (n) { S.chartN = +n.dataset.n; S.sel = null; track('chart_range'); render(); }
+  if (e.target.closest('[data-act=allmatches]')) { S.showAll = true; track('matches_all'); render(); }
+  if (e.target.closest('a[href^="https://wa.me/"]')) track('whatsapp_staff');
   const o = e.target.closest('[data-open]'); if (o) openSheet(o.dataset.open);
   const pl = e.target.closest('[data-player]'); if (pl) openSheet('player', pl.dataset.player);
 });
@@ -585,6 +641,7 @@ addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 const staffLink = (me, p) => waLink(`Hi Deuce & Smash, I'd like my SmashDex level reviewed. Name: ${me}, ${dexLabel(S.profiles[S.mid]?.dexNo)}, current SDX ${sdx(p.r)}.`);
 
 function openSheet(kind, arg) {
+  track({ sdx: 'sdx_explainer', raise: 'raise_info', lower: 'lower_info', edit: 'edit_open', prefs: 'prefs_open', player: 'player_card' }[kind] || kind);
   const me = myName(), p = playerOf(me), b = bandOf(p.r), conf = p.confidence || 0, cl = DSR.confidenceLabel(conf);
   if (kind === 'sdx') return sheet(`
     <h2>Your SDX Rating</h2>
@@ -695,7 +752,7 @@ document.addEventListener('click', async e => {
   if (e.target.id !== 'lowerGo') return;
   const p = playerOf(myName()), from = Math.round(p.r * 1000) / 1000, to = Math.round((p.r - S.lowerBy) * 1000) / 1000;
   e.target.disabled = true;
-  try { await set(ref(db, `adjustments/${S.mid}/self`), { from, to, date: todayLocal(), at: new Date().toISOString() }); closeSheet(); toast(`Level lowered. Your SDX is now ${sdx(to)}`); }
+  try { await set(ref(db, `adjustments/${S.mid}/self`), { from, to, date: todayLocal(), at: new Date().toISOString() }); closeSheet(); track('lowered'); toast(`Level lowered. Your SDX is now ${sdx(to)}`); }
   catch (err) { e.target.disabled = false; toast(/permission/i.test(err.message) ? 'You have already used your one self adjustment.' : 'Could not lower your level: ' + err.message, 4000); }
 });
 document.addEventListener('submit', async e => {
@@ -705,13 +762,13 @@ document.addEventListener('submit', async e => {
     if (clash) { $('#editMsg').textContent = `Another player is already called “${name}”. Add a surname or an initial.`; $('#editMsg').className = 'msg err'; return; }
     const upd = { [`members/${S.mid}/name`]: name, [`profiles/${S.mid}/name`]: name };
     for (const k of ['fullName', 'phone', 'email']) upd[`members/${S.mid}/${k}`] = f.get(k).trim();
-    try { await update(ref(db), upd); Object.assign(S.mine, { name, fullName: f.get('fullName').trim(), phone: f.get('phone').trim(), email: f.get('email').trim() }); closeSheet(); toast('Profile saved'); }
+    try { await update(ref(db), upd); Object.assign(S.mine, { name, fullName: f.get('fullName').trim(), phone: f.get('phone').trim(), email: f.get('email').trim() }); closeSheet(); track('profile_saved'); toast('Profile saved'); }
     catch (err) { $('#editMsg').textContent = 'Could not save: ' + err.message; $('#editMsg').className = 'msg err'; }
   }
   if (e.target.id === 'prefsForm') {
     e.preventDefault(); const f = new FormData(e.target), prefs = {};
     for (const k of ['hand', 'side', 'matchType', 'time']) if (f.get(k)) prefs[k] = f.get(k);
-    try { await set(ref(db, `profiles/${S.mid}/prefs`), prefs); closeSheet(); toast('Preferences saved'); }
+    try { await set(ref(db, `profiles/${S.mid}/prefs`), prefs); closeSheet(); track('prefs_saved'); toast('Preferences saved'); }
     catch (err) { toast('Could not save preferences: ' + err.message, 4000); }
   }
 });

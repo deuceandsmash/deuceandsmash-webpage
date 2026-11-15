@@ -321,6 +321,7 @@
   <button class="tab" onclick="showTab('openplay')">🎾 Open Play</button>
   <button class="tab" onclick="showTab('tournaments')">🏆 Tournaments</button>
   <button class="tab" onclick="showTab('add-member')">➕ Add Member</button>
+  <button class="tab" onclick="showTab('smashdex')">📊 SmashDex</button>
 </div>
 
 <!-- Members tab -->
@@ -428,6 +429,10 @@
 </div>
 
 <!-- Add Member tab -->
+<div class="section" id="tab-smashdex">
+  <div id="sdx-analytics"><div style="color:var(--muted);padding:20px">Loading SmashDex usage…</div></div>
+</div>
+
 <div class="section" id="tab-add-member">
   <div class="new-member-form">
     <h3 style="margin-bottom:20px">Add New Member</h3>
@@ -813,9 +818,13 @@ function renderLinkRequests() {
     .map(([id, m]) => `<option value="${id}">${m.name}${m.dexNo ? ' · ' + dexLabel(m) : ''}</option>`).join('');
   box.style.display = 'block';
   box.innerHTML = `<div style="font-weight:700;margin-bottom:8px">SmashDex sign-in requests (${reqs.length})</div>` + reqs.map(([uid, r]) => {
-    const guess = (r.dexNo && Object.keys(members).find(id => +members[id].dexNo === +r.dexNo)) || idByName(r.name) || '';
+    const last10 = v => String(v || '').replace(/\D/g, '').slice(-10);
+    const byPhone = last10(r.phone).length === 10 ? Object.keys(members).find(id => last10(members[id].phone) === last10(r.phone)) : '';
+    const guess = byPhone || (r.dexNo && Object.keys(members).find(id => +members[id].dexNo === +r.dexNo)) || idByName(r.name) || '';
+    const how = [...(r.playTimes || []), ...(r.playWays || [])].join(', ');
     return `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--border)">
-      <div style="flex:1;min-width:220px"><b>${r.name || '—'}</b> <span style="color:var(--muted)">${r.email || ''}${r.phone ? ' · ' + r.phone : ''}${r.dexNo ? ' · says Dex #' + String(r.dexNo).padStart(4, '0') : ''}</span>${r.note ? `<div style="color:var(--muted);font-size:.8rem">${String(r.note).replace(/</g, '&lt;')}</div>` : ''}</div>
+      <div style="flex:1;min-width:220px"><b>${String(r.name || '—').replace(/</g, '&lt;')}</b> <span style="color:var(--muted)">${r.email || ''}${r.phone ? ' · ' + String(r.phone).replace(/</g, '&lt;') : ''}${r.dexNo ? ' · says Dex #' + String(r.dexNo).padStart(4, '0') : ''}</span>
+        <div style="color:var(--muted);font-size:.8rem">${byPhone ? '✓ Mobile number matches ' + members[byPhone].name : (r.phone ? 'No member has this mobile number yet' : '')}${how ? ' · Plays: ' + how : ''}</div></div>
       <select class="filter-select" id="lr-${uid}"><option value="">Choose member…</option>${opts}</select>
       <button class="btn btn-primary btn-sm" onclick="approveLink('${uid}')">Link</button>
       <button class="btn btn-sm" onclick="rejectLink('${uid}')">Dismiss</button></div>`
@@ -825,10 +834,99 @@ function renderLinkRequests() {
 window.approveLink = async uid => {
   const mid = document.getElementById(`lr-${uid}`).value; if (!mid) return showToast('Choose the member first', 'err');
   const r = linkRequests[uid] || {};
-  await update(ref(db), { [`links/${uid}`]: mid, [`members/${mid}/smashdexUid`]: uid, [`members/${mid}/smashdexEmail`]: r.email || '', [`linkRequests/${uid}`]: null });
+  const upd = { [`links/${uid}`]: mid, [`members/${mid}/smashdexUid`]: uid, [`members/${mid}/smashdexEmail`]: r.email || '', [`linkRequests/${uid}`]: null };
+  if (r.phone && !members[mid].phone) { upd[`members/${mid}/phone`] = r.phone; members[mid].phone = r.phone; }
+  await update(ref(db), upd);
+  members[mid].smashdexUid = uid;
   delete linkRequests[uid]; renderLinkRequests(); showToast(`Linked to ${members[mid].name}`, 'ok');
 };
 window.rejectLink = async uid => { await update(ref(db), { [`linkRequests/${uid}`]: null }); delete linkRequests[uid]; renderLinkRequests(); };
+
+// ===== SmashDex usage analytics =====
+const SDX_EVENTS = {
+  sdx_explainer: ['Opened SDX explainer', 'Profile'], raise_info: ['Opened "Raise your level"', 'Level'], lower_info: ['Opened "Lower your level"', 'Level'],
+  lowered: ['Lowered their level', 'Level'], whatsapp_staff: ['Tapped WhatsApp to staff', 'Level'],
+  chart_range: ['Changed chart range (5/10/All)', 'Chart'], chart_point: ['Tapped a point on the chart', 'Chart'],
+  matches_all: ['Opened all matches', 'Matches'], player_card: ['Opened another player', 'People'],
+  edit_open: ['Opened Edit profile', 'Profile'], profile_saved: ['Saved profile changes', 'Profile'],
+  prefs_open: ['Opened preferences', 'Profile'], prefs_saved: ['Saved preferences', 'Profile'],
+  see_chart: ['Scrolled to SDX chart', 'Seen'], see_matches: ['Scrolled to Matches', 'Seen'], see_stats: ['Scrolled to Statistics', 'Seen'],
+  see_prefs: ['Scrolled to Preferences', 'Seen'], see_people: ['Scrolled to People', 'Seen'], see_clubs: ['Scrolled to Clubs', 'Seen'],
+  tab_record: ['Tapped Record score (coming soon)', 'Coming soon'], tab_dex: ['Tapped Matchup Dex (coming soon)', 'Coming soon'],
+  tab_honours: ['Tapped Honours (coming soon)', 'Coming soon'], tab_profile: ['Returned to Profile tab', 'Profile'],
+  signin_google: ['Signed in with Google', 'Sign-in'], signin_email: ['Signed in with email', 'Sign-in'], signup_email: ['Created email account', 'Sign-in'],
+  link_form: ['Saw the one-time setup form', 'Sign-in'], link_request: ['Sent a link request', 'Sign-in'],
+};
+const _esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const _ago = ms => { if (!ms) return '—'; const d = Math.floor((Date.now() - ms) / 864e5); return d <= 0 ? 'Today' : d === 1 ? 'Yesterday' : `${d} days ago`; };
+let _sdxSort = 'visits';
+window.loadSmashdexAnalytics = async () => {
+  const box = document.getElementById('sdx-analytics');
+  try {
+    const [aSnap, lSnap, rSnap] = await Promise.all([get(ref(db, 'analytics')), get(ref(db, 'links')), get(ref(db, 'linkRequests'))]);
+    window._sdxA = { a: aSnap.val() || {}, links: lSnap.val() || {}, reqs: rSnap.val() || {} };
+    renderSmashdexAnalytics();
+  } catch (e) { box.innerHTML = `<div style="color:var(--warn);padding:20px">Could not load SmashDex usage: ${_esc(e.message)}</div>`; }
+};
+window.sdxSortBy = k => { _sdxSort = k; renderSmashdexAnalytics(); };
+function renderSmashdexAnalytics() {
+  const { a, links, reqs } = window._sdxA, M = a.members || {}, daily = a.daily || {};
+  const linked = new Set(Object.values(links));
+  const day = n => { const d = new Date(Date.now() - n * 864e5); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const days = Array.from({ length: 30 }, (_, i) => day(29 - i));
+  const uniq = n => { const u = new Set(); days.slice(-n).forEach(d => Object.keys(daily[d]?.users || {}).forEach(x => u.add(x))); return u.size; };
+  const visitsN = n => days.slice(-n).reduce((s, d) => s + (daily[d]?.visits || 0), 0);
+  const totalVisits = Object.values(M).reduce((s, x) => s + (x.visits || 0), 0);
+  // feature table
+  const evs = new Set([...Object.keys(SDX_EVENTS)]);
+  Object.values(M).forEach(x => Object.keys(x.events || {}).forEach(e => evs.add(e)));
+  const rows = [...evs].map(e => {
+    const total = Object.values(M).reduce((s, x) => s + (x.events?.[e] || 0), 0) || 0;
+    const users = Object.values(M).filter(x => x.events?.[e]).length;
+    const last30 = days.reduce((s, d) => s + (daily[d]?.events?.[e] || 0), 0);
+    const [label, group] = SDX_EVENTS[e] || [e, 'Other'];
+    return { e, label, group, total: Math.max(total, last30), users, last30 };
+  }).sort((x, y) => y.users - x.users || y.total - x.total);
+  const activeBase = Math.max(1, Object.keys(M).length);
+  // daily chart
+  const W = 600, H = 120, bw = W / 30, maxV = Math.max(1, ...days.map(d => daily[d]?.visits || 0));
+  const bars = days.map((d, i) => { const v = daily[d]?.visits || 0, u = Object.keys(daily[d]?.users || {}).length, h = Math.round((H - 20) * v / maxV);
+    return `<g><title>${d}: ${v} visits, ${u} members</title><rect x="${i * bw + 2}" y="${H - 16 - h}" width="${bw - 4}" height="${Math.max(h, v ? 2 : 0)}" rx="3" fill="var(--accent)"/>${i % 5 === 4 ? `<text x="${i * bw + bw / 2}" y="${H - 2}" text-anchor="middle" font-size="10" fill="var(--muted)">${d.slice(8)}/${d.slice(5, 7)}</text>` : ''}</g>`; }).join('');
+  // members table
+  const mrows = Object.entries(M).map(([id, x]) => {
+    const top = Object.entries(x.events || {}).filter(([e]) => !e.startsWith('see_') && !e.startsWith('link_') && !e.startsWith('sign')).sort((p, q) => q[1] - p[1])[0];
+    return { id, name: members[id]?.name || id, dex: members[id]?.dexNo, visits: x.visits || 0, last: x.lastSeen || 0, first: x.firstSeen || 0, top: top ? (SDX_EVENTS[top[0]]?.[0] || top[0]) : '—' };
+  });
+  for (const id of linked) if (!M[id]) mrows.push({ id, name: members[id]?.name || id, dex: members[id]?.dexNo, visits: 0, last: 0, first: 0, top: 'Linked, not opened yet' });
+  mrows.sort((p, q) => _sdxSort === 'name' ? p.name.localeCompare(q.name) : _sdxSort === 'last' ? q.last - p.last : q.visits - p.visits);
+  const card = (v, l) => `<div style="flex:1;min-width:120px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px"><div style="font-size:1.6rem;font-weight:800">${v}</div><div style="color:var(--muted);font-size:.8rem">${l}</div></div>`;
+  const th = 'text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:600;font-size:.8rem';
+  const td = 'padding:8px;border-bottom:1px solid var(--border);font-size:.85rem';
+  document.getElementById('sdx-analytics').innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      ${card(linked.size, 'Members linked to SmashDex')}${card(Object.keys(reqs).length, 'Sign-in requests waiting')}
+      ${card(uniq(7), 'Members active, last 7 days')}${card(uniq(30), 'Members active, last 30 days')}
+      ${card(visitsN(7), 'Visits, last 7 days')}${card(totalVisits, 'Visits, all time')}
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px">
+      <div style="font-weight:700;margin-bottom:6px">Visits per day, last 30 days</div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">${bars}</svg>
+      <div style="color:var(--muted);font-size:.75rem">A visit is opening SmashDex, or coming back to it after 30+ minutes away. Hover a bar for members per day.</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;overflow-x:auto">
+      <div style="font-weight:700;margin-bottom:2px">What members use</div>
+      <div style="color:var(--muted);font-size:.75rem;margin-bottom:8px">Sorted by how many members used each feature. "Seen" rows count members who scrolled to that part of their profile (once per visit). "Coming soon" rows show interest in features not built yet.</div>
+      <table style="width:100%;border-collapse:collapse"><thead><tr><th style="${th}">Feature</th><th style="${th}">Area</th><th style="${th}">Members</th><th style="${th}">% of active</th><th style="${th}">Total uses</th><th style="${th}">Last 30 days</th></tr></thead>
+      <tbody>${rows.map(r => `<tr style="${r.users ? '' : 'opacity:.45'}"><td style="${td}">${_esc(r.label)}</td><td style="${td};color:var(--muted)">${_esc(r.group)}</td><td style="${td};font-weight:700">${r.users}</td><td style="${td}">${Math.round(100 * r.users / activeBase)}%</td><td style="${td}">${r.total}</td><td style="${td}">${r.last30}</td></tr>`).join('')}</tbody></table>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;overflow-x:auto">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div style="font-weight:700">Members on SmashDex</div>
+        <div style="margin-left:auto;font-size:.8rem;color:var(--muted)">Sort: <a href="#" onclick="sdxSortBy('visits');return false">visits</a> · <a href="#" onclick="sdxSortBy('last');return false">last seen</a> · <a href="#" onclick="sdxSortBy('name');return false">name</a></div></div>
+      ${mrows.length ? `<table style="width:100%;border-collapse:collapse"><thead><tr><th style="${th}">Member</th><th style="${th}">Dex</th><th style="${th}">Visits</th><th style="${th}">Last seen</th><th style="${th}">First seen</th><th style="${th}">Uses most</th></tr></thead>
+      <tbody>${mrows.map(r => `<tr><td style="${td};font-weight:600">${_esc(r.name)}</td><td style="${td}">${r.dex ? '#' + String(r.dex).padStart(4, '0') : ''}</td><td style="${td};font-weight:700">${r.visits}</td><td style="${td}">${_ago(r.last)}</td><td style="${td}">${r.first ? new Date(r.first).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</td><td style="${td};color:var(--muted)">${_esc(r.top)}</td></tr>`).join('')}</tbody></table>`
+      : '<div style="color:var(--muted)">No members have opened SmashDex yet.</div>'}
+    </div>`;
+}
 
 // ===== Members tab =====
 window.renderMembers = () => {
@@ -2116,6 +2214,7 @@ window.showTab = (name) => {
   if (name === 'openplay') showOpHistory();
   if (name === 'tournaments') loadTournaments();
   if (name === 'ratings') requestAnimationFrame(renderWormChart);
+  if (name === 'smashdex') loadSmashdexAnalytics();
 };
 window.addEventListener('resize', () => { if (currentTab === 'ratings') renderWormChart(); });
 

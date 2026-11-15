@@ -64,6 +64,25 @@
     },
 
     // Club list for score entry (staff curate; members can suggest in a later release)
-    "clubs": { ".read": "auth != null" }
+    "clubs": { ".read": "auth != null" },
+
+    // Usage analytics: write-only counters for members (each write may only add 1); staff read them in /admin
+    "analytics": {
+      "members": {
+        "$mid": {
+          "visits":    { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid", ".validate": "newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" },
+          "lastSeen":  { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid", ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+          "firstSeen": { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid && !data.exists()", ".validate": "newData.isNumber()" },
+          "events": { "$ev": { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid", ".validate": "$ev.length <= 40 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } }
+        }
+      },
+      "daily": {
+        "$day": {
+          "visits": { ".write": "auth != null", ".validate": "$day.length === 10 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" },
+          "users":  { "$mid": { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid", ".validate": "newData.val() === true" } },
+          "events": { "$ev": { ".write": "auth != null", ".validate": "$day.length === 10 && $ev.length <= 40 && newData.isNumber() && newData.val() === (data.exists() ? data.val() : 0) + 1" } }
+        }
+      }
+    }
   }
 }
