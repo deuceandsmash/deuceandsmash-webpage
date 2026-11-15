@@ -820,11 +820,15 @@ function renderLinkRequests() {
   box.innerHTML = `<div style="font-weight:700;margin-bottom:8px">SmashDex sign-in requests (${reqs.length})</div>` + reqs.map(([uid, r]) => {
     const last10 = v => String(v || '').replace(/\D/g, '').slice(-10);
     const byPhone = last10(r.phone).length === 10 ? Object.keys(members).find(id => last10(members[id].phone) === last10(r.phone)) : '';
-    const guess = byPhone || (r.dexNo && Object.keys(members).find(id => +members[id].dexNo === +r.dexNo)) || idByName(r.name) || '';
+    // Fallback: exactly one member whose name starts with the first name they typed (e.g. "Ranjith Raja" -> "Ranjith")
+    const first = String(r.name || '').trim().toLowerCase().split(/\s+/)[0] || '';
+    const byFirst = first.length >= 3 ? Object.keys(members).filter(id => { const n = String(members[id].name || '').toLowerCase(); return n === first || n.startsWith(first + ' ') || n.startsWith(first + ' ('); }) : [];
+    const guess = byPhone || (r.dexNo && Object.keys(members).find(id => +members[id].dexNo === +r.dexNo)) || idByName(r.name) || (byFirst.length === 1 ? byFirst[0] : '') || '';
+    const guessNote = !byPhone && guess ? ` · Suggested by name: ${members[guess].name} (please check)` : (!guess && byFirst.length > 1 ? ` · ${byFirst.length} members start with “${first}”, pick the right one` : '');
     const how = [...(r.playTimes || []), ...(r.playWays || [])].join(', ');
     return `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--border)">
       <div style="flex:1;min-width:220px"><b>${String(r.name || '—').replace(/</g, '&lt;')}</b> <span style="color:var(--muted)">${r.email || ''}${r.phone ? ' · ' + String(r.phone).replace(/</g, '&lt;') : ''}${r.dexNo ? ' · says Dex #' + String(r.dexNo).padStart(4, '0') : ''}</span>
-        <div style="color:var(--muted);font-size:.8rem">${byPhone ? '✓ Mobile number matches ' + members[byPhone].name : (r.phone ? 'No member has this mobile number yet' : '')}${how ? ' · Plays: ' + how : ''}</div></div>
+        <div style="color:var(--muted);font-size:.8rem">${byPhone ? '✓ Mobile number matches ' + members[byPhone].name : (r.phone ? 'No member has this mobile number yet' : '')}${guessNote}${how ? ' · Plays: ' + how : ''}</div></div>
       <select class="filter-select" id="lr-${uid}"><option value="">Choose member…</option>${opts}</select>
       <button class="btn btn-primary btn-sm" onclick="approveLink('${uid}')">Link</button>
       <button class="btn btn-sm" onclick="rejectLink('${uid}')">Dismiss</button></div>`
