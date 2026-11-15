@@ -294,7 +294,7 @@ function toast(t, ms = 2600) { document.querySelectorAll('.toast').forEach(x => 
 const waLink = text => `https://wa.me/${CLUB_WA}?text=${encodeURIComponent(text)}`;
 
 /* ── Split-flap logo and score (Night Court, 300 ms per flip) ── */
-const FLIP_MS = 300, INTRO_FLIP_MS = 110, INTRO_HOLD_MS = 2000, IDLE_AFTER_MS = 10000, IDLE_EVERY_MS = 20000, IDLE_MAX_RUNS = 5;
+const FLIP_MS = 300, INTRO_FLIP_MS = 300, INTRO_HOLD_MS = 1000, IDLE_AFTER_MS = 10000, IDLE_EVERY_MS = 20000, IDLE_MAX_RUNS = 5;
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const flapHTML = (ch, cls = '') => `<span class="flap ${cls}" data-c="${ch}"><span class="t"><i>${ch}</i></span><span class="b"><i>${ch}</i></span><span class="ft"><i>${ch}</i></span><span class="fb"><i>${ch}</i></span></span>`;
 const logoHTML = cls => `<span class="tiles ${cls}" role="img" aria-label="SmashDex">${'SMASHDEX'.split('').map((c, i) => flapHTML(c, (i < 5 ? '' : 'dx') + (i === 5 ? ' gapL' : ''))).join('')}</span>`;
@@ -323,9 +323,9 @@ function runLogo(root, { intro = false } = {}) {
   let end = 0;
   root.querySelectorAll('.flap').forEach((el, i) => {
     const final = 'SMASHDEX'[i];
-    const n = intro ? 2 + Math.floor(i / 2) : 3 + i;
+    const n = intro ? 2 + Math.floor(i / 4) : 3 + i;
     const seq = Array.from({ length: n }, () => AZ[Math.floor(Math.random() * 26)]).concat(final);
-    end = Math.max(end, playFlap(el, seq, i * (intro ? 45 : 70), ms));
+    end = Math.max(end, playFlap(el, seq, i * (intro ? 110 : 70), ms));
   });
   return end;
 }
