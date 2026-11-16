@@ -322,6 +322,7 @@
   <button class="tab" onclick="showTab('tournaments')">🏆 Tournaments</button>
   <button class="tab" onclick="showTab('add-member')">➕ Add Member</button>
   <button class="tab" onclick="showTab('smashdex')">📊 SmashDex</button>
+  <button class="tab" onclick="showTab('scores')">📝 Member scores <span id="scores-badge" style="display:none;background:#E05A00;color:#fff;border-radius:999px;padding:0 7px;font-size:.75rem;margin-left:4px"></span></button>
 </div>
 
 <!-- Members tab -->
@@ -435,6 +436,10 @@
   <div id="sdx-analytics"><div style="color:var(--muted);padding:20px">Loading SmashDex usage…</div></div>
 </div>
 
+<div class="section" id="tab-scores">
+  <div id="sdx-scores"><div style="color:var(--muted);padding:20px">Loading member scores…</div></div>
+</div>
+
 <div class="section" id="tab-add-member">
   <div class="new-member-form">
     <h3 style="margin-bottom:20px">Add New Member</h3>
@@ -537,6 +542,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, get, set, update, push, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { DSR } from "/shared/dsr.js";
+import { subsToMatches, subState, confirmers, playersOf, setsOfSub, isNew, DAY_MS } from "/shared/subs.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ============================================================
@@ -608,6 +614,7 @@ onAuthStateChanged(auth, async user => {
   let ok = false;
   try { ok = (await get(ref(db, `admins/${_emailKey(user.email)}`))).val() === true; } catch (e) { console.warn('admin check failed', e); }
   if (!ok) { msg.textContent = `${user.email} isn't approved for staff access. Ask an owner to add it.`; so.style.display = ''; return; }
+  window._staffEmail = user.email;
   document.getElementById('pin-overlay').style.display = 'none';
   document.getElementById('main-header').style.display = 'flex';
   document.getElementById('main-tabs').style.display = 'flex';
@@ -696,15 +703,17 @@ async function loadAll() {
   // Fetch members, matches and tournament meta in parallel.
   // openPlaySessions is only needed when a member has neither ratingOverride nor levelOverride;
   // we fetch it lazily after the main data is ready to avoid blocking first render.
-  const [mSnap, matchSnap, trnMetaSnap, adjSnap, lrSnap] = await Promise.all([
+  const [mSnap, matchSnap, trnMetaSnap, adjSnap, lrSnap, subSnap] = await Promise.all([
     get(ref(db, 'members')),
     get(ref(db, 'openPlayMatches')),
     get(ref(db, 'tournaments/_meta')),
     get(ref(db, 'adjustments')).catch(() => null),
     get(ref(db, 'linkRequests')).catch(() => null),
+    get(ref(db, 'submissions')).catch(() => null),
   ]);
   adjustments = (adjSnap && adjSnap.val()) || {};
   linkRequests = (lrSnap && lrSnap.val()) || {};
+  subs = (subSnap && subSnap.val()) || {};
   members = mSnap.val() || {};
   opMatches = matchSnap.val() || {};
   trnMeta = trnMetaSnap.val() || {};
@@ -726,6 +735,7 @@ async function loadAll() {
     renderLinkRequests();
     renderMembers();
     renderRatings();
+    watchSubs();
   }).catch(() => {}); // non-critical
 }
 
@@ -771,8 +781,12 @@ function computeAllRatings() {
   }
   // All matches
   const allMatches = Object.entries(opMatches).map(([id, m]) => ({ id, ...m }));
-  const result = DSR.compute(seeds, allMatches, today, adjustmentList());
+  // Scores recorded by members in SmashDex count once confirmed (or 24h after submission with no dispute)
+  const sx = subsToMatches(subs, id => members[id]?.name);
+  for (const [k, v] of Object.entries(sx.seeds)) if (!seeds[k]) seeds[k] = v;
+  const result = DSR.compute(seeds, allMatches.concat(sx.matches), today, adjustmentList());
   ratings = result.players;
+  for (const k of Object.keys(ratings)) if (k.startsWith('~new:')) delete ratings[k]; // newcomers aren't members yet
   _lastSeeds = seeds;
   // Keep SmashDex profiles in step with every staff change (debounced)
   if (_profilesReady) { clearTimeout(_publishTimer); _publishTimer = setTimeout(publishProfiles, 1200); }
@@ -785,6 +799,8 @@ let adjustments = {};
 let _lastSeeds = {};
 let _profilesReady = false, _publishTimer = null;
 let linkRequests = {};
+let subs = {};          // member-submitted scores (SmashDex → Record score)
+let _subsLive = false;
 function adjustmentList() {
   const out = [];
   for (const [mid, a] of Object.entries(adjustments || {})) {
@@ -830,7 +846,7 @@ function renderLinkRequests() {
     const how = [...(r.playTimes || []), ...(r.playWays || [])].join(', ');
     return `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--border)">
       <div style="flex:1;min-width:220px"><b>${String(r.name || '—').replace(/</g, '&lt;')}</b> <span style="color:var(--muted)">${r.email || ''}${r.phone ? ' · ' + String(r.phone).replace(/</g, '&lt;') : ''}${r.dexNo ? ' · says Dex #' + String(r.dexNo).padStart(4, '0') : ''}</span>
-        <div style="color:var(--muted);font-size:.8rem">${byPhone ? '✓ Mobile number matches ' + members[byPhone].name : (r.phone ? 'No member has this mobile number yet' : '')}${guessNote}${how ? ' · Plays: ' + how : ''}</div></div>
+        <div style="color:var(--muted);font-size:.8rem">${byPhone ? '✓ Mobile number matches ' + members[byPhone].name : (r.phone ? 'No member has this mobile number yet' : '')}${guessNote}${how ? ' · Plays: ' + how : ''}${r.invite ? ' · Invited as a new player from a recorded match: link them, then swap them in under 📝 Member scores' : ''}</div></div>
       <select class="filter-select" id="lr-${uid}"><option value="">Choose member…</option>${opts}</select>
       <button class="btn btn-primary btn-sm" onclick="approveLink('${uid}')">Link</button>
       <button class="btn btn-sm" onclick="rejectLink('${uid}')">Dismiss</button></div>`
@@ -848,6 +864,93 @@ window.approveLink = async uid => {
 };
 window.rejectLink = async uid => { await update(ref(db), { [`linkRequests/${uid}`]: null }); delete linkRequests[uid]; renderLinkRequests(); };
 
+
+// ===== Member scores (SmashDex → Record score) =====
+function watchSubs() {
+  if (_subsLive) return; _subsLive = true;
+  onValue(ref(db, 'submissions'), snap => { subs = snap.val() || {}; computeAllRatings(); renderScores(); }, e => console.warn('submissions', e));
+  setInterval(() => { computeAllRatings(); renderScores(); }, 10 * 60 * 1000); // auto-confirm happens with time
+}
+const _pn = (s, id) => isNew(id) ? `${(s.newcomers || {})[id.slice(4)]?.name || 'New player'} (new)` : (members[id]?.name || '?');
+const _clubName = s => s.club === 'other' ? `${s.clubOther || 'Other club'} (not on the list)` : (s.club || 'deuce-and-smash').replace(/-/g, ' ');
+const _hrs = ms => { const h = Math.floor((Date.now() - ms) / 36e5); return h < 1 ? 'under an hour' : h < 48 ? `${h} h` : `${Math.floor(h / 24)} days`; };
+function _setsHTML(s) {
+  return setsOfSub(s).map((x, i) => {
+    const bad = (s.dispute?.sets || []).map(Number).includes(i);
+    const fix = s.dispute?.fix?.[i];
+    return `<div style="display:flex;gap:8px;align-items:center;padding:3px 0;${bad ? 'color:#ff9a6b' : ''}"><span style="width:44px;color:var(--muted)">Set ${i + 1}</span>
+      <span style="flex:1">${_esc(x.A.map(id => _pn(s, id)).join(' & '))} <b>${x.a}–${x.b}</b>${x.tb ? ` <span style="color:var(--muted)">(TB ${x.tb.a}–${x.tb.b})</span>` : ''} ${_esc(x.B.map(id => _pn(s, id)).join(' & '))}</span>
+      ${bad ? `<span>disputed${fix ? `: says ${fix.a}–${fix.b}` : ''}</span>` : ''}
+      <input class="filter-select" style="width:52px" inputmode="numeric" data-fix="${i}a" value="${x.a}" aria-label="Set ${i + 1} games, first pair"><input class="filter-select" style="width:52px" inputmode="numeric" data-fix="${i}b" value="${x.b}" aria-label="Set ${i + 1} games, second pair"></div>`;
+  }).join('');
+}
+function _dupOf(s) {
+  const ids = new Set(playersOf(s).filter(id => !isNew(id)));
+  if (ids.size < 3) return null;
+  return Object.entries(opMatches).find(([, m]) => m.date === s.date && [...(m.teamAIds || []), ...(m.teamBIds || [])].filter(id => ids.has(id)).length >= 3)?.[0] || null;
+}
+window.renderScores = () => {
+  const box = document.getElementById('sdx-scores'); if (!box) return;
+  const now = Date.now(), list = Object.entries(subs).map(([sid, s]) => ({ sid, s, st: subState(s, now) })).sort((a, b) => (b.s.at || 0) - (a.s.at || 0));
+  const disputed = list.filter(x => x.st === 'disputed');
+  const noConfirmer = list.filter(x => ['pending', 'auto'].includes(x.st) && !confirmers(x.s).length && !x.s.reviewed);
+  const dups = list.filter(x => x.st !== 'void' && !x.s.reviewed && _dupOf(x.s));
+  const otherClub = list.filter(x => x.st !== 'void' && x.s.club === 'other');
+  const withNew = list.filter(x => x.st !== 'void' && playersOf(x.s).some(isNew));
+  const badge = document.getElementById('scores-badge'); const nAct = disputed.length + noConfirmer.length + dups.length + otherClub.length;
+  if (badge) { badge.style.display = nAct ? 'inline' : 'none'; badge.textContent = nAct; }
+  const memberOpts = Object.entries(members).sort((a, b) => (a[1].name || '').localeCompare(b[1].name || '')).map(([id, m]) => `<option value="${id}">${_esc(m.name)}${m.dexNo ? ' · ' + dexLabel(m) : ''}</option>`).join('');
+  const card = ({ sid, s, st }, actions) => `<div style="border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:8px 0" data-sid="${sid}">
+    <div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;color:var(--muted)"><span>${s.date}</span><span>${_esc(_clubName(s))}</span><span>${s.format === 'competitive' ? 'Competitive' : 'Casual'}${s.rotate ? ' · partners rotate' : ''}</span><span>Recorded by ${_esc(_pn(s, s.by))}, ${_hrs(s.at)} ago</span><span>State: <b>${st === 'auto' ? 'counted (no reply in 24 h)' : st}</b></span></div>
+    <div style="margin:8px 0">${_setsHTML(s)}</div>
+    ${s.dispute ? `<div style="background:rgba(224,90,0,.12);border-radius:8px;padding:8px 10px;margin:6px 0">Disputed by <b>${_esc(_pn(s, s.dispute.by))}</b> (${_hrs(s.dispute.at)} ago): ${_esc(s.dispute.reason)}${s.dispute.note ? ` — “${_esc(s.dispute.note)}”` : ''}</div>` : ''}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${actions}</div></div>`;
+  const resolveBtns = `<button class="btn btn-primary btn-sm" data-sact="fix">Save set scores &amp; confirm</button><button class="btn btn-sm" data-sact="confirm">Confirm as recorded</button><button class="btn btn-sm" data-sact="void">Void the match</button>`;
+  const sec = (title, help, items, actions) => items.length ? `<h3 style="margin:18px 0 4px">${title} (${items.length})</h3><p style="color:var(--muted);font-size:.85rem;margin:0 0 6px">${help}</p>${items.map(x => card(x, typeof actions === 'function' ? actions(x) : actions)).join('')}` : '';
+  box.innerHTML = `<div style="padding:4px 2px">
+    <p style="color:var(--muted)">${list.length} scores recorded by members · ${list.filter(x => x.st === 'pending').length} waiting for confirmation · ${list.filter(x => x.st === 'confirmed' || x.st === 'auto').length} counted</p>
+    ${!nAct && !withNew.length ? '<p style="padding:16px 0">Nothing needs attention.</p>' : ''}
+    ${sec('Disputes', 'Fix the set scores and confirm, confirm as recorded, or void. Disputed sets don’t count until you resolve them.', disputed, resolveBtns)}
+    ${sec('Possible duplicates', 'The same players have a staff-entered match on this date. Void one of them so it isn’t counted twice.', dups, `<button class="btn btn-sm" data-sact="void">Void this member score</button><button class="btn btn-sm" data-sact="reviewed">Not a duplicate</button>`)}
+    ${sec('No opponent could confirm', 'All opponents are new players, so this counts automatically after 24 hours. Spot-check it.', noConfirmer, `<button class="btn btn-sm" data-sact="reviewed">Looks right</button><button class="btn btn-sm" data-sact="void">Void the match</button>`)}
+    ${sec('Clubs not on the list', 'Add the club to the dropdown, or move the match to an existing club.', otherClub, x => `<button class="btn btn-primary btn-sm" data-sact="addclub">Add “${_esc(x.s.clubOther || '')}” to the club list</button>`)}
+    ${sec('New players', 'When a new player joins and is linked, swap them in so the match moves to their profile and ratings recalculate.', withNew, x => playersOf(x.s).filter(isNew).map(id => `<span style="display:inline-flex;gap:6px;align-items:center">${_esc(_pn(x.s, id))} (${_esc((x.s.newcomers || {})[id.slice(4)]?.level || '')}) → <select class="filter-select" data-swapsel="${id}"><option value="">Choose member…</option>${memberOpts}</select><button class="btn btn-sm" data-sact="swap" data-new="${id}">Swap in</button></span>`).join(''))}
+  </div>`;
+};
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-sact]'); if (!b) return;
+  const cardEl = b.closest('[data-sid]'), sid = cardEl?.dataset.sid, s = subs[sid]; if (!s) return;
+  const act = b.dataset.sact, base = `submissions/${sid}`, upd = {}, who = (window._staffEmail || 'staff');
+  try {
+    if (act === 'confirm') Object.assign(upd, { [`${base}/status`]: 'confirmed', [`${base}/resolvedBy`]: who, [`${base}/resolvedAt`]: Date.now() });
+    if (act === 'void') { if (!confirm('Void this match? It will stop counting for everyone.')) return; Object.assign(upd, { [`${base}/status`]: 'void', [`${base}/resolvedBy`]: who, [`${base}/resolvedAt`]: Date.now() }); }
+    if (act === 'reviewed') upd[`${base}/reviewed`] = true;
+    if (act === 'fix') {
+      const sets = setsOfSub(s).map((x, i) => {
+        const a = +cardEl.querySelector(`[data-fix="${i}a"]`).value, bb = +cardEl.querySelector(`[data-fix="${i}b"]`).value;
+        return { ...x, a, b: bb };
+      });
+      if (sets.some(x => !Number.isInteger(x.a) || !Number.isInteger(x.b) || x.a < 0 || x.b < 0 || x.a > 7 || x.b > 7 || x.a + x.b === 0)) return showToast('Check the set scores (0–7 games each)', 'err');
+      Object.assign(upd, { [`${base}/sets`]: sets, [`${base}/status`]: 'confirmed', [`${base}/resolvedBy`]: who, [`${base}/resolvedAt`]: Date.now() });
+    }
+    if (act === 'addclub') {
+      const name = String(s.clubOther || '').trim(); if (!name) return;
+      const slug = _slug(name), cs = (await get(ref(db, 'clubs'))).val() || {};
+      if (!cs[slug]) upd[`clubs/${slug}`] = { name, approved: true, order: Object.keys(cs).length + 1 };
+      for (const [k, x] of Object.entries(subs)) if (x.club === 'other' && _slug(x.clubOther) === slug) { upd[`submissions/${k}/club`] = slug; upd[`submissions/${k}/clubOther`] = null; }
+    }
+    if (act === 'swap') {
+      const nid = b.dataset.new, mid = cardEl.querySelector(`[data-swapsel="${nid}"]`).value; if (!mid) return showToast('Choose the member first', 'err');
+      if (playersOf(s).includes(mid)) return showToast('That member is already in this match', 'err');
+      const sw = v => v === nid ? mid : v;
+      upd[`${base}/players`] = playersOf(s).map(sw);
+      upd[`${base}/sets`] = setsOfSub(s).map(x => ({ ...x, A: x.A.map(sw), B: x.B.map(sw) }));
+      upd[`${base}/newcomers/${nid.slice(4)}/joinedAs`] = mid;
+    }
+    await update(ref(db), upd); showToast('Saved', 'ok');
+  } catch (err) { showToast('Could not save: ' + (err.code || err.message), 'err'); }
+});
+
 // ===== SmashDex usage analytics =====
 const SDX_EVENTS = {
   sdx_explainer: ['Opened SDX explainer', 'Profile'], sdx_levels: ['Read "SDX levels"', 'Profile'], sdx_confidence: ['Read "Confidence"', 'Profile'], sdx_moves: ['Read "What moves your SDX"', 'Profile'], raise_info: ['Opened "Raise your level"', 'Level'], lower_info: ['Opened "Lower your level"', 'Level'],
@@ -858,7 +961,7 @@ const SDX_EVENTS = {
   prefs_open: ['Opened preferences', 'Profile'], prefs_saved: ['Saved preferences', 'Profile'],
   see_chart: ['Scrolled to SDX chart', 'Seen'], see_matches: ['Scrolled to Matches', 'Seen'], see_stats: ['Scrolled to Statistics', 'Seen'],
   see_prefs: ['Scrolled to Preferences', 'Seen'], see_people: ['Scrolled to People', 'Seen'], see_clubs: ['Scrolled to Clubs', 'Seen'],
-  tab_record: ['Tapped Record score (coming soon)', 'Coming soon'], tab_dex: ['Tapped Matchup Dex (coming soon)', 'Coming soon'],
+  tab_record: ['Opened Record score', 'Scores'], rec_start: ['Started recording a score', 'Scores'], rec_score: ['Reached the score step', 'Scores'], rec_review: ['Reached review', 'Scores'], rec_submit: ['Submitted a score', 'Scores'], rec_share: ['Shared a score on WhatsApp', 'Scores'], rec_newcomer: ['Added a new player', 'Scores'], rec_invite: ['Invited a new player on WhatsApp', 'Scores'], rec_confirm: ['Confirmed a score', 'Scores'], rec_dispute: ['Disputed a score', 'Scores'], rec_nudge: ['Nudged the club about a dispute', 'Scores'], rec_remind: ['Reminded opponents on WhatsApp', 'Scores'], rec_delete: ['Deleted their own pending score', 'Scores'], popup_seen: ['Saw the matches-waiting pop-up', 'Scores'], tab_dex: ['Tapped Matchup Dex (coming soon)', 'Coming soon'],
   tab_honours: ['Tapped Honours (coming soon)', 'Coming soon'], tab_profile: ['Returned to Profile tab', 'Profile'],
   signin_google: ['Signed in with Google', 'Sign-in'], signin_email: ['Signed in with email', 'Sign-in'], signup_email: ['Created email account', 'Sign-in'],
   link_form: ['Saw the one-time setup form', 'Sign-in'], link_request: ['Sent a link request', 'Sign-in'],
@@ -2221,6 +2324,7 @@ window.showTab = (name) => {
   if (name === 'tournaments') loadTournaments();
   if (name === 'ratings') requestAnimationFrame(renderWormChart);
   if (name === 'smashdex') loadSmashdexAnalytics();
+  if (name === 'scores') renderScores();
 };
 window.addEventListener('resize', () => { if (currentTab === 'ratings') renderWormChart(); });
 

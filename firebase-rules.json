@@ -63,8 +63,36 @@
       }
     },
 
-    // Club list for score entry (staff curate; members can suggest in a later release)
+    // Club list for score entry (staff curate; a typed "other" club is checked by staff before it joins)
     "clubs": { ".read": "auth != null" },
+
+    // Scores recorded by members (SmashDex → Record score). See shared/subs.js for the shape.
+    // ME = the member this login is linked to.
+    "submissions": {
+      ".read": "auth != null",
+      "$sid": {
+        // Create: you must be the submitter and players[0]; 4 players; 1–6 sets; timestamp is now.
+        // Edit or delete: only the submitter, while pending, unconfirmed and within 24 hours.
+        ".write": "auth != null && root.child('links').child(auth.uid).exists() && ((!data.exists() && newData.child('by').val() === root.child('links').child(auth.uid).val() && newData.child('players').child('0').val() === root.child('links').child(auth.uid).val() && newData.child('status').val() === 'pending' && newData.child('at').val() <= now + 60000 && newData.child('at').val() >= now - 600000) || (data.exists() && data.child('by').val() === root.child('links').child(auth.uid).val() && data.child('status').val() === 'pending' && !data.child('confirms').exists() && !data.child('dispute').exists() && now - data.child('at').val() < 86400000 && (!newData.exists() || (newData.child('by').val() === data.child('by').val() && newData.child('at').val() === data.child('at').val() && newData.child('status').val() === 'pending' && newData.child('players').child('0').val() === data.child('by').val()))))",
+        ".validate": "newData.hasChildren(['by', 'at', 'date', 'club', 'format', 'players', 'sets', 'status']) && newData.child('date').isString() && newData.child('date').val().length === 10 && (newData.child('format').val() === 'openplay' || newData.child('format').val() === 'competitive') && newData.child('players').hasChildren(['0', '1', '2', '3']) && !newData.child('players').child('4').exists() && newData.child('sets').hasChildren(['0']) && !newData.child('sets').child('6').exists()",
+
+        // Confirm: an opponent of the submitter (players 2–3; any of 1–3 when partners rotate), within the open window
+        "confirms": {
+          "$mid": {
+            ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid && $mid !== data.parent().parent().child('by').val() && data.parent().parent().child('status').val() === 'pending' && !data.exists() && newData.isNumber() && (data.parent().parent().child('players').child('2').val() === $mid || data.parent().parent().child('players').child('3').val() === $mid || (data.parent().parent().child('rotate').val() === true && data.parent().parent().child('players').child('1').val() === $mid))"
+          }
+        },
+
+        // Dispute: any other player in the match, once, within 24 hours of submission (written together with status)
+        "dispute": {
+          ".write": "auth != null && !data.exists() && newData.child('by').val() === root.child('links').child(auth.uid).val() && newData.child('by').val() !== data.parent().child('by').val() && now - data.parent().child('at').val() < 86400000 && (data.parent().child('players').child('1').val() === newData.child('by').val() || data.parent().child('players').child('2').val() === newData.child('by').val() || data.parent().child('players').child('3').val() === newData.child('by').val())",
+          ".validate": "newData.hasChildren(['by', 'at', 'reason']) && newData.child('reason').isString() && newData.child('reason').val().length <= 40 && (!newData.child('note').exists() || (newData.child('note').isString() && newData.child('note').val().length <= 300))"
+        },
+        "status": {
+          ".write": "auth != null && data.val() === 'pending' && newData.val() === 'disputed' && newData.parent().child('dispute').child('by').val() === root.child('links').child(auth.uid).val() && !data.parent().child('dispute').exists()"
+        }
+      }
+    },
 
     // Usage analytics: write-only counters for members (each write may only add 1); staff read them in /admin
     "analytics": {

@@ -268,6 +268,119 @@ fieldset.q legend{font-size:14px;color:var(--muted);margin-bottom:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ───────── Tablet portrait: tabs under the header, two-column profile ───────── */
+
+/* ── Record score ── */
+.hint{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.45}
+.mu{color:var(--muted);font-weight:500}
+.up{color:#8FD63A}.down{color:#FF8A4C}
+.pa{display:inline-flex;flex-direction:column;align-items:center;gap:2px;flex:none;width:32px}
+.pa i{font-style:normal;font-size:11px;font-weight:700;line-height:1;color:var(--yellow)}
+.pa.new i{color:#5AA6F7}.av.new,.pa.new .av{border-style:dashed}
+.m .team{height:auto;min-height:44px}
+.m .sets{grid-template-rows:44px 44px;justify-content:end}
+.m .tbn{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.m.bare{border-top:0;padding:4px 0 0}
+.m.rot{display:block}
+.m.rot .when{display:inline-flex}.m.rot .res{float:right}
+.rot-who{display:flex;align-items:center;gap:4px;margin:10px 0 4px;font-size:13px;color:var(--muted);clear:both}
+.rot-who>span:last-child{margin-left:6px}
+.rot-lines .rl{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.rot-lines .rn{font-size:13px;color:var(--muted)}
+.rot-lines .teams{display:grid;gap:4px;grid-area:auto}.rot-lines .team{min-height:30px;font-size:14px}.rot-lines .rs,.rot-lines .rn{grid-area:auto}
+.rot-lines .rs{display:flex;gap:4px}
+.nav [data-tab]{position:relative}
+.nbadge{position:absolute;top:2px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#E05A00;color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center}
+.r-head{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin:22px 0 4px}
+.r-title{font-family:var(--head);font-weight:400;font-size:42px;line-height:1;margin-right:auto}
+.btn.big{min-height:52px;font-size:17px}
+.btn.primary.big svg,.btn svg{width:20px;height:20px}
+.btn.wa{background:#1F7A4D;border-color:#1F7A4D;color:#fff;text-decoration:none}
+.btn.dashed{border-style:dashed;margin-top:10px}
+a.btn{text-decoration:none;color:inherit}
+.h3{font-family:var(--head);font-weight:400;font-size:28px;line-height:1;margin:22px 0 10px}
+.acard{background:var(--deep);border:1px solid var(--line2);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.acard.hot{border-color:rgba(245,214,40,.6)}
+.acard .note{margin:0}
+.ah{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 10px;font-size:13px;color:var(--muted)}
+.tag{display:inline-block;border:1px solid var(--line2);border-radius:999px;padding:0 9px;font-size:12px;font-weight:700;color:#8EC3FF;border-color:rgba(142,195,255,.5)}
+.tag.hot{color:var(--yellow);border-color:rgba(245,214,40,.6)}.tag.disp{color:#FF8A4C;border-color:rgba(255,138,76,.6)}
+.pv{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 10px;background:var(--navy);border-radius:12px;padding:10px 12px;font-size:14px}
+.pv span{color:var(--muted)}.pv small{font-size:13px}
+.row2{display:flex;gap:10px}.row2>*{flex:1}
+.note.clock{display:flex;align-items:center;gap:6px}
+.fchips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.fchip{min-height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:none;color:var(--text);font-size:14px}
+.fchip.on{border-color:var(--yellow);color:var(--yellow);background:rgba(245,214,40,.1)}
+select.fchip{appearance:none;-webkit-appearance:none;padding-right:28px;background:none url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23EDEDF7' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 11px center}
+select.fchip option,.clubrow select option{background:var(--deep);color:var(--text)}
+.trendc{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;background:var(--deep);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:6px}
+.trendc b{display:block}.trendc span{font-size:13px;color:var(--muted)}
+.trend{display:flex;gap:4px}.trend .st{--sh:32px}.trend .st i{width:calc(var(--sh) * .78);font-size:calc(var(--sh) * .72)}
+.st.empty i{color:var(--faint)}
+/* flow */
+.rflow{display:block}
+.rhead h2{margin:2px 0 10px}
+.rprog{display:flex;gap:6px;margin-bottom:14px}.rprog span{flex:1;height:4px;border-radius:4px;background:var(--line2)}.rprog span.on{background:var(--yellow)}
+.rsec{margin-bottom:18px}
+.lbl{font-size:14px;color:var(--muted);margin-bottom:8px}
+.clubrow{display:flex;align-items:center;gap:10px;background:var(--deep);border:1px solid var(--line2);border-radius:12px;padding:6px 12px}
+.clubrow select{flex:1;min-height:40px;background:transparent;border:0;color:var(--text);outline:none;font-size:16px}
+.cb-logo{height:22px;width:auto;flex:none}
+.cb{flex:none;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--navy);border:1px solid var(--line2);font-size:11px;font-weight:700}
+.slots{display:grid;gap:8px}
+.slot{display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 12px;border:1px solid var(--line2);border-radius:14px;background:var(--deep);text-align:left;width:100%;color:var(--text)}
+.slot.col{flex-direction:column;align-items:stretch}
+.slot.act{border-color:var(--yellow)}
+.slot.open{border-style:dashed;color:var(--muted);font-weight:600}
+.slot .x,.scard .x{margin-left:auto;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:1px solid var(--line2);background:none}
+.slot .x svg,.scard .x svg{width:16px;height:16px}
+.st2{display:flex;flex-direction:column;min-width:0}.st2 b{font-weight:700}.st2 span{font-size:13px;color:var(--muted)}
+.sbox{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line2);padding-bottom:6px}
+.sbox svg{width:18px;height:18px;color:var(--muted)}
+.sbox input{flex:1;background:none;border:0;outline:none;font-size:16px;color:var(--text);min-height:36px}
+.rres{display:flex;flex-direction:column}
+.rlbl{font-size:12px;color:var(--muted);margin:8px 0 2px}
+.ritem{display:flex;align-items:center;gap:10px;padding:8px 2px;background:none;border:0;border-top:1px solid var(--line);text-align:left;color:var(--text);width:100%}
+.ritem.new{color:#8EC3FF}
+.lvls{display:grid;gap:6px}
+.lvls label{position:relative;display:block}
+.lvls input{position:absolute;opacity:0}
+.lvls span{display:block;border:1px solid var(--line2);border-radius:12px;padding:8px 12px;cursor:pointer}
+.lvls b{display:block;font-size:15px}.lvls em{font-style:normal;color:var(--muted);font-weight:500}.lvls small{display:block;font-size:13px;color:var(--muted)}
+.lvls input:checked+span{border-color:var(--yellow);background:rgba(245,214,40,.08)}
+.lvls input:focus-visible+span{outline:2px solid var(--yellow);outline-offset:2px}
+.seg2{display:flex;gap:8px}.seg2 .fchip{flex:1;min-height:44px}
+.tog,.chk{display:flex;align-items:center;gap:12px;justify-content:space-between;border:1px solid var(--line2);border-radius:14px;padding:12px 14px;margin-bottom:14px;cursor:pointer}
+.chk{justify-content:flex-start;border:0;padding:4px 0;margin:12px 0 4px;align-items:flex-start}
+.tog b,.chk b{display:block}.tog small,.chk small{display:block;font-size:13px;color:var(--muted)}
+.tog input,.chk input{width:22px;height:22px;flex:none;accent-color:#F5D628;margin-top:2px}
+.scards{display:grid;gap:10px}
+.scard{border:1px solid var(--line2);border-radius:16px;padding:12px 14px;background:var(--deep);display:flex;flex-direction:column;gap:8px}
+.scard.act{border-color:rgba(245,214,40,.6)}
+.sch{display:flex;align-items:center}
+.pp{display:flex;flex-direction:column;gap:6px}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:15px}
+.srow .me{font-weight:700}
+.tbtn{background:none;border:0;padding:3px;border-radius:8px}
+.tbtn .st{--sh:40px}
+.tbtn.act{outline:2px solid var(--yellow);outline-offset:1px}
+.pad{display:flex;flex-wrap:wrap;gap:6px;padding-top:4px}
+.pad button{background:none;border:0;padding:2px;border-radius:6px}.pad .st{--sh:38px}
+.tbbox{border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:6px}
+.tbh{display:flex;justify-content:space-between;font-size:14px}.tbh b{color:var(--yellow)}.tbh span{color:var(--muted);font-size:13px}
+.tbr{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px}
+.tbr input{width:56px;height:40px;text-align:center;border-radius:8px;border:1px solid var(--line2);background:linear-gradient(180deg,#2A2A60 0 50%,#1E1E4A 50% 100%);color:var(--yellow);font:400 28px/1 var(--head);padding-top:3px}
+.tbr input:focus{outline:2px solid var(--yellow)}
+.rerr{min-height:20px;color:#FF8A4C;font-size:14px;margin:8px 0}
+.rres-line{font-weight:700;margin:0}
+.rnotes{list-style:none;display:grid;gap:8px;margin:14px 0 18px;font-size:14px;color:var(--muted)}
+.rnotes li{padding-left:18px;position:relative}.rnotes li::before{content:"";position:absolute;left:2px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--yellow)}
+.done-h{display:flex;align-items:center;gap:10px;margin:6px 0 12px}.done-h svg{width:34px;height:34px;color:#8FD63A}.done-h h2{margin:0}
+.dset{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding:8px 0;border-top:1px solid var(--line)}
+.dset .fix{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.dset .fix input{width:44px;height:38px;text-align:center;border-radius:8px;border:1px solid var(--line2);background:var(--deep);color:var(--text);font-size:16px}
+#dispForm textarea{width:100%;background:var(--deep);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;color:var(--text);font:inherit;resize:vertical}
+.btn.danger{background:#E05A00;border-color:#E05A00;color:#fff}
 @media (min-width:700px){
   #app{display:flex;flex-direction:column}
   .bar{order:0}.nav{order:1}#view{order:2}
@@ -347,6 +460,19 @@ fieldset.q legend{font-size:14px;color:var(--muted);margin-bottom:6px}
   .nav-out span{display:inline}
   .wrap{max-width:1180px;padding:0 40px 48px}
 }
+
+@media (min-width:1024px){
+  .rgrid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);grid-template-areas:"head head" "hist att";gap:0 28px;align-items:start}
+  .rgrid .r-head{grid-area:head}.rgrid .r-att{grid-area:att}.rgrid .r-hist{grid-area:hist;margin-top:22px}
+  .rgrid:not(:has(.r-att)){grid-template-areas:"head head" "hist hist"}
+}
+@media (min-width:700px){
+  .m.rot .rl{grid-template-columns:60px minmax(0,1fr) auto}
+  .scards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .slots{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .slot.col{grid-column:1/-1}
+  .m.bare{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"teams sets"}
+}
 </style>
 </head>
 <body>
@@ -388,6 +514,7 @@ import { getDatabase, ref, get, set, update, onValue, increment } from "https://
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut,
   signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { DSR } from "/shared/dsr.js";
+import { subsToMatches, subState, counts, confirmers, canDispute, playersOf, setsOfSub, isNew, hoursLeft, validSet, needsTb, validTb, finalSet, NEW_LEVELS, levelSeed, MAX_SETS, DAY_MS } from "/shared/subs.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyDu7A0agFAT1jwfrjCRkQe6tHg2Qu_LnDc", authDomain: "deuceandsmash-club.firebaseapp.com",
@@ -417,8 +544,8 @@ const BANDS = [
 const bandOf = r => { let b = BANDS[0]; for (const x of BANDS) if (r >= x.lo - 1e-9) b = x; return b; };
 
 /* State */
-const S = { user: null, mid: null, profiles: {}, matches: {}, adjustments: {}, clubs: {}, mine: {}, ratings: {}, ms: [], outcomes: {},
-  tab: 'profile', chartN: 10, sel: null, showAll: false, ready: { profiles: false, matches: false, adjustments: false } };
+const S = { user: null, mid: null, profiles: {}, matches: {}, adjustments: {}, subs: {}, clubs: {}, mine: {}, ratings: {}, ms: [], outcomes: {}, pre: {}, newSeeds: {},
+  tab: 'profile', chartN: 10, sel: null, showAll: false, hFilter: 'all', hClub: '', hShown: 20, ready: { profiles: false, matches: false, adjustments: false, subs: false } };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const sdx = r => (Math.round(r * 1000) / 1000).toFixed(3);
@@ -582,6 +709,7 @@ document.addEventListener('submit', async ev => {
     const phone = f.get('phone').trim(), digits = phone.replace(/\D/g, '');
     if (digits.length < 10) { $('#gateMsg').textContent = 'Enter your 10-digit mobile number.'; $('#gateMsg').className = 'msg err'; return; }
     const req = { name: f.get('name').trim(), phone, dexNo: +f.get('dex') || null, playTimes: f.getAll('playTimes'), playWays: f.getAll('playWays'), email: S.user.email || '', at: new Date().toISOString() };
+    try { const j = localStorage.getItem('sdxJoin'); if (j) req.invite = j.slice(0, 60); } catch {}
     if (!req.name) return;
     track('link_request');
     try { await set(ref(db, `linkRequests/${S.user.uid}`), req); boot(S.user); }
@@ -631,6 +759,9 @@ async function boot(user) {
   S.mine = Object.fromEntries(fields.map((f, i) => [f, vals[i]]));
   const live = (path, key) => _unsubs.push(onValue(ref(db, path), snap => { S[key] = snap.val() || {}; S.ready[key] = true; schedule(); }, e => console.warn(path, e)));
   live('profiles', 'profiles'); live('openPlayMatches', 'matches'); live('adjustments', 'adjustments');
+  // Member-recorded scores. If they can't be read, carry on without them rather than blocking the app.
+  _unsubs.push(onValue(ref(db, 'submissions'), snap => { S.subs = snap.val() || {}; S.ready.subs = true; schedule(); }, e => { console.warn('submissions', e); S.subs = {}; S.ready.subs = true; schedule(); }));
+  clearInterval(S._tick); S._tick = setInterval(schedule, 5 * 60 * 1000); // pending scores auto-confirm after 24 hours
   get(ref(db, 'clubs')).then(s => { S.clubs = s.val() || {}; schedule(); }).catch(() => {});
 }
 
@@ -638,7 +769,7 @@ async function boot(user) {
 let _t = null;
 function schedule() { clearTimeout(_t); _t = setTimeout(compute, 120); }
 function compute() {
-  if (!(S.ready.profiles && S.ready.matches && S.ready.adjustments)) return;
+  if (!(S.ready.profiles && S.ready.matches && S.ready.adjustments && S.ready.subs)) return;
   const P = S.profiles, nameOf = id => P[id]?.name;
   const ms = Object.entries(S.matches).map(([id, m]) => {
     const x = { id, ...m };
@@ -654,8 +785,14 @@ function compute() {
     if (a.self) adj.push({ ...a.self, name, by: 'self', id: `${mid}-self` });
     for (const [k, x] of Object.entries(a.admin || {})) adj.push({ ...x, name, by: 'admin', id: `${mid}-${k}` });
   }
-  S.ratings = DSR.compute(seeds, ms, todayUTC(), adj).players;
-  S.ms = ms;
+  // Member-recorded scores count once confirmed, or 24 hours after submission with no dispute
+  const sx = subsToMatches(S.subs, id => P[id]?.name);
+  for (const [k, v] of Object.entries(sx.seeds)) if (!seeds[k]) seeds[k] = v;
+  S.newSeeds = sx.seeds; S._seeds = seeds; S._adj = adj; S._base = ms;
+  S.ratings = DSR.compute(seeds, ms.concat(sx.matches), todayUTC(), adj).players;
+  S.ms = ms.concat(sx.matches);
+  S._preview = {};
+  buildPre();
   buildOutcomes();
   const firstShow = $('#app').classList.contains('hidden');
   // First time in: let the landed logo sit for a moment before opening the profile
@@ -663,8 +800,17 @@ function compute() {
   if (wait > 0) { clearTimeout(_t); _t = setTimeout(compute, wait); return; }
   $('#gate').classList.add('hidden'); $('#app').classList.remove('hidden');
   render();
+  maybePopup();
 }
 const myName = () => S.profiles[S.mid]?.name || S.mine.name || '';
+const dispName = n => String(n || '').startsWith('~new:') ? (S.newSeeds[n]?.label || 'New player') : n;
+// SDX going into each match, per player: S.pre[matchId][name]
+function buildPre() {
+  const pre = {};
+  for (const p of Object.values(S.ratings)) for (const h of p.hist || []) if (h.id && !h.manual) { const o = (pre[h.id] ||= {}); if (!(p.name in o)) o[p.name] = h.r - h.delta; }
+  S.pre = pre;
+}
+const pa = (n, r, isNewP, label) => `<span class="pa${isNewP ? ' new' : ''}"><span class="av sm" aria-hidden="true">${esc(initials(label || dispName(n)))}</span>${r != null ? `<i aria-label="SDX ${(+r).toFixed(1)}">${isNewP ? '~' : ''}${(+r).toFixed(1)}</i>` : ''}</span>`;
 const playerOf = name => S.ratings[name] || { name, r: DSR.DEFAULT_SEED, seed: DSR.DEFAULT_SEED, sets: 0, me: 0, matches: 0, last: null, partners: new Set(), opps: new Set(), hist: [], trend: 0, lastDelta: 0, confidence: 0 };
 const validMatch = m => m.status === 'confirmed' && DSR.W[m.format];
 const sideOf = (m, name) => (m.teamA || []).includes(name) ? 'A' : (m.teamB || []).includes(name) ? 'B' : null;
@@ -699,15 +845,16 @@ function formLine(name) {
 }
 
 /* ── Rendering ── */
-$('.nav').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; S.tab = b.dataset.tab; track('tab_' + S.tab); document.querySelectorAll('.nav button').forEach(x => x.classList.toggle('on', x === b)); render(); scrollTo(0, 0); });
+$('.nav').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) switchTab(b.dataset.tab); });
 const soon = (t, d) => `<div class="soon"><h3>${t}</h3><p>${d}</p><p style="margin-top:14px;color:var(--yellow)">Coming next</p></div>`;
 function render() {
   const v = $('#view');
-  if (S.tab === 'record') return v.innerHTML = soon('Record a score', 'Log a match with the club, your partner and the set scores. Your opponents confirm it, then everyone’s SDX updates straight away.');
+  const pr0 = S.profiles[S.mid] || {};
+  $('#navAv').textContent = initials(myName()); $('#navName').textContent = myName(); $('#navDex').textContent = dexLabel(pr0.dexNo || S.mine.dexNo);
+  updateBadge();
+  if (S.tab === 'record') { v.innerHTML = recordHTML(); watchSections(); return; }
   if (S.tab === 'dex') return v.innerHTML = soon('Matchup Dex', 'Look up any player to see your record against them, as opponents and as partners, and the SDX at stake before you play.');
   if (S.tab === 'honours') return v.innerHTML = soon('Honours', 'Earned on court, never bought. Your club honours board is being built.');
-  const pr = S.profiles[S.mid] || {};
-  $('#navAv').textContent = initials(myName()); $('#navName').textContent = myName(); $('#navDex').textContent = dexLabel(pr.dexNo || S.mine.dexNo);
   v.innerHTML = profileHTML();
   drawChart();
   watchSections();
@@ -732,7 +879,8 @@ function profileHTML() {
   const partners = Object.entries(pc).sort((a, b) => b[1] - a[1]).slice(0, 4);
   const cc = {}; for (const m of done) { const c = m.club || 'deuce-and-smash'; cc[c] = (cc[c] || 0) + 1; }
   const clubs = Object.entries(cc).sort((a, b) => b[1] - a[1]);
-  const prefs = prof.prefs || {}, shown = S.showAll ? mine.length : 6;
+  const prefs = prof.prefs || {};
+  const hist = historyItems(), r5 = hist.map(itemRes).filter(x => x !== 'P').slice(0, 5);
   return `<div class="pgrid">
   <section class="who">
     <div class="av" aria-hidden="true">${esc(initials(me))}</div>
@@ -763,9 +911,10 @@ function profileHTML() {
   </section>
 
   <section class="sec g-matches" data-sec="matches">
-    <div class="sec-h"><h3>Matches</h3>${mine.length ? `<span class="aside">${Math.min(mine.length, shown)} of ${mine.length}</span>` : ''}</div>
-    ${mine.length ? mine.slice(0, shown).map(matchRow).join('') + (mine.length > shown ? `<button class="btn full" style="margin-top:12px" data-act="allmatches">Show all ${mine.length} matches</button>` : '')
-      : `<p class="empty">No matches yet. Play an open-play session or a tournament and they'll appear here.</p>`}
+    <div class="sec-h"><h3>Recent matches</h3>${hist.length ? `<span class="aside">Last ${Math.min(5, hist.length)}</span>` : ''}</div>
+    ${r5.length ? `<div class="trendc"><div><b>${r5.filter(x => x === 'W').length} win${r5.filter(x => x === 'W').length === 1 ? '' : 's'} in your last ${r5.length}</b><span>Newest on the left</span></div><div class="trend" role="img" aria-label="${r5.map(x => x === 'W' ? 'win' : x === 'L' ? 'loss' : 'draw').join(', ')}">${r5.map(x => `<span class="st ${x === 'W' ? '' : x === 'L' ? 'lo' : 'even'}" aria-hidden="true"><i>${x}</i></span>`).join('')}</div></div>` : ''}
+    ${hist.length ? hist.slice(0, 5).map(itemRow).join('') + `<button class="btn full" style="margin-top:12px" data-go="record">${hist.length > 5 ? `All ${hist.length} matches in Record score` : 'Record a score'}</button>`
+      : `<p class="empty">No matches yet. Record a score or play an open-play session and they'll appear here.</p><button class="btn full" style="margin-top:8px" data-go="record">Record a score</button>`}
   </section>
 
   <section class="sec g-stats" data-sec="stats">
@@ -826,8 +975,9 @@ function matchRow(m) {
   const delta = (p.hist || []).filter(h => h.id === m.id).reduce((s, h) => s + h.delta, 0);
   const r = resultFor(m, me);
   const resTxt = !done ? '<span class="pending">Pending</span>' : r === 'W' ? '<span class="up">Win</span>' : r === 'L' ? '<span class="down">Loss</span>' : 'Draw';
-  const club = S.clubs[m.club || 'deuce-and-smash']?.name || 'Deuce & Smash';
-  const team = (t, isMe) => `<div class="team ${isMe ? 'me' : ''}">${(t || []).map(n => `<span class="av sm" aria-hidden="true">${esc(initials(n))}</span>`).join('')}<span>${(t || []).map(esc).join(' & ')}</span></div>`;
+  const club = clubName(m.club, m.clubOther);
+  const pr = S.pre[m.id] || {};
+  const team = (t, isMe) => `<div class="team ${isMe ? 'me' : ''}">${(t || []).map(n => pa(n, pr[n], String(n).startsWith('~new:'))).join('')}<span>${(t || []).map(n => esc(dispName(n))).join(' & ')}</span></div>`;
   const cells = ss.map(s => scoreTiles(s.a, tileCls(s.a, s.b)) + scoreTiles(s.b, tileCls(s.b, s.a))).join('');
   return `<div class="m">
     <div class="when"><span>${fmtDate(m.date)}</span><span>${esc(club)}</span></div>
@@ -886,14 +1036,14 @@ function tipHTML(q) {
   const m = S.ms.find(x => x.id === q.id); if (!m) return '';
   const me = myName(), side = sideOf(m, me), mates = ((side === 'A' ? m.teamA : m.teamB) || []).filter(n => n !== me), opp = (side === 'A' ? m.teamB : m.teamA) || [];
   return `<div class="t1"><b>${fmtDate(m.date)}</b><span class="d ${q.delta >= 0 ? 'up' : 'down'}">${sgn(q.delta)}</span></div>
-    <div style="color:var(--muted)">With ${mates.map(esc).join(' & ') || '—'} against ${opp.map(esc).join(' & ')}</div>
+    <div style="color:var(--muted)">With ${mates.map(n => esc(dispName(n))).join(' & ') || '—'} against ${opp.map(n => esc(dispName(n))).join(' & ')}</div>
     ${scoreLineHTML(m, side)}
     <div style="color:var(--muted)">SDX ${sdx(q.r)} afterwards.</div>`;
 }
 document.addEventListener('click', e => {
   const n = e.target.closest('#seg [data-n]'); if (n) { S.chartN = +n.dataset.n; S.sel = null; track('chart_range'); render(); }
   if (e.target.closest('[data-act=allmatches]')) { S.showAll = true; track('matches_all'); render(); }
-  if (e.target.closest('a[href^="https://wa.me/"]')) track('whatsapp_staff');
+  if (e.target.closest(`a[href^="https://wa.me/${CLUB_WA}"]`)) track('whatsapp_staff');
   const o = e.target.closest('[data-open]'); if (o) openSheet(o.dataset.open);
   const pl = e.target.closest('[data-player]'); if (pl) openSheet('player', pl.dataset.player);
 });
@@ -1074,6 +1224,480 @@ document.addEventListener('submit', async e => {
     catch (err) { toast('Could not save preferences: ' + err.message, 4000); }
   }
 });
+
+/* ══════════ Record score ══════════ */
+const CLUB_DEFAULT = 'deuce-and-smash';
+const clubList = () => Object.entries(S.clubs || {}).filter(([, c]) => c && c.name && c.approved !== false).sort((a, b) => (a[1].order || 99) - (b[1].order || 99)).map(([k, c]) => [k, c.name]);
+function clubName(k, other) { if (k === 'other') return other || 'Other club'; return S.clubs?.[k || CLUB_DEFAULT]?.name || (k && k !== CLUB_DEFAULT ? k : 'Deuce & Smash'); }
+const clubBadge = k => (k || CLUB_DEFAULT) === CLUB_DEFAULT ? `<img class="cb-logo" src="/assets/deuce-and-smash-logo.png" alt="">` : `<span class="cb" aria-hidden="true">${esc(initials(clubName(k)))}</span>`;
+const pName = (s, id) => isNew(id) ? (s?.newcomers?.[id.slice(4)]?.name || 'New player') : (S.profiles[id]?.name || '?');
+const engName = (sid, id) => isNew(id) ? `~new:${sid}:${id.slice(4)}` : S.profiles[id]?.name;
+const teamName = (s, ids) => ids.map(id => id === S.mid ? 'You' : pName(s, id)).join(' & ');
+const listOr = a => a.length <= 1 ? (a[0] || '') : `${a.slice(0, -1).join(', ')} or ${a[a.length - 1]}`;
+const localISO = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const dayChoices = () => [...Array(8)].map((_, n) => { const d = new Date(); d.setDate(d.getDate() - n); return localISO(d); });
+const setsTxt = (s) => setsOfSub(s).map((t, i) => `Set ${i + 1}: ${teamName(s, t.A).replace(/^You/, pName(s, S.mid))} ${t.a}–${t.b}${t.tb ? ` (tie-break ${t.tb.a}–${t.tb.b})` : ''} ${teamName(s, t.B).replace(/^You/, pName(s, S.mid))}`).join('\n');
+const appUrl = q => `${location.origin}/smashdex/${q}`;
+const shareText = (sid, s) => `🎾 ${pName(s, s.by)} recorded our padel match on ${fmtDate(s.date)} at ${clubName(s.club, s.clubOther)}.\n${setsTxt(s)}\n\nConfirm or dispute it on SmashDex: ${appUrl(`?m=${sid}`)}`;
+const shareLink = (sid, s) => `https://wa.me/?text=${encodeURIComponent(shareText(sid, s))}`;
+const nudgeText = (sid, s) => `Hi Deuce & Smash, a disputed SmashDex score is still open. Match on ${fmtDate(s.date)} at ${clubName(s.club, s.clubOther)}, recorded by ${pName(s, s.by)}, disputed by ${pName(s, s.dispute?.by)}. Ref ${sid}. Please review it in /admin → Member scores.`;
+const inviteLink = (sid, s, k) => { const nc = s.newcomers?.[k] || {}; return `https://wa.me/?text=${encodeURIComponent(`Hi ${nc.name || ''}, I've added our padel match from ${fmtDate(s.date)} at ${clubName(s.club, s.clubOther)} to SmashDex, the Deuce & Smash player rating. Join to see your SDX rating and your matches: ${appUrl(`?join=${sid}.${k}`)}`)}`; };
+
+function mySubItems() {
+  const now = Date.now();
+  return Object.entries(S.subs || {}).filter(([, s]) => s && playersOf(s).includes(S.mid)).map(([sid, s]) => ({ sid, s, st: subState(s, now) })).filter(x => x.st !== 'void');
+}
+function subResult(x) {
+  let w = 0, l = 0;
+  setsOfSub(x.s).forEach(t => { const side = t.A.includes(S.mid) ? 'A' : t.B.includes(S.mid) ? 'B' : null; if (!side) return; const my = side === 'A' ? +t.a : +t.b, th = side === 'A' ? +t.b : +t.a; if (my > th) w++; else if (my < th) l++; });
+  return { w, l };
+}
+const subDelta = sid => (playerOf(myName()).hist || []).filter(h => String(h.id || '').startsWith(`s:${sid}:`)).reduce((a, h) => a + h.delta, 0);
+// SDX going into the match: from the rating history once counted, else the current rating (or a newcomer's estimate)
+function subPre(sid, s, id) {
+  const n = engName(sid, id);
+  for (let bi = 0; bi < 6; bi++) { const v = S.pre[`s:${sid}:${bi}`]?.[n]; if (v != null) return v; }
+  if (isNew(id)) return levelSeed(s.newcomers?.[id.slice(4)]?.level);
+  return n ? playerOf(n).r : null;
+}
+// What this score would do to my SDX if it counted now
+function previewDelta(sid) {
+  if (sid in S._preview) return S._preview[sid];
+  const sx = subsToMatches(S.subs, id => S.profiles[id]?.name, Date.now(), { include: k => k === sid });
+  const seeds = { ...S._seeds }; for (const [k, v] of Object.entries(sx.seeds)) if (!seeds[k]) seeds[k] = v;
+  const r = DSR.compute(seeds, S._base.concat(sx.matches), todayUTC(), S._adj).players[myName()];
+  return (S._preview[sid] = r ? { from: playerOf(myName()).r, to: r.r } : null);
+}
+const subTeam = (sid, s, ids, isMe, withSdx = true) => `<div class="team ${isMe ? 'me' : ''}">${ids.map(id => pa(engName(sid, id) || id, withSdx ? subPre(sid, s, id) : null, isNew(id), pName(s, id))).join('')}<span>${ids.map(id => esc(pName(s, id))).join(' & ')}</span></div>`;
+function subStatus(x) {
+  const { s, st, sid } = x;
+  if (st === 'pending') return `<span class="pending">Pending · ${hoursLeft(s)} h left</span>`;
+  if (st === 'disputed') return `<span class="down">Disputed</span>`;
+  const { w, l } = subResult(x), d = subDelta(sid);
+  const r = s.rotate ? `<span class="${w > l ? 'up' : w < l ? 'down' : ''}">Won ${w} of ${w + l}</span>` : (w > l ? '<span class="up">Win</span>' : w < l ? '<span class="down">Loss</span>' : 'Draw');
+  return `${r}${d ? ` <span class="${d >= 0 ? 'up' : 'down'}">${sgn(d)}</span>` : ''}`;
+}
+// The teams and set tiles of a recorded score. Fixed pairs: like any match row. Rotating: one line per set.
+function subCore(sid, s) {
+  const ss = setsOfSub(s);
+  if (!s.rotate) {
+    const t0 = ss[0], mine = t0.A.includes(S.mid) ? 'A' : 'B';
+    return `<div class="teams">${subTeam(sid, s, t0.A, mine === 'A')}${subTeam(sid, s, t0.B, mine === 'B')}</div><div class="sets" aria-label="Set scores">${ss.map(t => scoreTiles(t.a, tileCls(+t.a, +t.b)) + scoreTiles(t.b, tileCls(+t.b, +t.a))).join('')}</div>`;
+  }
+  return `<div class="rot-who">${playersOf(s).map(id => pa(engName(sid, id) || id, subPre(sid, s, id), isNew(id), pName(s, id))).join('')}<span>Partners rotated</span></div>
+    <div class="rot-lines">${ss.map((t, i) => `<div class="rl"><span class="rn">Set ${i + 1}</span><div class="teams">${subTeam(sid, s, t.A, t.A.includes(S.mid), false)}${subTeam(sid, s, t.B, t.B.includes(S.mid), false)}</div><span class="rs">${scoreTiles(t.a, tileCls(+t.a, +t.b))}${scoreTiles(t.b, tileCls(+t.b, +t.a))}</span></div>`).join('')}</div>`;
+}
+const subTb = s => setsOfSub(s).map((t, i) => t.tb ? `Set ${i + 1} tie-break ${t.tb.a}–${t.tb.b}` : '').filter(Boolean).join(' · ');
+function subRow(x) {
+  const { sid, s } = x, tb = subTb(s);
+  return `<div class="m${s.rotate ? ' rot' : ''}" data-sub="${sid}"><div class="when"><span>${fmtDate(s.date)}</span><span>${esc(clubName(s.club, s.clubOther))}</span></div><div class="res">${subStatus(x)}</div>${subCore(sid, s)}${tb ? `<div class="tbn">${tb}</div>` : ''}</div>`;
+}
+
+function historyItems() {
+  const staff = myMatches().filter(m => !m.sub).map(m => ({ kind: 'm', date: m.date, at: String(m.enteredAt || ''), m }));
+  const sub = mySubItems().map(x => ({ kind: 's', date: x.s.date, at: new Date(+x.s.at || 0).toISOString(), ...x }));
+  return staff.concat(sub).sort((a, b) => b.date.localeCompare(a.date) || b.at.localeCompare(a.at));
+}
+const itemRow = it => it.kind === 'm' ? matchRow(it.m) : subRow(it);
+const itemRes = it => { if (it.kind === 'm') return validMatch(it.m) ? resultFor(it.m, myName()) : 'P'; if (!counts(it.st)) return 'P'; const { w, l } = subResult(it); return w > l ? 'W' : w < l ? 'L' : 'D'; };
+const itemClub = it => (it.kind === 'm' ? it.m.club : it.s.club) || CLUB_DEFAULT;
+
+const canConfirm = s => s.status === 'pending' && confirmers(s).includes(S.mid) && !(s.confirms || {})[S.mid];
+function attention() {
+  const out = { act: [], mine: [], disp: [] };
+  for (const x of mySubItems()) {
+    if (x.st === 'disputed') out.disp.push(x);
+    else if (x.st === 'pending') (x.s.by === S.mid ? out.mine : out.act).push(x);
+  }
+  const by = (a, b) => (b.s.at || 0) - (a.s.at || 0);
+  out.act.sort(by); out.mine.sort(by); out.disp.sort(by);
+  return out;
+}
+function attnCard(x, ctx) {
+  const { sid, s } = x, conf = ctx === 'act' && canConfirm(s);
+  const opp = confirmers(s).filter(id => id !== S.mid).map(id => pName(s, id));
+  const pv = ctx !== 'disp' ? previewDelta(sid) : null;
+  let note = '', btns = '', tag = '';
+  if (ctx === 'act') {
+    tag = conf ? '<span class="tag hot">Confirm</span>' : '<span class="tag">Waiting</span>';
+    note = conf ? `${esc(pName(s, s.by))} recorded this. You were on the other side${s.rotate ? ' in at least one set' : ''}.`
+      : `${esc(pName(s, s.by))}${s.rotate ? '' : ', your partner,'} recorded this. Waiting for ${esc(listOr(opp)) || 'an opponent'} to confirm.`;
+    btns = conf ? `<div class="row2"><button class="btn primary" data-sub-act="confirm" data-sid="${sid}">Confirm</button><button class="btn" data-sub-act="dispute" data-sid="${sid}">Dispute</button></div>`
+      : `<button class="btn full" data-sub-act="dispute" data-sid="${sid}">Something wrong? Dispute</button>`;
+  } else if (ctx === 'mine') {
+    tag = '<span class="tag">Waiting</span>';
+    note = opp.length ? `You recorded this. Waiting for ${esc(listOr(opp))} to confirm.` : `You recorded this. None of your opponents is on SmashDex yet, so it counts automatically.`;
+    btns = `<div class="row2"><a class="btn wa" href="${shareLink(sid, s)}" target="_blank" rel="noopener" data-track="rec_remind">Remind on WhatsApp</a><button class="btn" data-sub-act="edit" data-sid="${sid}">Edit</button></div>`;
+  } else {
+    tag = '<span class="tag disp">Disputed</span>';
+    const d = s.dispute || {}, open24 = Date.now() - (+s.at || 0) >= DAY_MS;
+    note = `${d.by === S.mid ? 'You' : esc(pName(s, d.by))} disputed this${d.reason ? ` (${esc(String(d.reason).toLowerCase())})` : ''}.${d.note ? ` “${esc(d.note)}”` : ''} Club staff will review it. The disputed sets don't count until then.`;
+    btns = open24 ? `<a class="btn wa full" href="${waLink(nudgeText(sid, s))}" target="_blank" rel="noopener" data-track="rec_nudge">Nudge the club on WhatsApp</a>`
+      : `<p class="note" style="margin:0">If it's still open 24 hours after the score was entered, you can nudge the club from here.</p>`;
+  }
+  return `<div class="acard${conf ? ' hot' : ''}">
+    <div class="ah"><span>${fmtDate(s.date)} · ${esc(clubName(s.club, s.clubOther))} · ${s.format === 'competitive' ? 'Competitive' : 'Casual'}</span>${tag}</div>
+    <div class="m bare${s.rotate ? ' rot' : ''}">${subCore(sid, s)}</div>
+    <p class="note">${note}</p>
+    ${pv && Math.abs(pv.to - pv.from) > 1e-6 ? `<div class="pv"><span>Your SDX once ${ctx === 'mine' ? 'it counts' : 'confirmed'}</span><b>${sdx(pv.from)} → <span class="${pv.to >= pv.from ? 'up' : 'down'}">${sdx(pv.to)}</span> <small class="${pv.to >= pv.from ? 'up' : 'down'}">${sgn(pv.to - pv.from)}</small></b></div>` : ''}
+    ${btns}
+    ${ctx !== 'disp' ? `<p class="note clock">Confirms automatically in ${hoursLeft(s)} h</p>` : ''}
+  </div>`;
+}
+
+function recordHTML() {
+  const a = attention(), items = historyItems(), f = S.hFilter;
+  const list = items.filter(it => { const r = itemRes(it); return (f === 'all' || (f === 'w' && r === 'W') || (f === 'l' && r === 'L') || (f === 'p' && r === 'P')) && (!S.hClub || itemClub(it) === S.hClub); });
+  const clubsUsed = [...new Set(items.map(itemClub))];
+  const nAtt = a.act.length + a.mine.length + a.disp.length;
+  return `<div class="rgrid">
+  <div class="r-head"><h1 class="r-title">Record score</h1><button class="btn primary big" data-rec="start">${svgI('<path d="M12 5v14M5 12h14"/>')}Record a score</button></div>
+  ${nAtt ? `<section class="r-att"><h3 class="h3">Needs your attention</h3>${a.act.map(x => attnCard(x, 'act')).join('')}${a.mine.map(x => attnCard(x, 'mine')).join('')}${a.disp.map(x => attnCard(x, 'disp')).join('')}</section>` : ''}
+  <section class="r-hist sec" data-sec="history">
+    <div class="sec-h"><h3>Match history</h3><span class="aside">${items.length} match${items.length === 1 ? '' : 'es'}</span></div>
+    <div class="fchips">${[['all', 'All'], ['w', 'Wins'], ['l', 'Losses'], ['p', 'Pending']].map(([k, l]) => `<button class="fchip${f === k ? ' on' : ''}" data-hf="${k}" aria-pressed="${f === k}">${l}</button>`).join('')}
+      ${clubsUsed.length > 1 ? `<select class="fchip" data-hclub aria-label="Filter by club"><option value="">Any club</option>${clubsUsed.map(c => `<option value="${esc(c)}"${S.hClub === c ? ' selected' : ''}>${esc(clubName(c))}</option>`).join('')}</select>` : ''}</div>
+    ${list.length ? list.slice(0, S.hShown).map(itemRow).join('') + (list.length > S.hShown ? `<button class="btn full" style="margin-top:12px" data-act="hmore">Show ${Math.min(20, list.length - S.hShown)} more</button>` : '')
+      : `<p class="empty">${items.length ? 'No matches with this filter.' : 'No matches yet. Record your first score above.'}</p>`}
+    ${items.length ? '<p class="note" style="margin-top:12px">The number under each player is their SDX going into that match.</p>' : ''}
+  </section></div>`;
+}
+
+function updateBadge() {
+  const n = attention().act.filter(x => canConfirm(x.s)).length, btn = document.querySelector('.nav [data-tab=record]'); if (!btn) return;
+  let b = btn.querySelector('.nbadge'); if (!n) { b?.remove(); return; }
+  if (!b) { b = document.createElement('span'); b.className = 'nbadge'; btn.appendChild(b); }
+  b.textContent = n; b.setAttribute('aria-label', `${n} to confirm`);
+}
+function switchTab(t) { S.tab = t; track('tab_' + t); document.querySelectorAll('.nav [data-tab]').forEach(x => x.classList.toggle('on', x.dataset.tab === t)); render(); scrollTo(0, 0); }
+
+/* Pop-up when a player opens SmashDex with scores waiting on them */
+function maybePopup() {
+  if (S._popDone) return; S._popDone = true;
+  const focus = new URLSearchParams(location.search).get('m');
+  if (focus) history.replaceState(null, '', location.pathname);
+  if (!attention().act.length && !(focus && S.subs[focus])) return;
+  openWaiting(focus);
+}
+function openWaiting(focus) {
+  let list = attention().act;
+  const fx = focus && mySubItems().find(y => y.sid === focus);
+  if (fx) list = [fx, ...list.filter(y => y.sid !== focus)];
+  if (!list.length) return closeSheet();
+  track('popup_seen'); S.sheetKind = 'waiting';
+  const ctx = x => x.st === 'disputed' ? 'disp' : x.s.by === S.mid ? 'mine' : 'act';
+  sheet(`<h2>${list.length === 1 ? '1 match waiting' : `${list.length} matches waiting`}</h2>
+    <p>Check the score and see what it does to your SDX.</p>
+    <div class="alist">${list.map(x => attnCard(x, ctx(x))).join('')}</div>
+    <button class="btn full" data-close style="margin-top:6px">Later</button>
+    <p class="note" style="text-align:center;margin:8px 0 0">They stay under Record score until they're confirmed.</p>`, true);
+}
+
+/* ── The 3-step flow ── */
+function recNew(fromSid) {
+  if (fromSid && S.subs[fromSid]) {
+    const s = S.subs[fromSid], pl = playersOf(s);
+    S.rec = { step: 0, sid: fromSid, date: s.date, club: s.club || CLUB_DEFAULT, clubOther: s.clubOther || '', format: s.format || 'openplay', rotate: !!s.rotate, early: !!s.early,
+      slots: pl.slice(), newcomers: JSON.parse(JSON.stringify(s.newcomers || {})), act: null, pick: null, q: '', newForm: false,
+      sets: setsOfSub(s).map(t => {
+        const meA = t.A.includes(S.mid), mate = (meA ? t.A : t.B).find(i => i !== S.mid);
+        let a = meA ? +t.a : +t.b, b = meA ? +t.b : +t.a, tb = t.tb ? (meA ? { a: t.tb.a, b: t.tb.b } : { a: t.tb.b, b: t.tb.a }) : null;
+        if (tb && Math.max(a, b) === 7 && Math.min(a, b) === 6) { a = 6; b = 6; }
+        return { a, b, tb, p: Math.max(1, pl.indexOf(mate)) };
+      }) };
+  } else S.rec = { step: 0, sid: null, date: todayLocal(), club: CLUB_DEFAULT, clubOther: '', format: 'openplay', rotate: false, early: false,
+    slots: [S.mid, null, null, null], newcomers: {}, sets: [{ a: null, b: null, tb: null, p: 1 }], act: { i: 0, k: 'a' }, pick: 1, q: '', newForm: false };
+}
+function recOpen() { S.sheetKind = 'rec'; recRender(true); }
+function recRender(top) {
+  const R = S.rec, body = $('#sheetBody'), keep = top ? 0 : body.scrollTop;
+  const html = [recWho, recScore, recReview, recDone][R.step]();
+  sheet(`<div class="rflow">${recHead()}${html}</div>`, true);
+  body.scrollTop = keep;
+  if (R.step === 0 && R.pick != null) { const el = R.newForm ? $('#ncName') : $('#recQ'); if (el && matchMedia('(hover:hover)').matches) { el.focus({ preventScroll: true }); el.setSelectionRange?.(el.value.length, el.value.length); } }
+}
+function recHead() {
+  const R = S.rec; if (R.step === 3) return '';
+  return `<div class="rhead">${R.step ? `<button class="back" data-rstep="${R.step - 1}">${ICON.back}Back</button>` : ''}
+    <h2>${['Who played', 'The score', 'Review'][R.step]}</h2>
+    <div class="rprog" aria-label="Step ${R.step + 1} of 3">${[0, 1, 2].map(i => `<span class="${i <= R.step ? 'on' : ''}"></span>`).join('')}</div></div>`;
+}
+const slotLabel = i => ['You', 'Your partner', 'Opponent', 'Opponent'][i];
+function slotHTML(i) {
+  const R = S.rec, id = R.slots[i];
+  if (id) {
+    const isN = isNew(id), nc = isN ? R.newcomers[id.slice(4)] : null, p = isN ? null : S.profiles[id];
+    const name = isN ? nc?.name : p?.name, sub = isN ? `New player · ${esc(nc?.level || '')} (estimate)` : `${dexLabel(p?.dexNo)}${p?.name ? ` · ${esc(bandOf(playerOf(p.name).r).persona)}` : ''}`;
+    return `<div class="slot"><span class="av sm${isN ? ' new' : ''}" aria-hidden="true">${esc(initials(name))}</span><span class="st2"><b>${esc(name)}${id === S.mid ? ' (you)' : ''}</b><span>${sub}</span></span>${i ? `<button class="x" data-rslot-clear="${i}" aria-label="Remove ${esc(name)}">${svgI('<path d="M6 6l12 12M18 6L6 18"/>')}</button>` : ''}</div>`;
+  }
+  if (R.pick === i) {
+    if (R.newForm) return `<div class="slot act col">
+      <label class="field" style="margin:0"><span>Their name</span><input id="ncName" maxlength="30" autocomplete="off" value="${esc(R.q)}"></label>
+      <fieldset class="pq" style="margin:10px 0 0"><legend>Your best guess at their level</legend><div class="lvls">${NEW_LEVELS.map(([lv], j) => { const b = BANDS.find(x => x.band === lv) || {}; return `<label><input type="radio" name="nclv" value="${lv}" ${j === 1 ? 'checked' : ''}><span><b>${lv} <em>· ${esc(b.persona || '')}</em></b><small>${b.lo}–${b.lo + 1} · ${esc(b.about || '')}</small></span></label>`; }).join('')}</div>
+      <p class="hint">Advanced and Elite players are placed by club staff. When they join SmashDex, this match moves to their profile and every rating is recalculated.</p></fieldset>
+      <div class="row2" style="margin-top:10px"><button class="btn primary" data-rnew-add>Add to the match</button><button class="btn" data-rnew-cancel>Cancel</button></div></div>`;
+    return `<div class="slot act col"><label class="sbox">${svgI('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>')}<input id="recQ" placeholder="Search by name or Dex number" autocomplete="off" value="${esc(R.q)}" aria-label="Search players for ${slotLabel(i).toLowerCase()}"></label><div id="recRes" class="rres">${recResults()}</div></div>`;
+  }
+  return `<button class="slot open" data-rslot="${i}">${svgI('<path d="M12 5v14M5 12h14"/>')}Add ${i === 1 ? 'your partner' : 'an opponent'}</button>`;
+}
+function recentIds() {
+  const seen = [];
+  for (const it of historyItems()) {
+    const ids = it.kind === 'm' ? [...(it.m.teamAIds || []), ...(it.m.teamBIds || [])] : playersOf(it.s);
+    ids.forEach(id => { if (id && id !== S.mid && !isNew(id) && !seen.includes(id)) seen.push(id); });
+  }
+  return seen;
+}
+function recResults() {
+  const R = S.rec, q = R.q.trim().toLowerCase().replace(/^#/, ''), taken = new Set(R.slots.filter(Boolean)), recent = recentIds();
+  let pool = Object.entries(S.profiles).filter(([id, p]) => p && p.name && id !== S.mid && !taken.has(id) && p.active !== false);
+  if (q) pool = pool.filter(([, p]) => p.name.toLowerCase().includes(q) || (/^\d+$/.test(q) && String(p.dexNo || '').padStart(4, '0').includes(q)));
+  else pool = pool.filter(([id]) => recent.includes(id));
+  pool.sort((a, b) => ((recent.indexOf(a[0]) + 1) || 999) - ((recent.indexOf(b[0]) + 1) || 999) || a[1].name.localeCompare(b[1].name));
+  const rows = pool.slice(0, q ? 8 : 6).map(([id, p]) => `<button class="ritem" data-rpick="${id}"><span class="av sm" aria-hidden="true">${esc(initials(p.name))}</span><span class="st2"><b>${esc(p.name)}</b><span>${dexLabel(p.dexNo)} · ${esc(bandOf(playerOf(p.name).r).persona)}</span></span></button>`);
+  return `${!q && rows.length ? '<p class="rlbl">Recent players</p>' : ''}${rows.join('')}${q && !rows.length ? '<p class="rlbl">No member matches that.</p>' : ''}<button class="ritem new" data-rnew><span class="av sm new" aria-hidden="true">+</span><span class="st2"><b>Someone new</b><span>Not on SmashDex yet</span></span></button>
+    ${rows.length > 1 && pool.some(([, p], i, a) => a.some(([, o], j) => j !== i && o.name === p.name)) ? '' : ''}<p class="rlbl">Two players with the same name? The Dex number tells them apart.</p>`;
+}
+function recWho() {
+  const R = S.rec, days = dayChoices(), cl = clubList();
+  const full = R.slots.every(Boolean) && (R.club !== 'other' || R.clubOther.trim());
+  return `<div class="rsec"><p class="lbl">When</p><div class="fchips">
+      <button class="fchip${R.date === days[0] ? ' on' : ''}" data-rdate="${days[0]}">Today</button><button class="fchip${R.date === days[1] ? ' on' : ''}" data-rdate="${days[1]}">Yesterday</button>
+      <select class="fchip${days.slice(2).includes(R.date) ? ' on' : ''}" data-rdate-sel aria-label="An earlier day"><option value="">Earlier this week…</option>${days.slice(2).map(d => `<option value="${d}"${R.date === d ? ' selected' : ''}>${new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</option>`).join('')}</select></div>
+      <p class="hint">Up to 7 days back. Older matches go through club staff.</p></div>
+    <div class="rsec"><p class="lbl">Club</p><div class="clubrow">${clubBadge(R.club === 'other' ? 'x' : R.club)}<select data-rf="club" aria-label="Club">${cl.map(([k, n]) => `<option value="${k}"${R.club === k ? ' selected' : ''}>${esc(n)}</option>`).join('')}<option value="other"${R.club === 'other' ? ' selected' : ''}>Another club…</option></select></div>
+      ${R.club === 'other' ? `<label class="field" style="margin-top:8px"><span>Club name</span><input data-rf="clubOther" maxlength="40" value="${esc(R.clubOther)}" placeholder="e.g. Padel Park Kharadi"></label><p class="hint">Club staff check new clubs before they join the list.</p>` : ''}</div>
+    <div class="rsec"><p class="lbl">Your team</p><div class="slots">${slotHTML(0)}${slotHTML(1)}</div></div>
+    <div class="rsec"><p class="lbl">Opponents</p><div class="slots">${slotHTML(2)}${slotHTML(3)}</div>
+      <p class="hint">Partners swapped between sets? Pick any pairing here and set the partner for each set on the next step.</p></div>
+    <button class="btn primary full big" data-rstep="1"${full ? '' : ' disabled'}>Next: the score</button>`;
+}
+function teamsFor(t) { const p = S.rec.rotate ? (t.p || 1) : 1; return { mine: [0, p], opp: [1, 2, 3].filter(i => i !== p) }; }
+const slotName = i => { const R = S.rec, id = R.slots[i]; return id === S.mid ? 'You' : isNew(id) ? (R.newcomers[id.slice(4)]?.name || 'New player') : (S.profiles[id]?.name || '?'); };
+function tileBtn(i, k, v, other) {
+  const R = S.rec, act = R.act && R.act.i === i && R.act.k === k, cls = v == null || other == null ? '' : tileCls(+v, +other);
+  return `<button class="tbtn${act ? ' act' : ''}" data-rt="${i}:${k}" aria-label="Set ${i + 1}, ${k === 'a' ? 'your team' : 'opponents'}: ${v ?? 'not entered'}">${scoreTiles(v ?? '–', v == null ? 'empty' : cls)}</button>`;
+}
+function setCard(t, i) {
+  const R = S.rec, { mine, opp } = teamsFor(t), act = R.act && R.act.i === i;
+  const tb = needsTb(t.a, t.b) ? `<div class="tbbox"><div class="tbh"><b>Tie-break${+t.a === 6 && +t.b === 6 ? ', at 6–6' : ''}</b><span>${+t.a === 6 && +t.b === 6 ? 'First to 7, win by 2' : 'Optional'}</span></div>
+      <div class="tbr"><span>${esc(mine.map(slotName).join(' & '))}</span><input inputmode="numeric" maxlength="2" data-rtb="${i}:a" value="${t.tb?.a ?? ''}" aria-label="Set ${i + 1} tie-break points, your team"></div>
+      <div class="tbr"><span>${esc(opp.map(slotName).join(' & '))}</span><input inputmode="numeric" maxlength="2" data-rtb="${i}:b" value="${t.tb?.b ?? ''}" aria-label="Set ${i + 1} tie-break points, opponents"></div></div>` : '';
+  return `<div class="scard${act ? ' act' : ''}">
+    <div class="sch"><b>Set ${i + 1}</b>${R.sets.length > 1 ? `<button class="x" data-rdelset="${i}" aria-label="Remove set ${i + 1}">${svgI('<path d="M6 6l12 12M18 6L6 18"/>')}</button>` : ''}</div>
+    ${R.rotate ? `<div class="pp"><span class="hint" style="margin:0">Your partner this set</span><div class="fchips">${[1, 2, 3].map(j => `<button class="fchip${(t.p || 1) === j ? ' on' : ''}" data-rp="${i}:${j}">${esc(slotName(j))}</button>`).join('')}</div></div>` : ''}
+    <div class="srow"><span class="me">${esc(mine.map(slotName).join(' & '))}</span>${tileBtn(i, 'a', t.a, t.b)}</div>
+    <div class="srow"><span>${esc(opp.map(slotName).join(' & '))}</span>${tileBtn(i, 'b', t.b, t.a)}</div>
+    ${act ? `<div class="pad" role="group" aria-label="Games">${[0, 1, 2, 3, 4, 5, 6, 7].map(n => `<button data-rpad="${n}">${scoreTiles(n)}</button>`).join('')}</div>` : ''}
+    ${tb}</div>`;
+}
+function recErrors() {
+  const R = S.rec, errs = [];
+  R.sets.forEach((t, i) => {
+    const n = `Set ${i + 1}`;
+    if (t.a == null || t.b == null) return errs.push(`${n} needs both scores.`);
+    if (!validSet(t.a, t.b, R.early)) return errs.push(`${n}: ${t.a}–${t.b} isn't a finished set. If time ran out, tick “A set ended early”.`);
+    const tbIn = t.tb && t.tb.a !== '' && t.tb.a != null && t.tb.b !== '' && t.tb.b != null;
+    if (+t.a === 6 && +t.b === 6 && !R.early && !validTb(t.tb)) return errs.push(`${n}: add the tie-break score (first to 7, win by 2).`);
+    if (tbIn && !validTb(t.tb)) return errs.push(`${n}: check the tie-break score (first to 7, win by 2).`);
+    if (tbIn && +t.a !== +t.b && ((+t.a > +t.b) !== (+t.tb.a > +t.tb.b))) errs.push(`${n}: the tie-break winner should also win the set.`);
+  });
+  return errs;
+}
+function recScore() {
+  const R = S.rec, max = R.rotate ? MAX_SETS.rotate : MAX_SETS.fixed, errs = recErrors();
+  return `<div class="rsec"><p class="lbl">Match type</p><div class="seg2">${[['openplay', 'Casual'], ['competitive', 'Competitive']].map(([k, l]) => `<button class="fchip${R.format === k ? ' on' : ''}" data-rfmt="${k}">${l}</button>`).join('')}</div></div>
+    <label class="tog"><span><b>Partners rotate between sets</b><small>Open play with the same four players, swapping partners</small></span><input type="checkbox" data-rrot${R.rotate ? ' checked' : ''}></label>
+    <div class="scards">${R.sets.map(setCard).join('')}</div>
+    ${R.sets.length < max ? `<button class="btn full dashed" data-raddset>${svgI('<path d="M12 5v14M5 12h14"/>')}Add set ${R.sets.length + 1} <span class="mu">(up to ${max})</span></button>` : `<p class="hint">That's the most sets for one ${R.rotate ? 'session' : 'match'}. Record the rest as a new score.</p>`}
+    <label class="chk"><input type="checkbox" data-rearly${R.early ? ' checked' : ''}><span><b>A set ended early</b><small>Time ran out before a set finished. The score still counts, game by game.</small></span></label>
+    <p class="hint">Tap a tile, then pick the games. A set is 6–0 to 6–4 or 7–5. At 6–6 the tie-break opens on its own.</p>
+    <div id="recErr" class="rerr" aria-live="polite">${errs.length && R.sets.some(t => t.a != null && t.b != null) ? esc(errs[0]) : ''}</div>
+    <button class="btn primary full big" data-rstep="2" id="recNext"${errs.length ? ' disabled' : ''}>Next: review</button>`;
+}
+function buildDraft() {
+  const R = S.rec, sl = R.slots;
+  const sets = R.sets.map(t => {
+    const { mine, opp } = teamsFor(t);
+    const tb = t.tb && validTb(t.tb) && needsTb(t.a, t.b) ? { a: +t.tb.a, b: +t.tb.b } : null;
+    const x = finalSet({ a: +t.a, b: +t.b, tb });
+    const o = { A: mine.map(j => sl[j]), B: opp.map(j => sl[j]), a: x.a, b: x.b }; if (x.tb) o.tb = x.tb; return o;
+  });
+  const p1 = R.rotate ? sl[R.sets[0].p || 1] : sl[1];
+  const players = [S.mid, p1, ...[1, 2, 3].map(j => sl[j]).filter(id => id !== p1)];
+  const nc = {}; for (const id of players) if (isNew(id)) nc[id.slice(4)] = { name: R.newcomers[id.slice(4)].name, level: R.newcomers[id.slice(4)].level };
+  const d = { by: S.mid, at: R.sid ? S.subs[R.sid]?.at : Date.now(), date: R.date, club: R.club, format: R.format, players, sets, status: 'pending' };
+  if (R.rotate) d.rotate = true; if (R.early) d.early = true;
+  if (R.club === 'other') d.clubOther = R.clubOther.trim().slice(0, 40);
+  if (Object.keys(nc).length) d.newcomers = nc;
+  return d;
+}
+function recReview() {
+  const R = S.rec, d = buildDraft(), who = confirmers(d).map(id => pName(d, id)), nc = Object.values(d.newcomers || {});
+  const { w, l } = subResult({ s: d });
+  const res = d.rotate ? `You won ${w} of ${w + l} sets` : w > l ? `${teamName(d, d.sets[0].A)} win ${w}–${l}` : w < l ? `${teamName(d, d.sets[0].B)} win ${l}–${w}` : `Sets level at ${w}–${l}`;
+  return `<div class="acard">
+      <div class="ah"><span>${fmtDate(d.date)} · ${esc(clubName(d.club, d.clubOther))} · ${d.format === 'competitive' ? 'Competitive' : 'Casual'}${d.rotate ? ' · partners rotate' : ''}</span></div>
+      <div class="m bare${d.rotate ? ' rot' : ''}">${subCore('draft', d)}</div>
+      ${subTb(d) ? `<p class="note">${subTb(d)}</p>` : ''}
+      <p class="rres-line ${w > l ? 'up' : w < l ? 'down' : ''}">${esc(res)}</p></div>
+    <ul class="rnotes">
+      <li>${who.length ? `${esc(listOr(who))} ${who.length > 1 ? 'can' : 'will be asked to'} confirm it. Only one needs to.` : 'None of your opponents is on SmashDex yet, so it counts automatically after 24 hours. Club staff may spot-check it.'}</li>
+      <li>Your SDX moves once it's confirmed, or automatically after 24 hours if nobody disputes it.</li>
+      ${nc.map(n => `<li>${esc(n.name)} counts as ${esc(n.level)} (about ${levelSeed(n.level).toFixed(1)}) until they join SmashDex.</li>`).join('')}
+    </ul>
+    <button class="btn primary full big" data-rsubmit>${R.sid ? 'Save changes' : 'Submit score'}</button>
+    ${R.sid ? `<button class="btn full" style="margin-top:10px" data-rdelete>Delete this score</button>` : ''}`;
+}
+function recDone() {
+  const R = S.rec, d = R.doneData, sid = R.done, nk = Object.keys(d.newcomers || {});
+  return `<div class="done-h">${svgI('<path d="M5 12.5l4.5 4.5L19 7"/>')}<h2>${R.sid ? 'Score updated' : 'Score recorded'}</h2></div>
+    <div class="acard"><div class="m bare${d.rotate ? ' rot' : ''}">${subCore(sid, d)}</div></div>
+    <p>Let the others know so they can confirm it. WhatsApp opens with the score and a link; pick your group chat or send it to each player.</p>
+    <a class="btn wa full big" href="${shareLink(sid, d)}" target="_blank" rel="noopener" data-track="rec_share">Send to the players on WhatsApp</a>
+    ${nk.map(k => `<a class="btn full" style="margin-top:10px" href="${inviteLink(sid, d, k)}" target="_blank" rel="noopener" data-track="rec_invite">Invite ${esc(d.newcomers[k].name)} to SmashDex</a>`).join('')}
+    <button class="btn full" style="margin-top:10px" data-close>Done</button>`;
+}
+async function recSubmit(btn) {
+  const R = S.rec;
+  if (recErrors().length) return;
+  if (!R.sid && Object.values(S.subs).filter(s => s && s.by === S.mid && Date.now() - (+s.at || 0) < DAY_MS).length >= 6)
+    return toast('You can record up to 6 scores in 24 hours. Ask club staff to add the rest.', 4500);
+  const d = buildDraft(), sid = R.sid || `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+  btn.disabled = true;
+  try { await set(ref(db, `submissions/${sid}`), d); track('rec_submit'); R.done = sid; R.doneData = d; R.step = 3; recRender(true); }
+  catch (e) { btn.disabled = false; toast(/permission/i.test(e.message) ? (R.sid ? 'This score can no longer be edited (it has been confirmed, disputed or is over 24 hours old).' : 'Could not save the score. Check your connection and try again.') : 'Could not save the score: ' + (e.code || e.message), 5000); }
+}
+
+/* ── Dispute ── */
+function disputeSheet(sid) {
+  const s = S.subs[sid]; if (!s) return;
+  S.sheetKind = 'dispute';
+  sheet(`<h2>Dispute this score</h2>
+    <div class="acard"><div class="ah"><span>${fmtDate(s.date)} · ${esc(clubName(s.club, s.clubOther))} · recorded by ${esc(pName(s, s.by))}</span></div><div class="m bare${s.rotate ? ' rot' : ''}">${subCore(sid, s)}</div></div>
+    <form id="dispForm" data-sid="${sid}">
+      <fieldset class="pq"><legend>What's wrong?</legend><div class="chips">${['The score', 'The players', 'The date or club', "I didn't play this"].map((r, i) => `<label><input type="radio" name="reason" value="${r}"${i ? '' : ' checked'}><span>${r}</span></label>`).join('')}</div></fieldset>
+      <fieldset class="pq" id="dispSets"><legend>Which set is wrong, and what was the score?</legend>
+        ${setsOfSub(s).map((t, i) => `<div class="dset"><label class="chk" style="margin:0"><input type="checkbox" name="set" value="${i}"><span><b>Set ${i + 1}</b><small>${esc(teamName(s, t.A))} ${t.a}–${t.b} ${esc(teamName(s, t.B))}</small></span></label>
+          <span class="fix">Should be <input name="fa${i}" inputmode="numeric" maxlength="1" aria-label="Set ${i + 1} correct games for ${esc(teamName(s, t.A))}">–<input name="fb${i}" inputmode="numeric" maxlength="1" aria-label="Set ${i + 1} correct games for ${esc(teamName(s, t.B))}"></span></div>`).join('')}
+      </fieldset>
+      <label class="field"><span>Anything else? (optional)</span><textarea name="note" maxlength="300" rows="3"></textarea></label>
+      <p class="note">The disputed sets stop counting until club staff sort it out. Staff see it in their review list straight away.</p>
+      <button class="btn primary full big" type="submit">Send dispute</button>
+    </form>`, true);
+}
+document.addEventListener('change', e => {
+  if (e.target.closest('#dispForm') && e.target.name === 'reason') $('#dispSets').classList.toggle('hidden', e.target.value !== 'The score');
+});
+document.addEventListener('submit', async e => {
+  if (e.target.id !== 'dispForm') return;
+  e.preventDefault();
+  const f = new FormData(e.target), sid = e.target.dataset.sid, s = S.subs[sid]; if (!s) return;
+  const reason = f.get('reason'), d = { by: S.mid, at: Date.now(), reason };
+  if (reason === 'The score') {
+    const sets = f.getAll('set').map(Number);
+    if (sets.length) d.sets = sets;
+    const fix = {}; (sets.length ? sets : setsOfSub(s).map((_, i) => i)).forEach(i => { const a = f.get('fa' + i), b = f.get('fb' + i); if (a !== '' && b !== '' && validSet(+a, +b, true)) fix[i] = { a: +a, b: +b }; });
+    if (Object.keys(fix).length) d.fix = fix;
+  }
+  const note = String(f.get('note') || '').trim().slice(0, 300); if (note) d.note = note;
+  const btn = e.target.querySelector('[type=submit]'); btn.disabled = true;
+  try { await update(ref(db), { [`submissions/${sid}/dispute`]: d, [`submissions/${sid}/status`]: 'disputed' }); track('rec_dispute'); closeSheet(); toast('Dispute sent. Club staff will review it.', 3500); }
+  catch (err) { btn.disabled = false; toast(/permission/i.test(err.message) ? 'This score can no longer be disputed here. Message the club instead.' : 'Could not send: ' + err.message, 4500); }
+});
+
+/* ── Clicks and inputs for the Record score tab and flow ── */
+document.addEventListener('click', async e => {
+  const t = e.target;
+  const tr = t.closest('[data-track]'); if (tr) track(tr.dataset.track);
+  if (t.closest('[data-rec=start]')) { recNew(); track('rec_start'); return recOpen(); }
+  const go = t.closest('[data-go]'); if (go) return switchTab(go.dataset.go);
+  const hf = t.closest('[data-hf]'); if (hf) { S.hFilter = hf.dataset.hf; S.hShown = 20; return render(); }
+  if (t.closest('[data-act=hmore]')) { S.hShown += 20; return render(); }
+  const sa = t.closest('[data-sub-act]');
+  if (sa) {
+    const sid = sa.dataset.sid, act = sa.dataset.subAct, s = S.subs[sid]; if (!s) return;
+    if (act === 'dispute') return disputeSheet(sid);
+    if (act === 'edit') { recNew(sid); return recOpen(); }
+    if (act === 'confirm') {
+      sa.disabled = true; const pv = previewDelta(sid);
+      try {
+        await set(ref(db, `submissions/${sid}/confirms/${S.mid}`), Date.now()); track('rec_confirm');
+        toast(pv ? `Confirmed. Your SDX is now ${sdx(pv.to)} (${sgn(pv.to - pv.from)})` : 'Confirmed', 4000);
+        if (S.sheetKind === 'waiting' && !$('#sheet').classList.contains('hidden')) setTimeout(() => openWaiting(), 400);
+      } catch (err) { sa.disabled = false; toast('Could not confirm: ' + err.message, 4000); }
+    }
+    return;
+  }
+  if (!S.rec || S.sheetKind !== 'rec' || !t.closest('#sheetBody')) return;
+  const R = S.rec, d = k => t.closest(`[${k}]`)?.getAttribute(k);
+  let v;
+  if ((v = d('data-rstep')) != null) {
+    const n = +v;
+    if (n > R.step && n === 1 && !(R.slots.every(Boolean))) return;
+    if (n > R.step && n === 2 && recErrors().length) return;
+    R.step = n; R.act = n === 1 && R.sets.some(x => x.a == null) ? { i: R.sets.findIndex(x => x.a == null), k: 'a' } : (n === 1 ? R.act : null);
+    if (n === 1) track('rec_score'); if (n === 2) track('rec_review');
+    return recRender(true);
+  }
+  if ((v = d('data-rdate')) != null) { R.date = v; return recRender(); }
+  if ((v = d('data-rslot')) != null) { R.pick = +v; R.q = ''; R.newForm = false; return recRender(); }
+  if ((v = d('data-rslot-clear')) != null) { R.slots[+v] = null; R.pick = +v; R.q = ''; R.newForm = false; return recRender(); }
+  if ((v = d('data-rpick')) != null) { R.slots[R.pick] = v; R.q = ''; R.newForm = false; const nx = R.slots.findIndex(x => !x); R.pick = nx >= 0 ? nx : null; return recRender(); }
+  if (t.closest('[data-rnew]')) { R.newForm = true; return recRender(); }
+  if (t.closest('[data-rnew-cancel]')) { R.newForm = false; return recRender(); }
+  if (t.closest('[data-rnew-add]')) {
+    const name = ($('#ncName')?.value || '').trim().slice(0, 30), level = document.querySelector('input[name=nclv]:checked')?.value || 'Beginner+';
+    if (!name) { $('#ncName')?.focus(); return toast('Add their name first'); }
+    const k = 'k' + Date.now().toString(36); R.newcomers[k] = { name, level }; R.slots[R.pick] = 'new:' + k; R.q = ''; R.newForm = false; track('rec_newcomer');
+    const nx = R.slots.findIndex(x => !x); R.pick = nx >= 0 ? nx : null; return recRender();
+  }
+  if ((v = d('data-rfmt')) != null) { R.format = v; return recRender(); }
+  if ((v = d('data-rp')) != null) { const [i, j] = v.split(':').map(Number); R.sets[i].p = j; return recRender(); }
+  if ((v = d('data-rt')) != null) { const [i, k] = v.split(':'); R.act = { i: +i, k }; return recRender(); }
+  if ((v = d('data-rpad')) != null && R.act) {
+    const st = R.sets[R.act.i]; st[R.act.k] = +v;
+    if (!needsTb(st.a, st.b)) st.tb = null;
+    if (R.act.k === 'a' && st.b == null) R.act = { i: R.act.i, k: 'b' };
+    else { const nx = R.sets.findIndex(x => x.a == null || x.b == null); R.act = nx >= 0 ? { i: nx, k: R.sets[nx].a == null ? 'a' : 'b' } : null; }
+    recRender();
+    if (needsTb(st.a, st.b) && !st.tb) setTimeout(() => document.querySelector(`[data-rtb="${R.sets.indexOf(st)}:a"]`)?.focus(), 30);
+    return;
+  }
+  if (t.closest('[data-raddset]')) { const last = R.sets[R.sets.length - 1]; R.sets.push({ a: null, b: null, tb: null, p: R.rotate ? ((last.p || 1) % 3) + 1 : 1 }); R.act = { i: R.sets.length - 1, k: 'a' }; return recRender(); }
+  if ((v = d('data-rdelset')) != null) { R.sets.splice(+v, 1); R.act = null; return recRender(); }
+  if (t.closest('[data-rsubmit]')) return recSubmit(t.closest('[data-rsubmit]'));
+  if (t.closest('[data-rdelete]')) {
+    const b = t.closest('[data-rdelete]');
+    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Tap again to delete this score'; b.classList.add('danger'); return; }
+    try { await set(ref(db, `submissions/${R.sid}`), null); track('rec_delete'); closeSheet(); toast('Score deleted'); }
+    catch (err) { toast('Could not delete: ' + err.message, 4000); }
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.matches('[data-hclub]')) { S.hClub = t.value; S.hShown = 20; return render(); }
+  if (!S.rec || S.sheetKind !== 'rec') return;
+  const R = S.rec;
+  if (t.matches('[data-rdate-sel]') && t.value) { R.date = t.value; return recRender(); }
+  if (t.matches('[data-rf=club]')) { R.club = t.value; return recRender(); }
+  if (t.matches('[data-rrot]')) { R.rotate = t.checked; if (!R.rotate) { R.sets = R.sets.slice(0, MAX_SETS.fixed); R.sets.forEach(x => x.p = 1); } return recRender(); }
+  if (t.matches('[data-rearly]')) { R.early = t.checked; return recRender(); }
+});
+document.addEventListener('input', e => {
+  const t = e.target; if (!S.rec || S.sheetKind !== 'rec') return;
+  const R = S.rec;
+  if (t.id === 'recQ') { R.q = t.value; $('#recRes').innerHTML = recResults(); return; }
+  if (t.id === 'ncName') { R.q = t.value; return; }
+  if (t.matches('[data-rf=clubOther]')) { R.clubOther = t.value; const nb = document.querySelector('[data-rstep="1"]'); if (nb) nb.disabled = !(R.slots.every(Boolean) && R.clubOther.trim()); return; }
+  if (t.matches('[data-rtb]')) {
+    const [i, k] = t.dataset.rtb.split(':'); t.value = t.value.replace(/\D/g, '');
+    R.sets[+i].tb = { ...(R.sets[+i].tb || { a: '', b: '' }), [k]: t.value === '' ? '' : +t.value };
+    const errs = recErrors(); $('#recErr').textContent = errs[0] || ''; $('#recNext').disabled = !!errs.length;
+  }
+});
+// Invitation links for new players: remember which match invited them, so staff can swap them in
+try { const j = new URLSearchParams(location.search).get('join'); if (j) { localStorage.setItem('sdxJoin', j); history.replaceState(null, '', location.pathname); } } catch {}
 </script>
 </body>
 </html>
