@@ -801,6 +801,7 @@ let _profilesReady = false, _publishTimer = null;
 let linkRequests = {};
 let subs = {};          // member-submitted scores (SmashDex → Record score)
 let _subsLive = false;
+let _allQ = '', _allShown = 30;
 function adjustmentList() {
   const out = [];
   for (const [mid, a] of Object.entries(adjustments || {})) {
@@ -872,7 +873,7 @@ function watchSubs() {
   setInterval(() => { computeAllRatings(); renderScores(); }, 10 * 60 * 1000); // auto-confirm happens with time
 }
 const _pn = (s, id) => isNew(id) ? `${(s.newcomers || {})[id.slice(4)]?.name || 'New player'} (new)` : (members[id]?.name || '?');
-const _clubName = s => s.club === 'other' ? `${s.clubOther || 'Other club'} (not on the list)` : (s.club || 'deuce-and-smash').replace(/-/g, ' ');
+const _clubName = s => s.club === 'other' ? `${s.clubOther || 'Other club'} (not on the list)` : (DEFAULT_CLUBS.find(n => _slug(n) === (s.club || 'deuce-and-smash')) || String(s.club).replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
 const _hrs = ms => { const h = Math.floor((Date.now() - ms) / 36e5); return h < 1 ? 'under an hour' : h < 48 ? `${h} h` : `${Math.floor(h / 24)} days`; };
 function _setsHTML(s) {
   return setsOfSub(s).map((x, i) => {
@@ -915,23 +916,53 @@ window.renderScores = () => {
     ${sec('No opponent could confirm', 'All opponents are new players, so this counts automatically after 24 hours. Spot-check it.', noConfirmer, `<button class="btn btn-sm" data-sact="reviewed">Looks right</button><button class="btn btn-sm" data-sact="void">Void the match</button>`)}
     ${sec('Clubs not on the list', 'Add the club to the dropdown, or move the match to an existing club.', otherClub, x => `<button class="btn btn-primary btn-sm" data-sact="addclub">Add “${_esc(x.s.clubOther || '')}” to the club list</button>`)}
     ${sec('New players', 'When a new player joins and is linked, swap them in so the match moves to their profile and ratings recalculate.', withNew, x => playersOf(x.s).filter(isNew).map(id => `<span style="display:inline-flex;gap:6px;align-items:center">${_esc(_pn(x.s, id))} (${_esc((x.s.newcomers || {})[id.slice(4)]?.level || '')}) → <select class="filter-select" data-swapsel="${id}"><option value="">Choose member…</option>${memberOpts}</select><button class="btn btn-sm" data-sact="swap" data-new="${id}">Swap in</button></span>`).join(''))}
+    <h3 style="margin:26px 0 4px">All member scores (${list.length})</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin:0 0 8px">Every score members have recorded, newest first, including ones that already count. Void a false entry or fix the set scores; every rating, chart and stat recalculates straight away. Voided scores are kept for the record and can be restored.</p>
+    <input class="filter-select" id="all-subs-q" placeholder="Search by player, date (2026-11-17) or club" value="${_esc(_allQ)}" style="width:100%;max-width:420px;margin-bottom:6px" aria-label="Search member scores">
+    <div id="all-subs-list">${_allSubsHTML(list)}</div>
   </div>`;
 };
+function _allSubsHTML(list) {
+  const q = _allQ.trim().toLowerCase();
+  const hit = x => !q || x.s.date?.includes(q) || _clubName(x.s).toLowerCase().includes(q) || playersOf(x.s).some(id => _pn(x.s, id).toLowerCase().includes(q));
+  const items = (list || Object.entries(subs).map(([sid, s]) => ({ sid, s, st: subState(s) })).sort((a, b) => (b.s.at || 0) - (a.s.at || 0))).filter(hit);
+  if (!items.length) return '<p style="color:var(--muted);padding:8px 0">No member scores match.</p>';
+  const tag = x => x.st === 'void' ? '<span style="color:#ff9a6b">Voided</span>' : x.st === 'disputed' ? '<span style="color:#ff9a6b">Disputed</span>' : x.st === 'pending' ? 'Waiting for confirmation' : x.s.resolvedBy ? 'Counts (checked by staff)' : x.st === 'auto' ? 'Counts (no reply in 24 h)' : 'Counts (confirmed)';
+  return items.slice(0, _allShown).map(x => `<div style="border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin:8px 0;${x.st === 'void' ? 'opacity:.6' : ''}" data-sid="${x.sid}">
+      <div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.85rem;color:var(--muted)"><span>${x.s.date}</span><span>${_esc(_clubName(x.s))}</span><span>Recorded by ${_esc(_pn(x.s, x.s.by))}</span><span><b>${tag(x)}</b></span>${x.s.resolvedBy ? `<span>Last staff change: ${_esc(x.s.resolvedBy)}, ${_hrs(x.s.resolvedAt)} ago</span>` : ''}</div>
+      <div style="margin:6px 0">${_setsHTML(x.s)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${x.st === 'void'
+        ? '<button class="btn btn-sm" data-sact="restore">Restore</button>'
+        : '<button class="btn btn-primary btn-sm" data-sact="fix">Save set scores</button><button class="btn btn-sm" data-sact="void">Void</button>'}</div></div>`).join('')
+    + (items.length > _allShown ? `<button class="btn btn-sm" id="all-subs-more" style="margin:8px 0">Show ${Math.min(30, items.length - _allShown)} more</button>` : '');
+}
+document.addEventListener('input', e => {
+  if (e.target.id !== 'all-subs-q') return;
+  _allQ = e.target.value; _allShown = 30;
+  document.getElementById('all-subs-list').innerHTML = _allSubsHTML();
+});
+document.addEventListener('click', e => {
+  if (e.target.id !== 'all-subs-more') return;
+  _allShown += 30; document.getElementById('all-subs-list').innerHTML = _allSubsHTML();
+});
 document.addEventListener('click', async e => {
   const b = e.target.closest('[data-sact]'); if (!b) return;
   const cardEl = b.closest('[data-sid]'), sid = cardEl?.dataset.sid, s = subs[sid]; if (!s) return;
   const act = b.dataset.sact, base = `submissions/${sid}`, upd = {}, who = (window._staffEmail || 'staff');
   try {
     if (act === 'confirm') Object.assign(upd, { [`${base}/status`]: 'confirmed', [`${base}/resolvedBy`]: who, [`${base}/resolvedAt`]: Date.now() });
-    if (act === 'void') { if (!confirm('Void this match? It will stop counting for everyone.')) return; Object.assign(upd, { [`${base}/status`]: 'void', [`${base}/resolvedBy`]: who, [`${base}/resolvedAt`]: Date.now() }); }
+    if (act === 'void') { if (!confirm('Void this match? It will stop counting for everyone.')) return; Object.assign(upd, { [`${base}/status`]: 'void', [`${base}/staffNote`]: 'voided', [`${base}/resolvedBy`]: who, [`${base}/resolvedAt`]: Date.now() }); }
     if (act === 'reviewed') upd[`${base}/reviewed`] = true;
+    if (act === 'restore') { if (!confirm('Restore this score? It will count again for everyone.')) return; Object.assign(upd, { [`${base}/status`]: 'confirmed', [`${base}/staffNote`]: null, [`${base}/resolvedBy`]: who, [`${base}/resolvedAt`]: Date.now() }); }
     if (act === 'fix') {
       const sets = setsOfSub(s).map((x, i) => {
         const a = +cardEl.querySelector(`[data-fix="${i}a"]`).value, bb = +cardEl.querySelector(`[data-fix="${i}b"]`).value;
         return { ...x, a, b: bb };
       });
       if (sets.some(x => !Number.isInteger(x.a) || !Number.isInteger(x.b) || x.a < 0 || x.b < 0 || x.a > 7 || x.b > 7 || x.a + x.b === 0)) return showToast('Check the set scores (0–7 games each)', 'err');
+      const changed = sets.some((x, i) => x.a !== +setsOfSub(s)[i].a || x.b !== +setsOfSub(s)[i].b);
       Object.assign(upd, { [`${base}/sets`]: sets, [`${base}/status`]: 'confirmed', [`${base}/resolvedBy`]: who, [`${base}/resolvedAt`]: Date.now() });
+      if (changed) upd[`${base}/staffNote`] = 'corrected';
     }
     if (act === 'addclub') {
       const name = String(s.clubOther || '').trim(); if (!name) return;

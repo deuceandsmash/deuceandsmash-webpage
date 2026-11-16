@@ -280,6 +280,7 @@ fieldset.q legend{font-size:14px;color:var(--muted);margin-bottom:6px}
 .m .sets{grid-template-rows:44px 44px;justify-content:end}
 .m .tbn{grid-column:1/-1;font-size:12px;color:var(--muted)}
 .m.bare{border-top:0;padding:4px 0 0}
+.m.voided .teams,.m.voided .sets,.m.voided .rot-lines,.m.voided .rot-who{opacity:.45}
 .m.rot{display:block}
 .m.rot .when{display:inline-flex}.m.rot .res{float:right}
 .rot-who{display:flex;align-items:center;gap:4px;margin:10px 0 4px;font-size:13px;color:var(--muted);clear:both}
@@ -880,7 +881,7 @@ function profileHTML() {
   const cc = {}; for (const m of done) { const c = m.club || 'deuce-and-smash'; cc[c] = (cc[c] || 0) + 1; }
   const clubs = Object.entries(cc).sort((a, b) => b[1] - a[1]);
   const prefs = prof.prefs || {};
-  const hist = historyItems(), r5 = hist.map(itemRes).filter(x => x !== 'P').slice(0, 5);
+  const hist = historyItems(), r5 = hist.map(itemRes).filter(x => x !== 'P' && x !== 'V').slice(0, 5);
   return `<div class="pgrid">
   <section class="who">
     <div class="av" aria-hidden="true">${esc(initials(me))}</div>
@@ -1247,6 +1248,8 @@ function mySubItems() {
   const now = Date.now();
   return Object.entries(S.subs || {}).filter(([, s]) => s && playersOf(s).includes(S.mid)).map(([sid, s]) => ({ sid, s, st: subState(s, now) })).filter(x => x.st !== 'void');
 }
+// Voided by staff: still shown in history so members can see what happened, but never counted
+const myVoided = () => Object.entries(S.subs || {}).filter(([, s]) => s && s.status === 'void' && playersOf(s).includes(S.mid)).map(([sid, s]) => ({ sid, s, st: 'void' }));
 function subResult(x) {
   let w = 0, l = 0;
   setsOfSub(x.s).forEach(t => { const side = t.A.includes(S.mid) ? 'A' : t.B.includes(S.mid) ? 'B' : null; if (!side) return; const my = side === 'A' ? +t.a : +t.b, th = side === 'A' ? +t.b : +t.a; if (my > th) w++; else if (my < th) l++; });
@@ -1271,6 +1274,7 @@ function previewDelta(sid) {
 const subTeam = (sid, s, ids, isMe, withSdx = true) => `<div class="team ${isMe ? 'me' : ''}">${ids.map(id => pa(engName(sid, id) || id, withSdx ? subPre(sid, s, id) : null, isNew(id), pName(s, id))).join('')}<span>${ids.map(id => esc(pName(s, id))).join(' & ')}</span></div>`;
 function subStatus(x) {
   const { s, st, sid } = x;
+  if (st === 'void') return `<span class="down">Removed by club staff</span>`;
   if (st === 'pending') return `<span class="pending">Pending · ${hoursLeft(s)} h left</span>`;
   if (st === 'disputed') return `<span class="down">Disputed</span>`;
   const { w, l } = subResult(x), d = subDelta(sid);
@@ -1289,17 +1293,17 @@ function subCore(sid, s) {
 }
 const subTb = s => setsOfSub(s).map((t, i) => t.tb ? `Set ${i + 1} tie-break ${t.tb.a}–${t.tb.b}` : '').filter(Boolean).join(' · ');
 function subRow(x) {
-  const { sid, s } = x, tb = subTb(s);
-  return `<div class="m${s.rotate ? ' rot' : ''}" data-sub="${sid}"><div class="when"><span>${fmtDate(s.date)}</span><span>${esc(clubName(s.club, s.clubOther))}</span></div><div class="res">${subStatus(x)}</div>${subCore(sid, s)}${tb ? `<div class="tbn">${tb}</div>` : ''}</div>`;
+  const { sid, s } = x, tb = [subTb(s), s.staffNote === 'corrected' ? 'Score corrected by club staff' : x.st === 'void' ? "Doesn't count towards anyone's SDX" : ''].filter(Boolean).join(' · ');
+  return `<div class="m${s.rotate ? ' rot' : ''}${x.st === 'void' ? ' voided' : ''}" data-sub="${sid}"><div class="when"><span>${fmtDate(s.date)}</span><span>${esc(clubName(s.club, s.clubOther))}</span></div><div class="res">${subStatus(x)}</div>${subCore(sid, s)}${tb ? `<div class="tbn">${tb}</div>` : ''}</div>`;
 }
 
 function historyItems() {
   const staff = myMatches().filter(m => !m.sub).map(m => ({ kind: 'm', date: m.date, at: String(m.enteredAt || ''), m }));
-  const sub = mySubItems().map(x => ({ kind: 's', date: x.s.date, at: new Date(+x.s.at || 0).toISOString(), ...x }));
+  const sub = mySubItems().concat(myVoided()).map(x => ({ kind: 's', date: x.s.date, at: new Date(+x.s.at || 0).toISOString(), ...x }));
   return staff.concat(sub).sort((a, b) => b.date.localeCompare(a.date) || b.at.localeCompare(a.at));
 }
 const itemRow = it => it.kind === 'm' ? matchRow(it.m) : subRow(it);
-const itemRes = it => { if (it.kind === 'm') return validMatch(it.m) ? resultFor(it.m, myName()) : 'P'; if (!counts(it.st)) return 'P'; const { w, l } = subResult(it); return w > l ? 'W' : w < l ? 'L' : 'D'; };
+const itemRes = it => { if (it.kind === 'm') return validMatch(it.m) ? resultFor(it.m, myName()) : 'P'; if (it.st === 'void') return 'V'; if (!counts(it.st)) return 'P'; const { w, l } = subResult(it); return w > l ? 'W' : w < l ? 'L' : 'D'; };
 const itemClub = it => (it.kind === 'm' ? it.m.club : it.s.club) || CLUB_DEFAULT;
 
 const canConfirm = s => s.status === 'pending' && confirmers(s).includes(S.mid) && !(s.confirms || {})[S.mid];
