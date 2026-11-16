@@ -114,7 +114,52 @@ fieldset.q legend{font-size:14px;color:var(--muted);margin-bottom:6px}
 .sdx .foot{position:relative;display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
 .chip{display:inline-block;border-radius:999px;padding:1px 10px;font-size:13px;font-weight:700;border:1px solid currentColor}
 .chip.Low{color:#ff9a6b} .chip.Medium{color:var(--yellow)} .chip.High{color:var(--green)}
-.sdx .more{margin-left:auto;color:var(--yellow);font-weight:600}
+.sdx::before{content:"";position:absolute;right:-30px;bottom:-40px;width:214px;height:250px;background:url(/assets/smashdex/mascot-ghost.webp) no-repeat center/contain;opacity:.04;transform:rotate(-7deg);pointer-events:none}
+.sdx .more{margin-left:auto;display:inline-flex;align-items:center;gap:10px;color:var(--yellow);font-weight:600}
+.sdx .go{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--yellow);color:var(--navy);transition:transform .2s ease}
+.sdx .go svg{width:18px;height:18px}
+.sdx:hover .go,.sdx:focus-visible .go{transform:translateX(3px)}
+@media (prefers-reduced-motion:reduce){.sdx .go{transition:none}}
+
+/* SDX explainer: topic cards */
+.sx-top{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin:10px 0 4px}
+.sx-top .n{font-family:var(--head);font-size:34px;line-height:1;color:var(--yellow)}
+.grp{font-size:13px;font-weight:600;color:var(--muted);margin:22px 0 10px}
+.tcards{display:grid;gap:10px}
+.tc{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:14px;width:100%;text-align:left;border:1px solid var(--line2);border-radius:16px;padding:14px 14px 14px 12px;background:var(--deep);color:var(--text);transition:border-color .15s ease}
+.tc:hover,.tc:focus-visible{border-color:var(--yellow)}
+.tc-ic{position:relative;display:grid;place-items:center;width:44px;height:44px;border-radius:9px;background:linear-gradient(180deg,#2A2A60 0 50%,#1E1E4A 50% 100%);color:var(--yellow);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.tc-ic::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:#07071A}
+.tc-ic svg{position:relative;z-index:1;width:22px;height:22px}
+.tc-t b{display:block;font-size:16px}
+.tc-t span{display:block;font-size:14px;color:var(--muted);margin-top:2px}
+.tc-r{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px;white-space:nowrap}
+.tc-r svg{width:18px;height:18px;color:var(--yellow)}
+.tc.dim .tc-ic{color:var(--muted)}
+.back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--yellow);font-weight:600;font-size:15px;padding:4px 0;margin-bottom:10px}
+.back svg{width:16px;height:16px}
+.fcards{display:grid;gap:10px;margin-top:12px}
+.fc{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(23,23,63,.6)}
+.fc b{display:block}
+.fc span{display:block;font-size:14px;color:var(--muted);margin-top:2px}
+.meter{height:10px;border-radius:999px;background:var(--deep);border:1px solid var(--line);overflow:hidden;margin:10px 0 6px}
+.meter i{display:block;height:100%;border-radius:999px;background:var(--yellow)}
+.meter.Low i{background:#ff9a6b}.meter.High i{background:var(--green)}
+
+/* Preference editor */
+.pq{border:0;margin:0 0 18px}
+.pq legend{font-size:14px;color:var(--muted);margin-bottom:8px}
+.pq .hint{font-size:13px;color:var(--faint);margin-top:6px}
+.sides{display:grid;gap:8px}
+.sides label{position:relative;display:block}
+.sides input{position:absolute;opacity:0;pointer-events:none}
+.sides .card{display:block;border:1px solid var(--line2);border-radius:14px;padding:12px 14px;cursor:pointer}
+.sides .card b{display:block}
+.sides .card small{display:block;font-size:14px;color:var(--muted);margin-top:2px}
+.sides input:checked+.card{border-color:var(--yellow);background:rgba(245,214,40,.08)}
+.sides input:checked+.card b{color:var(--yellow)}
+.sides input:focus-visible+.card{outline:2px solid var(--yellow);outline-offset:2px}
+.pref .note{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:2px}
 
 .sec{margin-top:30px}
 .sec-h{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;margin-bottom:10px}
@@ -255,6 +300,8 @@ fieldset.q legend{font-size:14px;color:var(--muted);margin-bottom:6px}
   .grab{display:none}
   .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .opts .opt{margin:0}
+  .fcards.two-up{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sides{grid-template-columns:repeat(3,minmax(0,1fr))}
   a:hover,.linkish:hover{color:#FFE769}
   .btn:hover{border-color:rgba(237,237,247,.45)} .btn.primary:hover{filter:brightness(1.05)}
   .person:hover,.m:hover{background:rgba(237,237,247,.03)}
@@ -699,7 +746,7 @@ function profileHTML() {
     <div class="score" role="img" aria-label="SDX ${sdx(p.r)}"><span class="tiles" aria-hidden="true">${flapHTML('S')}${flapHTML('D', 'dx')}${flapHTML('X', 'dx')}</span><span class="tiles" id="sdxDigits" aria-hidden="true">${digitsHTML(S.shownSdx ?? sdx(p.r))}</span>${played ? `<span class="mv ${ld >= 0 ? 'up' : 'down'}" title="Change after your last match">${ld >= 0 ? '▲' : '▼'} ${Math.abs(ld).toFixed(3)}</span>` : ''}</div>
     <div class="persona">${esc(b.persona)} <span style="color:var(--muted);font-weight:500">· ${esc(b.band)}</span></div>
     <div class="line">${esc(b.quip)}</div>
-    <div class="foot">Confidence ${conf}% <span class="chip ${cl}">${cl}</span><span class="more">What does this mean?</span></div>
+    <div class="foot">Confidence ${conf}% <span class="chip ${cl}">${cl}</span><span class="more">About your SDX<span class="go" aria-hidden="true">${ICON.chev}</span></span></div>
   </button>
   <p class="form-line">${esc(formLine(me))}</p>
   </div>
@@ -737,7 +784,7 @@ function profileHTML() {
 
   <section class="sec g-prefs" data-sec="prefs">
     <div class="sec-h"><h3>Player preferences</h3><span class="aside"><button class="linkish" data-open="prefs">Edit</button></span></div>
-    <div class="prefs">${prefRow('✋', 'Best hand', prefs.hand)}${prefRow('📍', 'Court side', prefs.side)}${prefRow('🎯', 'Match type', prefs.matchType)}${prefRow('🕖', 'Preferred time to play', prefs.time)}</div>
+    <div class="prefs">${prefRows(prefs)}</div>
   </section>
 
   <section class="sec g-people" data-sec="people">
@@ -752,7 +799,24 @@ function profileHTML() {
   </section>
   </div>`;
 }
-const prefRow = (ic, l, v) => `<div class="pref"><span class="ic" aria-hidden="true">${ic}</span><div><div class="l">${l}</div><div class="v">${v ? esc(v) : '<span style="color:var(--faint);font-weight:400">Not set</span>'}</div></div></div>`;
+const svgI = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICON = {
+  chev: svgI('<path d="M9 5l7 7-7 7"/>'), back: svgI('<path d="M15 5l-7 7 7 7"/>'),
+  levels: svgI('<path d="M5 20v-4M10 20v-8M15 20V8M20 20V4"/>'),
+  conf: svgI('<path d="M3.5 17a8.5 8.5 0 1 1 17 0"/><path d="M12 17l4.5-5.5"/>'),
+  moves: svgI('<path d="M2 12h4l2.5-6 5 12 2.5-6h6"/>'),
+  raise: svgI('<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'),
+  lower: svgI('<path d="M3 7l6 6 4-4 8 8"/><path d="M15 17h6v-6"/>'),
+};
+const SIDES = {
+  'Right side': 'Builds the point: steady returns, deep lobs and patience to set up the net.',
+  'Left side': 'Finishes the point: covers the middle and takes most of the overheads and smashes.',
+  'Both sides': 'Comfortable on either side and adapts to the partner.',
+};
+const TIMES = ['Early morning', 'Morning', 'Afternoon', 'Evening', 'Late night', 'Anytime'];
+const timesOf = v => (Array.isArray(v) ? v : v && typeof v === 'object' ? Object.values(v) : v ? [v] : []).filter(Boolean);
+const prefRow = (ic, l, v, note) => `<div class="pref"><span class="ic" aria-hidden="true">${ic}</span><div><div class="l">${l}</div><div class="v">${v ? esc(v) : '<span style="color:var(--faint);font-weight:400">Not set</span>'}${v && note ? `<span class="note">${esc(note)}</span>` : ''}</div></div></div>`;
+const prefRows = pr => `${prefRow('✋', 'Best hand', pr.hand)}${prefRow('📍', 'Court side', pr.side, SIDES[pr.side])}${prefRow('🎯', 'Match type', pr.matchType)}${prefRow('🕖', 'Preferred time to play', timesOf(pr.time).join(', '))}`;
 function ring(pct) {
   const r = 38, c = 2 * Math.PI * r;
   return `<svg class="ring" width="104" height="104" viewBox="0 0 104 104" role="img" aria-label="${pct}% win rate"><circle cx="52" cy="52" r="${r}" fill="none" stroke="rgba(237,237,247,.12)" stroke-width="9"/><circle cx="52" cy="52" r="${r}" fill="none" stroke="#F5D628" stroke-width="9" stroke-linecap="round" stroke-dasharray="${(c * pct / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 52 52)"/><text x="52" y="61" text-anchor="middle" fill="#EDEDF7" font-family="Bebas Neue, Impact, sans-serif" font-size="30">${pct}%</text></svg>`;
@@ -843,38 +907,62 @@ let _rz = null; addEventListener('resize', () => { clearTimeout(_rz); _rz = setT
 const staffLink = (me, p) => waLink(`Hi Deuce & Smash, I'd like my SmashDex level reviewed. Name: ${me}, ${dexLabel(S.profiles[S.mid]?.dexNo)}, current SDX ${sdx(p.r)}.`);
 
 function openSheet(kind, arg) {
-  track({ sdx: 'sdx_explainer', raise: 'raise_info', lower: 'lower_info', edit: 'edit_open', prefs: 'prefs_open', player: 'player_card' }[kind] || kind);
+  track({ sdx: 'sdx_explainer', 'sdx-levels': 'sdx_levels', 'sdx-conf': 'sdx_confidence', 'sdx-moves': 'sdx_moves', raise: 'raise_info', lower: 'lower_info', edit: 'edit_open', prefs: 'prefs_open', player: 'player_card' }[kind] || kind);
   const me = myName(), p = playerOf(me), b = bandOf(p.r), conf = p.confidence || 0, cl = DSR.confidenceLabel(conf);
+  const backBtn = `<button class="back" data-open="sdx">${ICON.back}Your SDX</button>`;
+  const tc = (open, ic, title, desc, right = '', dim = false) => `<button class="tc${dim ? ' dim' : ''}" data-open="${open}"><span class="tc-ic">${ICON[ic]}</span><span class="tc-t"><b>${title}</b><span>${desc}</span></span><span class="tc-r">${right}${ICON.chev}</span></button>`;
+  const used = S.adjustments[S.mid]?.self;
   if (kind === 'sdx') return sheet(`
     <h2>Your SDX Rating</h2>
-    <p style="margin-top:6px"><span style="font-family:var(--head);font-size:34px;color:var(--yellow)">SDX ${sdx(p.r)}</span></p>
-    <p>${esc(b.persona)}, ${esc(b.band)}. Your SDX Rating runs from 0 to 7 and moves with every confirmed set you play.</p>
+    <div class="sx-top"><span class="n">SDX ${sdx(p.r)}</span><span><b>${esc(b.persona)}</b> <span style="color:var(--muted)">· ${esc(b.band)}</span></span></div>
+    <p>Your SDX runs from 0 to 7 and moves with every confirmed set you play.</p>
 
-    <div class="two"><div>
-    <h4>The SDX levels</h4>
-    ${BANDS.map(x => `<div class="lv ${x === b ? 'cur' : ''}"><div class="rg">${x.lo}–${x.lo + 1}</div><div><b>${esc(x.band)}: ${esc(x.persona)}${x === b ? ' <span class="here">You are here</span>' : ''}</b><span>${esc(x.about)}</span></div></div>`).join('')}
+    <h4 class="grp">Understand your SDX</h4>
+    <div class="tcards">
+      ${tc('sdx-levels', 'levels', 'SDX levels', `Seven levels, from ${esc(BANDS[0].persona)} to ${esc(BANDS[BANDS.length - 1].persona)}.`, `${b.lo}–${b.lo + 1}`)}
+      ${tc('sdx-conf', 'conf', 'Confidence', 'How settled your rating is, and what firms it up.', `<span class="chip ${cl}">${conf}%</span>`)}
+      ${tc('sdx-moves', 'moves', 'What moves your SDX', 'Results, who was on court, and the type of match.')}
+    </div>
 
-    </div><div>
-    <h4>Confidence: ${conf}% <span class="chip ${cl}">${cl}</span></h4>
-    <p>Confidence shows how settled your SDX is. A new rating starts as a best guess and firms up as SmashDex sees more of your game.</p>
-    <div class="factor"><b>How much you've played</b><span>More confirmed sets give a clearer picture of your level.</span></div>
-    <div class="factor"><b>Who you've played with and against</b><span>A wide mix of partners and opponents tells us more than the same four players every week.</span></div>
-    <div class="factor"><b>How recently you've played</b><span>Confidence fades during long breaks and builds back as you return to the court.</span></div>
+    <h4 class="grp">Change your level</h4>
+    <div class="tcards">
+      ${tc('raise', 'raise', 'Raise your level', 'Play your way up, or ask club staff to review your level.')}
+      ${tc('lower', 'lower', 'Lower your level', used ? 'Already used. Further changes need club staff.' : 'A one-time adjustment you can make yourself.', '', !!used)}
+    </div>`);
 
-    <h4>Why your SDX moves</h4>
-    <div class="factor"><b>The result, and how close it was</b><span>Every set counts on its own. A tight set moves ratings less than a one-sided one.</span></div>
-    <div class="factor"><b>Who was on court</b><span>Beating a stronger pair is worth more than beating a weaker one, and losing to a stronger pair costs less. Your partner's level counts too.</span></div>
-    <div class="factor"><b>How settled your rating is</b><span>With low confidence your SDX moves in bigger steps, so it finds your level quickly. As confidence grows, the steps get smaller.</span></div>
-    <div class="factor"><b>The type of match</b><span>Open play and competitive matches count in full. Social formats like Americano count for less.</span></div>
-    <div class="factor"><b>Coming back from a break</b><span>Your first matches after a long gap move your SDX a little more while it catches up with you.</span></div>
-    <p style="margin-top:12px">Only confirmed scores count. A pending or disputed score never moves your SDX.</p>
-    </div></div>
+  if (kind === 'sdx-levels') return sheet(`
+    ${backBtn}
+    <h2>SDX levels</h2>
+    <p style="margin-top:8px">Each level spans one point of SDX. Your level updates as soon as your rating crosses into a new range.</p>
+    <div style="margin-top:12px">${BANDS.map(x => `<div class="lv ${x === b ? 'cur' : ''}"><div class="rg">${x.lo}–${x.lo + 1}</div><div><b>${esc(x.band)}: ${esc(x.persona)}${x === b ? ' <span class="here">You are here</span>' : ''}</b><span>${esc(x.about)}</span></div></div>`).join('')}</div>`);
 
-    <h4>Change your level</h4>
-    <div class="opts"><button class="opt" data-open="raise"><span class="ic" aria-hidden="true">↗</span><span><b>Raise your level</b><span class="sub">Only club staff can raise a level</span></span></button>
-    <button class="opt" data-open="lower"><span class="ic" aria-hidden="true">↘</span><span><b>Lower your level</b><span class="sub">${S.adjustments[S.mid]?.self ? 'Already used. Further changes need club staff' : 'A one-time self adjustment'}</span></span></button></div>`, true);
+  if (kind === 'sdx-conf') return sheet(`
+    ${backBtn}
+    <h2>Confidence</h2>
+    <div class="sx-top"><span class="n">${conf}%</span><span class="chip ${cl}">${cl}</span></div>
+    <div class="meter ${cl}" role="img" aria-label="Confidence ${conf}%"><i style="width:${Math.max(3, conf)}%"></i></div>
+    <p>Confidence shows how settled your SDX is. A new rating starts as a best guess and firms up as SmashDex sees more of your game. Three things build it.</p>
+    <div class="fcards">
+      <div class="fc"><b>How much you've played</b><span>More confirmed sets give a clearer picture of your level.</span></div>
+      <div class="fc"><b>Who you've played with and against</b><span>A wide mix of partners and opponents tells us more than the same four players every week.</span></div>
+      <div class="fc"><b>How recently you've played</b><span>Confidence fades during long breaks and builds back as you return to the court.</span></div>
+    </div>`);
+
+  if (kind === 'sdx-moves') return sheet(`
+    ${backBtn}
+    <h2>What moves your SDX</h2>
+    <p style="margin-top:8px">Every confirmed set nudges your SDX up or down. How far depends on these.</p>
+    <div class="fcards two-up">
+      <div class="fc"><b>The result, and how close it was</b><span>Every set counts on its own. A tight set moves ratings less than a one-sided one.</span></div>
+      <div class="fc"><b>Who was on court</b><span>Beating a stronger pair is worth more than beating a weaker one, and losing to a stronger pair costs less. Your partner's level counts too.</span></div>
+      <div class="fc"><b>How settled your rating is</b><span>With low confidence your SDX moves in bigger steps, so it finds your level quickly. As confidence grows, the steps get smaller.</span></div>
+      <div class="fc"><b>The type of match</b><span>Open play and competitive matches count in full. Social formats like Americano count for less.</span></div>
+      <div class="fc"><b>Coming back from a break</b><span>Your first matches after a long gap move your SDX a little more while it catches up with you.</span></div>
+      <div class="fc"><b>Only confirmed scores count</b><span>A pending or disputed score never moves your SDX.</span></div>
+    </div>`);
 
   if (kind === 'raise') return sheet(`
+    ${backBtn}
     <h2>Raise your level</h2>
     <p>Your SDX rises by playing. Win sets, especially against stronger pairs, and it climbs on its own.</p>
     <p>If you think your starting level was set too low, club staff can review it with you.</p>
@@ -882,8 +970,8 @@ function openSheet(kind, arg) {
     <button class="btn full" style="margin-top:10px" data-open="sdx">Back</button>`);
 
   if (kind === 'lower') {
-    const used = S.adjustments[S.mid]?.self;
     if (used) return sheet(`
+      ${backBtn}
       <h2>Lower your level</h2>
       <p>You lowered your level on <b>${fmtDate(used.date)}</b>, from SDX ${sdx(used.from)} to SDX ${sdx(used.to)}. A self adjustment can be made only once.</p>
       <p>Any further change to your level needs approval from club staff.</p>
@@ -893,6 +981,7 @@ function openSheet(kind, arg) {
     if (!steps.length) return sheet(`<h2>Lower your level</h2><p>Your SDX is already at the bottom of the scale.</p><button class="btn full" data-open="sdx">Back</button>`);
     S.lowerBy = steps.includes(S.lowerBy) ? S.lowerBy : steps[0];
     return sheet(`
+      ${backBtn}
       <h2>Lower your level</h2>
       <p>If your SDX feels higher than where you really play, you can lower it so your matches are fairer and more fun.</p>
       <div class="pick" id="lowerPick">${steps.map(k => { const to = p.r - k; return `<button data-k="${k}" class="${S.lowerBy === k ? 'on' : ''}"><b>SDX ${sdx(to)}</b><span>Down ${k.toFixed(1)}, ${esc(bandOf(to).band)}</span></button>`; }).join('')}</div>
@@ -920,16 +1009,16 @@ function openSheet(kind, arg) {
   }
 
   if (kind === 'prefs') {
-    const pr = S.profiles[S.mid]?.prefs || {};
-    const sel = (name, label, opts) => `<label class="field"><span>${label}</span><select name="${name}"><option value="">Not set</option>${opts.map(o => `<option ${pr[name] === o ? 'selected' : ''}>${o}</option>`).join('')}</select></label>`;
+    const pr = S.profiles[S.mid]?.prefs || {}, tm = timesOf(pr.time);
+    const chips = (name, label, opts, multi = false, hint = '') => `<fieldset class="pq"><legend>${label}</legend><div class="chips">${opts.map(o => `<label><input type="${multi ? 'checkbox' : 'radio'}" name="${name}" value="${esc(o)}" ${(multi ? tm.includes(o) : pr[name] === o) ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</div>${hint ? `<div class="hint">${hint}</div>` : ''}</fieldset>`;
     return sheet(`
       <h2>Player preferences</h2>
-      <p>Other players see these on your profile.</p>
-      <form id="prefsForm" style="margin-top:12px">
-        ${sel('hand', 'Best hand', ['Right', 'Left', 'Both'])}
-        ${sel('side', 'Court side', ['Left side', 'Right side', 'Both sides'])}
-        ${sel('matchType', 'Match type', ['Casual', 'Competitive', 'Both'])}
-        ${sel('time', 'Preferred time to play', ['Early morning', 'Morning', 'Afternoon', 'Evening', 'Late night', 'Anytime'])}
+      <p>Other players see these on your profile. Tap a choice again to clear it.</p>
+      <form id="prefsForm" style="margin-top:16px">
+        ${chips('hand', 'Best hand', ['Right', 'Left', 'Both'])}
+        <fieldset class="pq"><legend>Court side</legend><div class="sides">${Object.entries(SIDES).map(([o, d]) => `<label><input type="radio" name="side" value="${o}" ${pr.side === o ? 'checked' : ''}><span class="card"><b>${o}</b><small>${d}</small></span></label>`).join('')}</div></fieldset>
+        ${chips('matchType', 'Match type', ['Casual', 'Competitive', 'Both'])}
+        ${chips('time', 'Preferred time to play', TIMES, true, 'Pick as many as you like.')}
         <button class="btn primary full" type="submit">Save preferences</button>
       </form>`);
   }
@@ -945,14 +1034,21 @@ function openSheet(kind, arg) {
       <p>${esc(qb.quip)}</p>
       <p class="form-line">${esc(formLine(n))}</p>
       <div class="strip"><div><b>${q.matches || 0}</b><span>Matches</span></div><div><b>${together}</b><span>With you</span></div><div><b>${against}</b><span>Against you</span></div></div>
-      ${(pr.hand || pr.side || pr.matchType || pr.time) ? `<h4>Preferences</h4>${prefRow('✋', 'Best hand', pr.hand)}${prefRow('📍', 'Court side', pr.side)}${prefRow('🎯', 'Match type', pr.matchType)}${prefRow('🕖', 'Preferred time to play', pr.time)}` : ''}`);
+      ${(pr.hand || pr.side || pr.matchType || timesOf(pr.time).length) ? `<h4>Preferences</h4>${prefRows(pr)}` : ''}`);
   }
 }
 document.addEventListener('click', e => {
   const k = e.target.closest('#lowerPick [data-k]');
   if (k) { S.lowerBy = +k.dataset.k; document.querySelectorAll('#lowerPick button').forEach(b => b.classList.toggle('on', b === k)); $('#lowerTo').textContent = sdx(playerOf(myName()).r - S.lowerBy); }
 });
-document.addEventListener('change', e => { if (e.target.id === 'lowerOk') $('#lowerGo').disabled = !e.target.checked; });
+document.addEventListener('change', e => {
+  if (e.target.id === 'lowerOk') $('#lowerGo').disabled = !e.target.checked;
+  if (e.target.name === 'time' && e.target.checked) document.querySelectorAll('#prefsForm input[name=time]').forEach(i => { if (i !== e.target && (e.target.value === 'Anytime' || i.value === 'Anytime')) i.checked = false; });
+});
+// Radios in the preferences form clear when tapped again
+let _wasOn = null;
+document.addEventListener('pointerdown', e => { const i = e.target.closest('#prefsForm label')?.querySelector('input[type=radio]'); _wasOn = i && i.checked ? i : null; });
+document.addEventListener('click', e => { const i = e.target.closest('#prefsForm label')?.querySelector('input[type=radio]'); if (i && i === _wasOn && e.target.tagName !== 'INPUT') { e.preventDefault(); setTimeout(() => { i.checked = false; }, 0); _wasOn = null; } });
 document.addEventListener('click', async e => {
   if (e.target.id !== 'lowerGo') return;
   const p = playerOf(myName()), from = Math.round(p.r * 1000) / 1000, to = Math.round((p.r - S.lowerBy) * 1000) / 1000;
@@ -972,7 +1068,8 @@ document.addEventListener('submit', async e => {
   }
   if (e.target.id === 'prefsForm') {
     e.preventDefault(); const f = new FormData(e.target), prefs = {};
-    for (const k of ['hand', 'side', 'matchType', 'time']) if (f.get(k)) prefs[k] = f.get(k);
+    for (const k of ['hand', 'side', 'matchType']) if (f.get(k)) prefs[k] = f.get(k);
+    const tm = f.getAll('time'); if (tm.length) prefs.time = tm;
     try { await set(ref(db, `profiles/${S.mid}/prefs`), prefs); closeSheet(); track('prefs_saved'); toast('Preferences saved'); }
     catch (err) { toast('Could not save preferences: ' + err.message, 4000); }
   }
