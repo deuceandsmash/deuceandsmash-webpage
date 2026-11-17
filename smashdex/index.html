@@ -384,6 +384,7 @@ select.fchip option,.clubrow select option{background:var(--deep);color:var(--te
 .btn.danger{background:#E05A00;border-color:#E05A00;color:#fff}
 .tick{display:inline-flex;align-items:center;gap:4px;color:#8FD63A;font-weight:600}.tick svg{width:14px;height:14px}
 .warnbox{border:1px solid rgba(245,214,40,.5);background:rgba(245,214,40,.07);border-radius:14px;padding:12px 14px;margin:0 0 14px;display:grid;gap:8px;font-size:14px}
+.warnbox .askq{display:grid;gap:8px;padding-top:6px;border-top:1px solid var(--line)}.warnbox .askq:first-of-type{border-top:0}.warnbox .askq p{color:var(--text)}
 .warnbox ul{margin:0;padding-left:18px;color:var(--muted)}.warnbox p{margin:0;color:var(--muted)}
 
 @media (min-width:700px){
@@ -1440,7 +1441,7 @@ function recNew(fromSid) {
         const meA = t.A.includes(S.mid), mate = (meA ? t.A : t.B).find(i => i !== S.mid);
         let a = meA ? +t.a : +t.b, b = meA ? +t.b : +t.a, tb = t.tb ? (meA ? { a: t.tb.a, b: t.tb.b } : { a: t.tb.b, b: t.tb.a }) : null;
         if (tb && Math.max(a, b) === 7 && Math.min(a, b) === 6) { a = 6; b = 6; }
-        return { a, b, tb, p: Math.max(1, pl.indexOf(mate)) };
+        return { a, b, tb, p: Math.max(1, pl.indexOf(mate)), extra: t.extra ? true : undefined };
       }) };
   } else S.rec = { step: 0, sid: null, date: todayLocal(), club: CLUB_DEFAULT, clubOther: '', format: 'openplay', rotate: false, early: false,
     slots: [S.mid, null, null, null], newcomers: {}, sets: [{ a: null, b: null, tb: null, p: 1 }], act: { i: 0, k: 'a' }, pick: 1, q: '', newForm: false };
@@ -1558,7 +1559,7 @@ function buildDraft() {
     const { mine, opp } = teamsFor(t);
     const tb = t.tb && validTb(t.tb) && needsTb(t.a, t.b) ? { a: +t.tb.a, b: +t.tb.b } : null;
     const x = finalSet({ a: +t.a, b: +t.b, tb });
-    const o = { A: mine.map(j => sl[j]), B: opp.map(j => sl[j]), a: x.a, b: x.b }; if (x.tb) o.tb = x.tb; return o;
+    const o = { A: mine.map(j => sl[j]), B: opp.map(j => sl[j]), a: x.a, b: x.b }; if (x.tb) o.tb = x.tb; if (t.extra === true) o.extra = true; return o;
   });
   const p1 = R.rotate ? sl[R.sets[0].p || 1] : sl[1];
   const players = [S.mid, p1, ...[1, 2, 3].map(j => sl[j]).filter(id => id !== p1)];
@@ -1578,7 +1579,12 @@ function recReview() {
   const R = S.rec, d = buildDraft(), who = confirmers(d).map(id => pName(d, id)), nc = Object.values(d.newcomers || {});
   const dd = draftDups(d), ddi = Object.keys(dd).map(Number), ss = setsOfSub(d);
   const src = x => x.src === 'staff' ? 'the front desk' : pName(S.subs[x.ref], S.subs[x.ref]?.by);
-  const allDup = ddi.length === ss.length && Object.values(dd).every(x => x.type === 'dup');
+  // Identical to a set another member recorded: only the players know if it's a copy or another set, so ask
+  const ask = ddi.filter(i => dd[i].type === 'dup' && dd[i].src === 'member' && R.sets[i].extra !== false);
+  const sameCount = i => { const o = S.subs[dd[i].ref]; if (!o) return 1; const k = [...ss[i].A].sort().join('+') + '|' + [...ss[i].B].sort().join('+'); return setsOfSub(o).filter(x => ([...x.A].sort().join('+') + '|' + [...x.B].sort().join('+') === k || [...x.B].sort().join('+') + '|' + [...x.A].sort().join('+') === k) && scoreFor(ss[i], dd[i].score).a === (x.A.includes(ss[i].A[0]) ? +x.a : +x.b)).length; };
+  const askBox = ask.length ? `<div class="warnbox ask"><b>Is this a new set?</b>${ask.map(i => { const x = dd[i], o = S.subs[x.ref], n = sameCount(i); return `<div class="askq"><p>${esc(pName(o, o?.by))} has already recorded ${n === 1 ? 'a set' : `${n} sets`} of ${esc(teamName(d, ss[i].A))} vs ${esc(teamName(d, ss[i].B))} at ${ss[i].a}–${ss[i].b} today. Is your set ${i + 1} ${n === 1 ? 'that one' : 'one of those'}, or another set?</p>
+      <div class="row2"><button class="btn" data-rx="${i}:same">${n === 1 ? "That one: don't add it" : "One of those: don't add it"}</button><button class="btn primary" data-rx="${i}:extra">Another set: count it too</button></div></div>`; }).join('')}</div>` : '';
+  const allDup = ddi.length === ss.length && Object.values(dd).every(x => x.type === 'dup') && !ask.length;
   const other = allDup ? [...new Set(Object.values(dd).filter(x => x.src === 'member').map(x => x.ref))].find(k => S.subs[k] && canConfirm(S.subs[k])) : null;
   const dupBox = ddi.length ? `<div class="warnbox"><b>${allDup ? 'This match looks already recorded' : `${ddi.length === 1 ? 'One set is' : `${ddi.length} sets are`} already recorded`}</b>
       <ul>${ddi.map(i => { const x = dd[i], sc = scoreFor(ss[i], x.score); return `<li>Set ${i + 1} (${esc(teamName(d, ss[i].A))} vs ${esc(teamName(d, ss[i].B))}): ${x.type === 'dup' ? `recorded by ${esc(src(x))} with the same score, so it won't count twice` : `recorded by ${esc(src(x))} as ${sc.a}–${sc.b}. Check your score: ${x.src === 'staff' || !isOutside(d) ? 'club staff will decide which is right' : `if ${esc(src(x))}'s is wrong, dispute it`}`}</li>`; }).join('')}</ul>
@@ -1598,8 +1604,8 @@ function recReview() {
       ${nc.map(n => `<li>${esc(n.name)} counts as ${esc(n.level)} (about ${levelSeed(n.level).toFixed(1)}) until they join SmashDex.</li>`).join('')}
     </ul>
     ${outsideNoConf ? `<div class="warnbox"><b>This score won't count yet</b><p>At another club an opponent on SmashDex has to confirm it, and none of your opponents is on SmashDex yet. Invite them after you submit: if one joins and confirms within ${OUTSIDE_DAYS} days, it counts.</p></div>` : ''}
-    ${dupBox}
-    ${allDup ? '<button class="btn full big" data-close>Close without submitting</button>' : `<button class="btn primary full big" data-rsubmit>${R.sid ? 'Save changes' : 'Submit score'}</button>`}
+    ${askBox || dupBox}
+    ${ask.length ? '' : allDup ? '<button class="btn full big" data-close>Close without submitting</button>' : `<button class="btn primary full big" data-rsubmit>${R.sid ? 'Save changes' : 'Submit score'}</button>`}
     ${R.sid ? `<button class="btn full" style="margin-top:10px" data-rdelete>Delete this score</button>` : ''}`;
 }
 function recDone() {
@@ -1733,6 +1739,12 @@ document.addEventListener('click', async e => {
   if (t.closest('[data-raddset]')) { const last = R.sets[R.sets.length - 1]; R.sets.push({ a: null, b: null, tb: null, p: R.rotate ? ((last.p || 1) % 3) + 1 : 1 }); R.act = { i: R.sets.length - 1, k: 'a' }; return recRender(); }
   if ((v = d('data-rdelset')) != null) { R.sets.splice(+v, 1); R.act = null; return recRender(); }
   if (t.closest('[data-rsubmit]')) return recSubmit(t.closest('[data-rsubmit]'));
+  if ((v = d('data-rx')) != null) {
+    const [i, how] = v.split(':'); track('rec_dupask_' + how);
+    if (how === 'extra') R.sets[+i].extra = true;
+    else { R.sets.splice(+i, 1); if (!R.sets.length) { closeSheet(); return toast('Nothing new to add. That set is already recorded.', 3500); } }
+    return recRender();
+  }
   if (t.closest('[data-rdelete]')) {
     const b = t.closest('[data-rdelete]');
     if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Tap again to delete this score'; b.classList.add('danger'); return; }

@@ -24,7 +24,8 @@
 //   score counts; if they withdraw (status "void") or nobody agrees within 3 days of the dispute, it doesn't count.
 // Duplicates: each set is matched against staff-entered matches and earlier member scores (same date, same pairing).
 //   Same score = duplicate (held back, never counted twice). Different score = conflict (held back, staff or players decide).
-//   Staff can set dupOk: true to count a score anyway.
+//   A set marked extra: true (the submitter said it is another set, not a copy of a member's) is only matched
+//   against front-desk entries. Staff can set dupOk: true to count a score anyway.
 
 export const DAY_MS = 864e5;
 export const HOME_CLUB = 'deuce-and-smash';
@@ -182,7 +183,8 @@ export function markDuplicates(subs, staffMatches, now = Date.now(), opts = {}) 
     // Exact matches first (so a set order or an extra set of the same pairing never shows as a conflict), then conflicts
     if (!s.dupOk) for (const exact of [true, false]) sets.forEach((x, i) => {
       if (out[sid]?.[i] || x.A.length !== 2 || x.B.length !== 2) return;
-      const k = `${s.date}|${pairKey(x.A, x.B)}`, sc = oriented(x.A, x.B, x.a, x.b), cands = (pool[k] || []).filter(c => !c.used);
+      // A set the submitter marked as "another set" is only matched against front-desk entries, not other members' sets
+      const k = `${s.date}|${pairKey(x.A, x.B)}`, sc = oriented(x.A, x.B, x.a, x.b), cands = (pool[k] || []).filter(c => !c.used && (!x.extra || c.src === 'staff'));
       const hit = exact ? cands.find(c => c.score === sc) : cands[0];
       if (!hit) return;
       hit.used = true;
