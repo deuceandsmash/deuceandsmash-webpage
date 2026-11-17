@@ -382,6 +382,10 @@ select.fchip option,.clubrow select option{background:var(--deep);color:var(--te
 .dset .fix input{width:44px;height:38px;text-align:center;border-radius:8px;border:1px solid var(--line2);background:var(--deep);color:var(--text);font-size:16px}
 #dispForm textarea{width:100%;background:var(--deep);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;color:var(--text);font:inherit;resize:vertical}
 .btn.danger{background:#E05A00;border-color:#E05A00;color:#fff}
+.tick{display:inline-flex;align-items:center;gap:4px;color:#8FD63A;font-weight:600}.tick svg{width:14px;height:14px}
+.warnbox{border:1px solid rgba(245,214,40,.5);background:rgba(245,214,40,.07);border-radius:14px;padding:12px 14px;margin:0 0 14px;display:grid;gap:8px;font-size:14px}
+.warnbox ul{margin:0;padding-left:18px;color:var(--muted)}.warnbox p{margin:0;color:var(--muted)}
+
 @media (min-width:700px){
   #app{display:flex;flex-direction:column}
   .bar{order:0}.nav{order:1}#view{order:2}
@@ -515,7 +519,7 @@ import { getDatabase, ref, get, set, update, onValue, increment } from "https://
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut,
   signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { DSR } from "/shared/dsr.js";
-import { subsToMatches, subState, counts, confirmers, canDispute, playersOf, setsOfSub, isNew, hoursLeft, validSet, needsTb, validTb, finalSet, NEW_LEVELS, levelSeed, MAX_SETS, DAY_MS } from "/shared/subs.js";
+import { subsToMatches, subState, counts, confirmers, canDispute, playersOf, setsOfSub, rawSets, isNew, hoursLeft, disputeHoursLeft, validSet, needsTb, validTb, finalSet, NEW_LEVELS, levelSeed, MAX_SETS, DAY_MS, isOutside, OUTSIDE_DAYS, validatedBy, markDuplicates, scoreFor } from "/shared/subs.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyDu7A0agFAT1jwfrjCRkQe6tHg2Qu_LnDc", authDomain: "deuceandsmash-club.firebaseapp.com",
@@ -787,7 +791,8 @@ function compute() {
     for (const [k, x] of Object.entries(a.admin || {})) adj.push({ ...x, name, by: 'admin', id: `${mid}-${k}` });
   }
   // Member-recorded scores count once confirmed, or 24 hours after submission with no dispute
-  const sx = subsToMatches(S.subs, id => P[id]?.name);
+  S.dups = markDuplicates(S.subs, S.matches); // sets already recorded elsewhere are held back
+  const sx = subsToMatches(S.subs, id => P[id]?.name, Date.now(), { dups: S.dups });
   for (const [k, v] of Object.entries(sx.seeds)) if (!seeds[k]) seeds[k] = v;
   S.newSeeds = sx.seeds; S._seeds = seeds; S._adj = adj; S._base = ms;
   S.ratings = DSR.compute(seeds, ms.concat(sx.matches), todayUTC(), adj).players;
@@ -1266,7 +1271,7 @@ function subPre(sid, s, id) {
 // What this score would do to my SDX if it counted now
 function previewDelta(sid) {
   if (sid in S._preview) return S._preview[sid];
-  const sx = subsToMatches(S.subs, id => S.profiles[id]?.name, Date.now(), { include: k => k === sid });
+  const sx = subsToMatches(S.subs, id => S.profiles[id]?.name, Date.now(), { include: k => k === sid, dups: S.dups });
   const seeds = { ...S._seeds }; for (const [k, v] of Object.entries(sx.seeds)) if (!seeds[k]) seeds[k] = v;
   const r = DSR.compute(seeds, S._base.concat(sx.matches), todayUTC(), S._adj).players[myName()];
   return (S._preview[sid] = r ? { from: playerOf(myName()).r, to: r.r } : null);
@@ -1274,7 +1279,8 @@ function previewDelta(sid) {
 const subTeam = (sid, s, ids, isMe, withSdx = true) => `<div class="team ${isMe ? 'me' : ''}">${ids.map(id => pa(engName(sid, id) || id, withSdx ? subPre(sid, s, id) : null, isNew(id), pName(s, id))).join('')}<span>${ids.map(id => esc(pName(s, id))).join(' & ')}</span></div>`;
 function subStatus(x) {
   const { s, st, sid } = x;
-  if (st === 'void') return `<span class="down">Removed by club staff</span>`;
+  if (st === 'void') return `<span class="down">${s.staffNote === 'voided' || s.resolvedBy ? 'Removed by club staff' : 'Withdrawn'}</span>`;
+  if (st === 'expired') return `<span class="mu">Didn't count</span>`;
   if (st === 'pending') return `<span class="pending">Pending · ${hoursLeft(s)} h left</span>`;
   if (st === 'disputed') return `<span class="down">Disputed</span>`;
   const { w, l } = subResult(x), d = subDelta(sid);
@@ -1291,9 +1297,24 @@ function subCore(sid, s) {
   return `<div class="rot-who">${playersOf(s).map(id => pa(engName(sid, id) || id, subPre(sid, s, id), isNew(id), pName(s, id))).join('')}<span>Partners rotated</span></div>
     <div class="rot-lines">${ss.map((t, i) => `<div class="rl"><span class="rn">Set ${i + 1}</span><div class="teams">${subTeam(sid, s, t.A, t.A.includes(S.mid), false)}${subTeam(sid, s, t.B, t.B.includes(S.mid), false)}</div><span class="rs">${scoreTiles(t.a, tileCls(+t.a, +t.b))}${scoreTiles(t.b, tileCls(+t.b, +t.a))}</span></div>`).join('')}</div>`;
 }
+// Sets of this score already recorded elsewhere (held back so nothing counts twice)
+function dupNotes(sid, s) {
+  const d = S.dups?.[sid]; if (!d) return '';
+  const ss = setsOfSub(s);
+  return Object.entries(d).map(([i, x]) => {
+    const who = x.src === 'staff' ? 'the front desk' : pName(S.subs[x.ref], S.subs[x.ref]?.by);
+    if (x.type === 'dup') return `Set ${+i + 1} was already recorded by ${esc(who)}, so it isn't counted twice`;
+    const sc = scoreFor(ss[+i], x.score);
+    return `Set ${+i + 1} was recorded as ${sc.a}–${sc.b} by ${esc(who)}${x.src === 'staff' || !isOutside(s) ? '; club staff will check it' : '; if that one is wrong, dispute it'}`;
+  }).join(' · ');
+}
 const subTb = s => setsOfSub(s).map((t, i) => t.tb ? `Set ${i + 1} tie-break ${t.tb.a}–${t.tb.b}` : '').filter(Boolean).join(' · ');
 function subRow(x) {
-  const { sid, s } = x, tb = [subTb(s), s.staffNote === 'corrected' ? 'Score corrected by club staff' : x.st === 'void' ? "Doesn't count towards anyone's SDX" : ''].filter(Boolean).join(' · ');
+  const { sid, s } = x, v = validatedBy(s);
+  const tick = v ? `<span class="tick">${svgI('<path d="M5 12.5l4.5 4.5L19 7"/>')}${v.kind === 'player' ? `Confirmed by ${esc(pName(s, v.id))}` : v.kind === 'auto' ? 'Counted after 24 h, no one disputed it' : v.kind === 'agreed' ? 'Correction agreed by both sides' : 'Checked by club staff'}</span>` : '';
+  const why = x.st === 'expired' ? (s.status === 'disputed' ? 'Disputed and not agreed within 3 days, so it doesn’t count' : 'Not confirmed by an opponent within 3 days, so it doesn’t count')
+    : x.st === 'void' ? "Doesn't count towards anyone's SDX" : '';
+  const tb = [tick, esc(subTb(s)), s.staffNote === 'corrected' ? 'Score corrected by club staff' : '', why, dupNotes(sid, s)].filter(Boolean).join(' · ');
   return `<div class="m${s.rotate ? ' rot' : ''}${x.st === 'void' ? ' voided' : ''}" data-sub="${sid}"><div class="when"><span>${fmtDate(s.date)}</span><span>${esc(clubName(s.club, s.clubOther))}</span></div><div class="res">${subStatus(x)}</div>${subCore(sid, s)}${tb ? `<div class="tbn">${tb}</div>` : ''}</div>`;
 }
 
@@ -1303,7 +1324,7 @@ function historyItems() {
   return staff.concat(sub).sort((a, b) => b.date.localeCompare(a.date) || b.at.localeCompare(a.at));
 }
 const itemRow = it => it.kind === 'm' ? matchRow(it.m) : subRow(it);
-const itemRes = it => { if (it.kind === 'm') return validMatch(it.m) ? resultFor(it.m, myName()) : 'P'; if (it.st === 'void') return 'V'; if (!counts(it.st)) return 'P'; const { w, l } = subResult(it); return w > l ? 'W' : w < l ? 'L' : 'D'; };
+const itemRes = it => { if (it.kind === 'm') return validMatch(it.m) ? resultFor(it.m, myName()) : 'P'; if (it.st === 'void' || it.st === 'expired') return 'V'; if (!counts(it.st)) return 'P'; const { w, l } = subResult(it); return w > l ? 'W' : w < l ? 'L' : 'D'; };
 const itemClub = it => (it.kind === 'm' ? it.m.club : it.s.club) || CLUB_DEFAULT;
 
 const canConfirm = s => s.status === 'pending' && confirmers(s).includes(S.mid) && !(s.confirms || {})[S.mid];
@@ -1330,8 +1351,19 @@ function attnCard(x, ctx) {
       : `<button class="btn full" data-sub-act="dispute" data-sid="${sid}">Something wrong? Dispute</button>`;
   } else if (ctx === 'mine') {
     tag = '<span class="tag">Waiting</span>';
-    note = opp.length ? `You recorded this. Waiting for ${esc(listOr(opp))} to confirm.` : `You recorded this. None of your opponents is on SmashDex yet, so it counts automatically.`;
+    note = opp.length ? `You recorded this. Waiting for ${esc(listOr(opp))} to confirm.${isOutside(s) ? ` At another club it only counts once an opponent confirms, within ${OUTSIDE_DAYS} days.` : ''}`
+      : isOutside(s) ? `You recorded this. None of your opponents is on SmashDex yet, and at another club an opponent has to confirm it, so it won't count unless they join and confirm within ${OUTSIDE_DAYS} days.`
+      : `You recorded this. None of your opponents is on SmashDex yet, so it counts automatically.`;
     btns = `<div class="row2"><a class="btn wa" href="${shareLink(sid, s)}" target="_blank" rel="noopener" data-track="rec_remind">Remind on WhatsApp</a><button class="btn" data-sub-act="edit" data-sid="${sid}">Edit</button></div>`;
+  } else if (isOutside(s)) {
+    // Other venues: the players settle it. The submitter accepts the proposed correction or withdraws the match.
+    tag = '<span class="tag disp">Disputed</span>';
+    const d = s.dispute || {}, fix = Object.entries(d.fix || {}), raw = rawSets(s), hl = disputeHoursLeft(s);
+    const prop = fix.length ? fix.map(([i, f]) => `set ${+i + 1} should be ${f.a}–${f.b} (recorded as ${raw[+i]?.a}–${raw[+i]?.b})`).join(', ') : '';
+    const who = d.by === S.mid ? 'You' : esc(pName(s, d.by));
+    note = `${who} disputed this${d.reason ? ` (${esc(String(d.reason).toLowerCase())})` : ''}${prop ? `: ${esc(prop)}` : ''}.${d.note ? ` “${esc(d.note)}”` : ''} At another club the players settle it between them. If it isn't agreed within ${hl} h, the match won't count.`;
+    if (s.by === S.mid) btns = `<div class="row2">${fix.length ? `<button class="btn primary" data-sub-act="accept" data-sid="${sid}">Accept the correction</button>` : ''}<button class="btn" data-sub-act="withdraw" data-sid="${sid}">Withdraw the match</button></div>`;
+    else btns = `<p class="note" style="margin:0">Waiting for ${esc(pName(s, s.by))} to ${fix.length ? 'accept the correction or withdraw the match' : 'withdraw the match'}.</p>`;
   } else {
     tag = '<span class="tag disp">Disputed</span>';
     const d = s.dispute || {}, open24 = Date.now() - (+s.at || 0) >= DAY_MS;
@@ -1345,7 +1377,7 @@ function attnCard(x, ctx) {
     <p class="note">${note}</p>
     ${pv && Math.abs(pv.to - pv.from) > 1e-6 ? `<div class="pv"><span>Your SDX once ${ctx === 'mine' ? 'it counts' : 'confirmed'}</span><b>${sdx(pv.from)} → <span class="${pv.to >= pv.from ? 'up' : 'down'}">${sdx(pv.to)}</span> <small class="${pv.to >= pv.from ? 'up' : 'down'}">${sgn(pv.to - pv.from)}</small></b></div>` : ''}
     ${btns}
-    ${ctx !== 'disp' ? `<p class="note clock">Confirms automatically in ${hoursLeft(s)} h</p>` : ''}
+    ${ctx !== 'disp' ? `<p class="note clock">${isOutside(s) ? `Needs an opponent to confirm within ${hoursLeft(s)} h, or it won't count` : `Confirms automatically in ${hoursLeft(s)} h`}</p>` : ''}
   </div>`;
 }
 
@@ -1368,7 +1400,7 @@ function recordHTML() {
 }
 
 function updateBadge() {
-  const n = attention().act.filter(x => canConfirm(x.s)).length, btn = document.querySelector('.nav [data-tab=record]'); if (!btn) return;
+  const n = attention().act.filter(x => canConfirm(x.s)).length + mustSettle().length, btn = document.querySelector('.nav [data-tab=record]'); if (!btn) return;
   let b = btn.querySelector('.nbadge'); if (!n) { b?.remove(); return; }
   if (!b) { b = document.createElement('span'); b.className = 'nbadge'; btn.appendChild(b); }
   b.textContent = n; b.setAttribute('aria-label', `${n} to confirm`);
@@ -1380,11 +1412,12 @@ function maybePopup() {
   if (S._popDone) return; S._popDone = true;
   const focus = new URLSearchParams(location.search).get('m');
   if (focus) history.replaceState(null, '', location.pathname);
-  if (!attention().act.length && !(focus && S.subs[focus])) return;
+  if (!attention().act.length && !mustSettle().length && !(focus && S.subs[focus])) return;
   openWaiting(focus);
 }
+const mustSettle = () => attention().disp.filter(x => isOutside(x.s) && x.s.by === S.mid);
 function openWaiting(focus) {
-  let list = attention().act;
+  let list = attention().act.concat(mustSettle());
   const fx = focus && mySubItems().find(y => y.sid === focus);
   if (fx) list = [fx, ...list.filter(y => y.sid !== focus)];
   if (!list.length) return closeSheet();
@@ -1536,8 +1569,22 @@ function buildDraft() {
   if (Object.keys(nc).length) d.newcomers = nc;
   return d;
 }
+// Sets of the draft already recorded by the front desk or another member
+function draftDups(d) {
+  const key = S.rec.sid || '~draft', all = { ...S.subs, [key]: { ...d, at: S.rec.sid ? d.at : Date.now() + 1 } };
+  return markDuplicates(all, S.matches)[key] || {};
+}
 function recReview() {
   const R = S.rec, d = buildDraft(), who = confirmers(d).map(id => pName(d, id)), nc = Object.values(d.newcomers || {});
+  const dd = draftDups(d), ddi = Object.keys(dd).map(Number), ss = setsOfSub(d);
+  const src = x => x.src === 'staff' ? 'the front desk' : pName(S.subs[x.ref], S.subs[x.ref]?.by);
+  const allDup = ddi.length === ss.length && Object.values(dd).every(x => x.type === 'dup');
+  const other = allDup ? [...new Set(Object.values(dd).filter(x => x.src === 'member').map(x => x.ref))].find(k => S.subs[k] && canConfirm(S.subs[k])) : null;
+  const dupBox = ddi.length ? `<div class="warnbox"><b>${allDup ? 'This match looks already recorded' : `${ddi.length === 1 ? 'One set is' : `${ddi.length} sets are`} already recorded`}</b>
+      <ul>${ddi.map(i => { const x = dd[i], sc = scoreFor(ss[i], x.score); return `<li>Set ${i + 1} (${esc(teamName(d, ss[i].A))} vs ${esc(teamName(d, ss[i].B))}): ${x.type === 'dup' ? `recorded by ${esc(src(x))} with the same score, so it won't count twice` : `recorded by ${esc(src(x))} as ${sc.a}–${sc.b}. Check your score: ${x.src === 'staff' || !isOutside(d) ? 'club staff will decide which is right' : `if ${esc(src(x))}'s is wrong, dispute it`}`}</li>`; }).join('')}</ul>
+      ${allDup ? '<p>There is nothing new to add.</p>' : '<p>You can submit as it is: only the new sets will count.</p>'}
+      ${other ? `<button class="btn primary full" data-sub-act="confirm" data-sid="${other}">Confirm ${esc(pName(S.subs[other], S.subs[other].by))}'s score instead</button>` : ''}</div>` : '';
+  const outsideNoConf = isOutside(d) && !who.length;
   const { w, l } = subResult({ s: d });
   const res = d.rotate ? `You won ${w} of ${w + l} sets` : w > l ? `${teamName(d, d.sets[0].A)} win ${w}–${l}` : w < l ? `${teamName(d, d.sets[0].B)} win ${l}–${w}` : `Sets level at ${w}–${l}`;
   return `<div class="acard">
@@ -1546,11 +1593,13 @@ function recReview() {
       ${subTb(d) ? `<p class="note">${subTb(d)}</p>` : ''}
       <p class="rres-line ${w > l ? 'up' : w < l ? 'down' : ''}">${esc(res)}</p></div>
     <ul class="rnotes">
-      <li>${who.length ? `${esc(listOr(who))} ${who.length > 1 ? 'can' : 'will be asked to'} confirm it. Only one needs to.` : 'None of your opponents is on SmashDex yet, so it counts automatically after 24 hours. Club staff may spot-check it.'}</li>
-      <li>Your SDX moves once it's confirmed, or automatically after 24 hours if nobody disputes it.</li>
+      <li>${who.length ? `${esc(listOr(who))} ${who.length > 1 ? 'can' : 'will be asked to'} confirm it. Only one needs to.` : outsideNoConf ? '' : 'None of your opponents is on SmashDex yet, so it counts automatically after 24 hours. Club staff may spot-check it.'}</li>
+      <li>${isOutside(d) ? `It was played at another club, so it only counts once an opponent confirms it, within ${OUTSIDE_DAYS} days. If there's a disagreement, you settle it between you.` : `Your SDX moves once it's confirmed, or automatically after 24 hours if nobody disputes it.`}</li>
       ${nc.map(n => `<li>${esc(n.name)} counts as ${esc(n.level)} (about ${levelSeed(n.level).toFixed(1)}) until they join SmashDex.</li>`).join('')}
     </ul>
-    <button class="btn primary full big" data-rsubmit>${R.sid ? 'Save changes' : 'Submit score'}</button>
+    ${outsideNoConf ? `<div class="warnbox"><b>This score won't count yet</b><p>At another club an opponent on SmashDex has to confirm it, and none of your opponents is on SmashDex yet. Invite them after you submit: if one joins and confirms within ${OUTSIDE_DAYS} days, it counts.</p></div>` : ''}
+    ${dupBox}
+    ${allDup ? '<button class="btn full big" data-close>Close without submitting</button>' : `<button class="btn primary full big" data-rsubmit>${R.sid ? 'Save changes' : 'Submit score'}</button>`}
     ${R.sid ? `<button class="btn full" style="margin-top:10px" data-rdelete>Delete this score</button>` : ''}`;
 }
 function recDone() {
@@ -1586,7 +1635,7 @@ function disputeSheet(sid) {
           <span class="fix">Should be <input name="fa${i}" inputmode="numeric" maxlength="1" aria-label="Set ${i + 1} correct games for ${esc(teamName(s, t.A))}">–<input name="fb${i}" inputmode="numeric" maxlength="1" aria-label="Set ${i + 1} correct games for ${esc(teamName(s, t.B))}"></span></div>`).join('')}
       </fieldset>
       <label class="field"><span>Anything else? (optional)</span><textarea name="note" maxlength="300" rows="3"></textarea></label>
-      <p class="note">The disputed sets stop counting until club staff sort it out. Staff see it in their review list straight away.</p>
+      <p class="note">${isOutside(s) ? `This match was at another club, so you and ${esc(pName(s, s.by))} settle it between you. If the dispute is about the score, propose the right one: if ${esc(pName(s, s.by))} accepts it, the corrected score counts. If it isn't agreed within ${OUTSIDE_DAYS} days, the match doesn't count.` : 'The disputed sets stop counting until club staff sort it out. Staff see it in their review list straight away.'}</p>
       <button class="btn primary full big" type="submit">Send dispute</button>
     </form>`, true);
 }
@@ -1603,6 +1652,7 @@ document.addEventListener('submit', async e => {
     if (sets.length) d.sets = sets;
     const fix = {}; (sets.length ? sets : setsOfSub(s).map((_, i) => i)).forEach(i => { const a = f.get('fa' + i), b = f.get('fb' + i); if (a !== '' && b !== '' && validSet(+a, +b, true)) fix[i] = { a: +a, b: +b }; });
     if (Object.keys(fix).length) d.fix = fix;
+    if (isOutside(s) && !Object.keys(fix).length) return toast('Add the right score for the set that is wrong, so it can be accepted', 4000);
   }
   const note = String(f.get('note') || '').trim().slice(0, 300); if (note) d.note = note;
   const btn = e.target.querySelector('[type=submit]'); btn.disabled = true;
@@ -1623,12 +1673,24 @@ document.addEventListener('click', async e => {
     const sid = sa.dataset.sid, act = sa.dataset.subAct, s = S.subs[sid]; if (!s) return;
     if (act === 'dispute') return disputeSheet(sid);
     if (act === 'edit') { recNew(sid); return recOpen(); }
+    if (act === 'accept' || act === 'withdraw') {
+      if (!sa.dataset.armed) { sa.dataset.armed = '1'; sa.textContent = act === 'accept' ? 'Tap again to accept' : 'Tap again to withdraw'; return; }
+      sa.disabled = true;
+      try {
+        await update(ref(db), act === 'accept' ? { [`submissions/${sid}/dispute/accepted`]: true, [`submissions/${sid}/status`]: 'confirmed' } : { [`submissions/${sid}/status`]: 'void' });
+        track(act === 'accept' ? 'rec_accept' : 'rec_withdraw');
+        toast(act === 'accept' ? 'Correction accepted. The corrected score now counts.' : 'Match withdrawn. It no longer counts.', 3500);
+        if (S.sheetKind === 'waiting' && !$('#sheet').classList.contains('hidden')) setTimeout(() => openWaiting(), 400);
+      } catch (err) { sa.disabled = false; toast('Could not save: ' + err.message, 4000); }
+      return;
+    }
     if (act === 'confirm') {
       sa.disabled = true; const pv = previewDelta(sid);
       try {
         await set(ref(db, `submissions/${sid}/confirms/${S.mid}`), Date.now()); track('rec_confirm');
         toast(pv ? `Confirmed. Your SDX is now ${sdx(pv.to)} (${sgn(pv.to - pv.from)})` : 'Confirmed', 4000);
         if (S.sheetKind === 'waiting' && !$('#sheet').classList.contains('hidden')) setTimeout(() => openWaiting(), 400);
+        if (S.sheetKind === 'rec') closeSheet();
       } catch (err) { sa.disabled = false; toast('Could not confirm: ' + err.message, 4000); }
     }
     return;

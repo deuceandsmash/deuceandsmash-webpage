@@ -83,13 +83,19 @@
           }
         },
 
-        // Dispute: any other player in the match, once, within 24 hours of submission (written together with status)
+        // Dispute: any other player in the match, once, within 24 hours of submission (3 days at other venues),
+        // written together with status. At other venues the submitter may then accept the proposed correction.
         "dispute": {
-          ".write": "auth != null && !data.exists() && newData.child('by').val() === root.child('links').child(auth.uid).val() && newData.child('by').val() !== data.parent().child('by').val() && now - data.parent().child('at').val() < 86400000 && (data.parent().child('players').child('1').val() === newData.child('by').val() || data.parent().child('players').child('2').val() === newData.child('by').val() || data.parent().child('players').child('3').val() === newData.child('by').val())",
-          ".validate": "newData.hasChildren(['by', 'at', 'reason']) && newData.child('reason').isString() && newData.child('reason').val().length <= 40 && (!newData.child('note').exists() || (newData.child('note').isString() && newData.child('note').val().length <= 300))"
+          ".write": "auth != null && !data.exists() && newData.child('by').val() === root.child('links').child(auth.uid).val() && newData.child('by').val() !== data.parent().child('by').val() && (now - data.parent().child('at').val() < 86400000 || (data.parent().child('club').val() !== 'deuce-and-smash' && now - data.parent().child('at').val() < 259200000)) && (data.parent().child('players').child('1').val() === newData.child('by').val() || data.parent().child('players').child('2').val() === newData.child('by').val() || data.parent().child('players').child('3').val() === newData.child('by').val())",
+          ".validate": "newData.hasChildren(['by', 'at', 'reason']) && newData.child('reason').isString() && newData.child('reason').val().length <= 40 && (!newData.child('note').exists() || (newData.child('note').isString() && newData.child('note').val().length <= 300))",
+          "accepted": {
+            ".write": "auth != null && data.parent().parent().child('by').val() === root.child('links').child(auth.uid).val() && data.parent().parent().child('club').val() !== 'deuce-and-smash' && data.parent().parent().child('status').val() === 'disputed' && data.parent().child('fix').exists() && now - data.parent().child('at').val() < 259200000 && newData.val() === true"
+          }
         },
+        // pending → disputed by the player disputing; at other venues the submitter settles a dispute:
+        // disputed → confirmed (with the correction accepted) or disputed → void (withdraws the match)
         "status": {
-          ".write": "auth != null && data.val() === 'pending' && newData.val() === 'disputed' && newData.parent().child('dispute').child('by').val() === root.child('links').child(auth.uid).val() && !data.parent().child('dispute').exists()"
+          ".write": "auth != null && ((data.val() === 'pending' && newData.val() === 'disputed' && newData.parent().child('dispute').child('by').val() === root.child('links').child(auth.uid).val() && !data.parent().child('dispute').exists()) || (data.val() === 'disputed' && data.parent().child('by').val() === root.child('links').child(auth.uid).val() && data.parent().child('club').val() !== 'deuce-and-smash' && now - data.parent().child('dispute').child('at').val() < 259200000 && (newData.val() === 'void' || (newData.val() === 'confirmed' && newData.parent().child('dispute').child('accepted').val() === true))))"
         }
       }
     },

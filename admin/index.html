@@ -542,7 +542,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, get, set, update, push, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { DSR } from "/shared/dsr.js";
-import { subsToMatches, subState, confirmers, playersOf, setsOfSub, isNew, DAY_MS } from "/shared/subs.js";
+import { subsToMatches, subState, confirmers, playersOf, setsOfSub, rawSets, isNew, DAY_MS, isOutside, markDuplicates, scoreFor } from "/shared/subs.js";
+let subDups = {};
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ============================================================
@@ -782,7 +783,8 @@ function computeAllRatings() {
   // All matches
   const allMatches = Object.entries(opMatches).map(([id, m]) => ({ id, ...m }));
   // Scores recorded by members in SmashDex count once confirmed (or 24h after submission with no dispute)
-  const sx = subsToMatches(subs, id => members[id]?.name);
+  subDups = markDuplicates(subs, opMatches);
+  const sx = subsToMatches(subs, id => members[id]?.name, Date.now(), { dups: subDups });
   for (const [k, v] of Object.entries(sx.seeds)) if (!seeds[k]) seeds[k] = v;
   const result = DSR.compute(seeds, allMatches.concat(sx.matches), today, adjustmentList());
   ratings = result.players;
@@ -879,23 +881,23 @@ function _setsHTML(s) {
   return setsOfSub(s).map((x, i) => {
     const bad = (s.dispute?.sets || []).map(Number).includes(i);
     const fix = s.dispute?.fix?.[i];
+    const dd = subDups[Object.keys(subs).find(k => subs[k] === s)]?.[i];
+    const ddTxt = dd ? (dd.type === 'dup' ? ` <span style="color:var(--muted)">(already recorded by ${dd.src === 'staff' ? 'the front desk' : _esc(_pn(subs[dd.ref], subs[dd.ref]?.by))}: not counted twice)</span>` : ` <span style="color:#ff9a6b">(conflict: ${dd.src === 'staff' ? 'front desk' : _esc(_pn(subs[dd.ref], subs[dd.ref]?.by))} has ${(() => { const sc = scoreFor(x, dd.score); return sc.a + '–' + sc.b; })()}; held back)</span>`) : '';
     return `<div style="display:flex;gap:8px;align-items:center;padding:3px 0;${bad ? 'color:#ff9a6b' : ''}"><span style="width:44px;color:var(--muted)">Set ${i + 1}</span>
-      <span style="flex:1">${_esc(x.A.map(id => _pn(s, id)).join(' & '))} <b>${x.a}–${x.b}</b>${x.tb ? ` <span style="color:var(--muted)">(TB ${x.tb.a}–${x.tb.b})</span>` : ''} ${_esc(x.B.map(id => _pn(s, id)).join(' & '))}</span>
+      <span style="flex:1">${_esc(x.A.map(id => _pn(s, id)).join(' & '))} <b>${x.a}–${x.b}</b>${x.tb ? ` <span style="color:var(--muted)">(TB ${x.tb.a}–${x.tb.b})</span>` : ''} ${_esc(x.B.map(id => _pn(s, id)).join(' & '))}${x.agreed ? ' <span style="color:var(--muted)">(correction agreed by both sides)</span>' : ''}${ddTxt}</span>
       ${bad ? `<span>disputed${fix ? `: says ${fix.a}–${fix.b}` : ''}</span>` : ''}
       <input class="filter-select" style="width:52px" inputmode="numeric" data-fix="${i}a" value="${x.a}" aria-label="Set ${i + 1} games, first pair"><input class="filter-select" style="width:52px" inputmode="numeric" data-fix="${i}b" value="${x.b}" aria-label="Set ${i + 1} games, second pair"></div>`;
   }).join('');
 }
-function _dupOf(s) {
-  const ids = new Set(playersOf(s).filter(id => !isNew(id)));
-  if (ids.size < 3) return null;
-  return Object.entries(opMatches).find(([, m]) => m.date === s.date && [...(m.teamAIds || []), ...(m.teamBIds || [])].filter(id => ids.has(id)).length >= 3)?.[0] || null;
-}
 window.renderScores = () => {
   const box = document.getElementById('sdx-scores'); if (!box) return;
   const now = Date.now(), list = Object.entries(subs).map(([sid, s]) => ({ sid, s, st: subState(s, now) })).sort((a, b) => (b.s.at || 0) - (a.s.at || 0));
-  const disputed = list.filter(x => x.st === 'disputed');
-  const noConfirmer = list.filter(x => ['pending', 'auto'].includes(x.st) && !confirmers(x.s).length && !x.s.reviewed);
-  const dups = list.filter(x => x.st !== 'void' && !x.s.reviewed && _dupOf(x.s));
+  // Staff referee Deuce & Smash matches only; at other venues the players settle disputes themselves
+  const disputed = list.filter(x => x.st === 'disputed' && !isOutside(x.s));
+  const noConfirmer = list.filter(x => ['pending', 'auto'].includes(x.st) && !isOutside(x.s) && !confirmers(x.s).length && !x.s.reviewed);
+  const conflictOf = x => Object.values(subDups[x.sid] || {}).filter(d => d.type === 'conflict' && (d.src === 'staff' || !isOutside(x.s)));
+  const dups = list.filter(x => !['void', 'expired'].includes(x.st) && !x.s.conflictReviewed && !x.s.dupOk && conflictOf(x).length);
+  const nHeld = Object.values(subDups).reduce((n, o) => n + Object.values(o).filter(d => d.type === 'dup').length, 0);
   const otherClub = list.filter(x => x.st !== 'void' && x.s.club === 'other');
   const withNew = list.filter(x => x.st !== 'void' && playersOf(x.s).some(isNew));
   const badge = document.getElementById('scores-badge'); const nAct = disputed.length + noConfirmer.length + dups.length + otherClub.length;
@@ -912,7 +914,8 @@ window.renderScores = () => {
     <p style="color:var(--muted)">${list.length} scores recorded by members · ${list.filter(x => x.st === 'pending').length} waiting for confirmation · ${list.filter(x => x.st === 'confirmed' || x.st === 'auto').length} counted</p>
     ${!nAct && !withNew.length ? '<p style="padding:16px 0">Nothing needs attention.</p>' : ''}
     ${sec('Disputes', 'Fix the set scores and confirm, confirm as recorded, or void. Disputed sets don’t count until you resolve them.', disputed, resolveBtns)}
-    ${sec('Possible duplicates', 'The same players have a staff-entered match on this date. Void one of them so it isn’t counted twice.', dups, `<button class="btn btn-sm" data-sact="void">Void this member score</button><button class="btn btn-sm" data-sact="reviewed">Not a duplicate</button>`)}
+    ${nHeld ? `<p style="color:var(--muted);font-size:.85rem">${nHeld} set${nHeld === 1 ? '' : 's'} recorded twice with the same score ${nHeld === 1 ? 'is' : 'are'} being held back automatically. Nothing to do.</p>` : ''}
+    ${sec('Score conflicts', 'The same set (same date, same pairing) was recorded with a different score, by the front desk or another member. The conflicting sets don’t count until you decide.', dups, x => `<button class="btn btn-sm" data-sact="keepother">The other entry is right</button><button class="btn btn-sm" data-sact="dupok">This member score is right</button><span style="color:var(--muted);font-size:.8rem;align-self:center">If this one is right, also fix or delete the other entry so it isn't counted twice.</span>`)}
     ${sec('No opponent could confirm', 'All opponents are new players, so this counts automatically after 24 hours. Spot-check it.', noConfirmer, `<button class="btn btn-sm" data-sact="reviewed">Looks right</button><button class="btn btn-sm" data-sact="void">Void the match</button>`)}
     ${sec('Clubs not on the list', 'Add the club to the dropdown, or move the match to an existing club.', otherClub, x => `<button class="btn btn-primary btn-sm" data-sact="addclub">Add “${_esc(x.s.clubOther || '')}” to the club list</button>`)}
     ${sec('New players', 'When a new player joins and is linked, swap them in so the match moves to their profile and ratings recalculate.', withNew, x => playersOf(x.s).filter(isNew).map(id => `<span style="display:inline-flex;gap:6px;align-items:center">${_esc(_pn(x.s, id))} (${_esc((x.s.newcomers || {})[id.slice(4)]?.level || '')}) → <select class="filter-select" data-swapsel="${id}"><option value="">Choose member…</option>${memberOpts}</select><button class="btn btn-sm" data-sact="swap" data-new="${id}">Swap in</button></span>`).join(''))}
@@ -927,7 +930,7 @@ function _allSubsHTML(list) {
   const hit = x => !q || x.s.date?.includes(q) || _clubName(x.s).toLowerCase().includes(q) || playersOf(x.s).some(id => _pn(x.s, id).toLowerCase().includes(q));
   const items = (list || Object.entries(subs).map(([sid, s]) => ({ sid, s, st: subState(s) })).sort((a, b) => (b.s.at || 0) - (a.s.at || 0))).filter(hit);
   if (!items.length) return '<p style="color:var(--muted);padding:8px 0">No member scores match.</p>';
-  const tag = x => x.st === 'void' ? '<span style="color:#ff9a6b">Voided</span>' : x.st === 'disputed' ? '<span style="color:#ff9a6b">Disputed</span>' : x.st === 'pending' ? 'Waiting for confirmation' : x.s.resolvedBy ? 'Counts (checked by staff)' : x.st === 'auto' ? 'Counts (no reply in 24 h)' : 'Counts (confirmed)';
+  const tag = x => x.st === 'void' ? `<span style="color:#ff9a6b">${x.s.resolvedBy ? 'Voided by staff' : 'Withdrawn by the player'}</span>` : x.st === 'expired' ? 'Didn’t count (not confirmed or agreed in 3 days)' : x.st === 'disputed' ? `<span style="color:#ff9a6b">Disputed${isOutside(x.s) ? ' (players settling it)' : ''}</span>` : x.st === 'pending' ? 'Waiting for confirmation' : x.s.dispute?.accepted ? 'Counts (correction agreed by both sides)' : x.s.resolvedBy ? 'Counts (checked by staff)' : x.st === 'auto' ? 'Counts (no reply in 24 h)' : 'Counts (confirmed)';
   return items.slice(0, _allShown).map(x => `<div style="border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin:8px 0;${x.st === 'void' ? 'opacity:.6' : ''}" data-sid="${x.sid}">
       <div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.85rem;color:var(--muted)"><span>${x.s.date}</span><span>${_esc(_clubName(x.s))}</span><span>Recorded by ${_esc(_pn(x.s, x.s.by))}</span><span><b>${tag(x)}</b></span>${x.s.resolvedBy ? `<span>Last staff change: ${_esc(x.s.resolvedBy)}, ${_hrs(x.s.resolvedAt)} ago</span>` : ''}</div>
       <div style="margin:6px 0">${_setsHTML(x.s)}</div>
@@ -953,6 +956,8 @@ document.addEventListener('click', async e => {
     if (act === 'confirm') Object.assign(upd, { [`${base}/status`]: 'confirmed', [`${base}/resolvedBy`]: who, [`${base}/resolvedAt`]: Date.now() });
     if (act === 'void') { if (!confirm('Void this match? It will stop counting for everyone.')) return; Object.assign(upd, { [`${base}/status`]: 'void', [`${base}/staffNote`]: 'voided', [`${base}/resolvedBy`]: who, [`${base}/resolvedAt`]: Date.now() }); }
     if (act === 'reviewed') upd[`${base}/reviewed`] = true;
+    if (act === 'keepother') upd[`${base}/conflictReviewed`] = true;
+    if (act === 'dupok') { if (!confirm('Count this member score? Every set in it will count, so fix or delete the other entry for the same set.')) return; upd[`${base}/dupOk`] = true; upd[`${base}/conflictReviewed`] = true; }
     if (act === 'restore') { if (!confirm('Restore this score? It will count again for everyone.')) return; Object.assign(upd, { [`${base}/status`]: 'confirmed', [`${base}/staffNote`]: null, [`${base}/resolvedBy`]: who, [`${base}/resolvedAt`]: Date.now() }); }
     if (act === 'fix') {
       const sets = setsOfSub(s).map((x, i) => {
@@ -992,7 +997,7 @@ const SDX_EVENTS = {
   prefs_open: ['Opened preferences', 'Profile'], prefs_saved: ['Saved preferences', 'Profile'],
   see_chart: ['Scrolled to SDX chart', 'Seen'], see_matches: ['Scrolled to Matches', 'Seen'], see_stats: ['Scrolled to Statistics', 'Seen'],
   see_prefs: ['Scrolled to Preferences', 'Seen'], see_people: ['Scrolled to People', 'Seen'], see_clubs: ['Scrolled to Clubs', 'Seen'],
-  tab_record: ['Opened Record score', 'Scores'], rec_start: ['Started recording a score', 'Scores'], rec_score: ['Reached the score step', 'Scores'], rec_review: ['Reached review', 'Scores'], rec_submit: ['Submitted a score', 'Scores'], rec_share: ['Shared a score on WhatsApp', 'Scores'], rec_newcomer: ['Added a new player', 'Scores'], rec_invite: ['Invited a new player on WhatsApp', 'Scores'], rec_confirm: ['Confirmed a score', 'Scores'], rec_dispute: ['Disputed a score', 'Scores'], rec_nudge: ['Nudged the club about a dispute', 'Scores'], rec_remind: ['Reminded opponents on WhatsApp', 'Scores'], rec_delete: ['Deleted their own pending score', 'Scores'], popup_seen: ['Saw the matches-waiting pop-up', 'Scores'], tab_dex: ['Tapped Matchup Dex (coming soon)', 'Coming soon'],
+  tab_record: ['Opened Record score', 'Scores'], rec_start: ['Started recording a score', 'Scores'], rec_score: ['Reached the score step', 'Scores'], rec_review: ['Reached review', 'Scores'], rec_submit: ['Submitted a score', 'Scores'], rec_share: ['Shared a score on WhatsApp', 'Scores'], rec_newcomer: ['Added a new player', 'Scores'], rec_invite: ['Invited a new player on WhatsApp', 'Scores'], rec_confirm: ['Confirmed a score', 'Scores'], rec_dispute: ['Disputed a score', 'Scores'], rec_nudge: ['Nudged the club about a dispute', 'Scores'], rec_remind: ['Reminded opponents on WhatsApp', 'Scores'], rec_delete: ['Deleted their own pending score', 'Scores'], rec_accept: ['Accepted a correction (other club)', 'Scores'], rec_withdraw: ['Withdrew a disputed match (other club)', 'Scores'], popup_seen: ['Saw the matches-waiting pop-up', 'Scores'], tab_dex: ['Tapped Matchup Dex (coming soon)', 'Coming soon'],
   tab_honours: ['Tapped Honours (coming soon)', 'Coming soon'], tab_profile: ['Returned to Profile tab', 'Profile'],
   signin_google: ['Signed in with Google', 'Sign-in'], signin_email: ['Signed in with email', 'Sign-in'], signup_email: ['Created email account', 'Sign-in'],
   link_form: ['Saw the one-time setup form', 'Sign-in'], link_request: ['Sent a link request', 'Sign-in'],
