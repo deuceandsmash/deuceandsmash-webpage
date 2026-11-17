@@ -387,6 +387,81 @@ select.fchip option,.clubrow select option{background:var(--deep);color:var(--te
 .warnbox .askq{display:grid;gap:8px;padding-top:6px;border-top:1px solid var(--line)}.warnbox .askq:first-of-type{border-top:0}.warnbox .askq p{color:var(--text)}
 .warnbox ul{margin:0;padding-left:18px;color:var(--muted)}.warnbox p{margin:0;color:var(--muted)}
 
+/* ── Matchup Dex ── */
+.dx-h{margin:22px 0 2px}.dx-h h1{font-family:var(--head);font-weight:400;font-size:44px;line-height:1}.dx-h p{color:var(--muted)}
+.dx-back{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--yellow);font-weight:600;font-size:15px;padding:16px 0 4px}.dx-back svg{width:16px;height:16px}
+.dx-start{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0 14px}
+.dx-card{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;border:2px solid rgba(245,214,40,.6);border-radius:20px;padding:16px;background:var(--deep);color:var(--text);min-height:170px}
+.dx-card.r{border-color:rgba(90,166,247,.75)}
+.dx-card .big{font-family:var(--head);font-size:30px;line-height:.95;color:var(--yellow)}.dx-card.r .big{color:#5AA6F7}
+.dx-card .ico{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:rgba(245,214,40,.14);color:var(--yellow)}.dx-card.r .ico{background:rgba(90,166,247,.16);color:#5AA6F7}
+.dx-card .ico svg{width:22px;height:22px}.dx-card small{font-size:14px;color:var(--muted)}.dx-card .cnt{margin-top:auto;font-size:14px}
+.dx-card:hover{background:#1c1c4a}
+.dx-search{display:flex;align-items:center;gap:10px;background:var(--deep);border:1px solid var(--line2);border-radius:14px;padding:0 14px;min-height:50px}
+.dx-search svg{width:18px;height:18px;color:var(--muted);flex:none}.dx-search input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--text);font-size:16px;min-height:46px}
+.dx-search:focus-within{border-color:var(--yellow)}
+.dx-lbl{font-size:13px;color:var(--muted);margin:18px 0 8px}
+.dx-chips{display:flex;flex-wrap:wrap;gap:8px}
+.dx-chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px 0 7px;border:1px solid var(--line2);border-radius:999px;background:none;color:var(--text);font-size:15px}
+.av.xs{width:30px;height:30px;font-size:13px;border-width:1px}
+.av.me{border-color:var(--yellow);color:var(--yellow)}.av.th{border-color:#5AA6F7;color:#5AA6F7}
+.av.md{width:44px;height:44px;font-size:19px}
+.duo{display:flex;flex:none}.duo .av+.av{margin-left:-4px}
+.hl{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid rgba(245,214,40,.55);border-radius:18px;padding:14px;background:var(--deep);color:var(--text);margin-top:10px}
+.hl.r{border-color:rgba(90,166,247,.6)}.hl b{display:block}.hl small{display:block;font-size:13px;color:var(--muted)}.hl .k{display:block;font-size:13px;font-weight:700;color:var(--yellow)}.hl.r .k{color:#5AA6F7}
+.hl>svg{width:18px;height:18px;margin-left:auto;flex:none;color:var(--muted)}
+.plist{display:flex;flex-direction:column;background:var(--deep);border:1px solid var(--line);border-radius:18px;padding:2px 14px}
+.prow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:12px 2px;border:0;border-top:1px solid var(--line);background:none;color:var(--text);text-align:left;width:100%}
+.prow:first-child{border-top:0}.prow b{display:block;font-size:15px;line-height:1.25}.prow small{display:block;font-size:13px;color:var(--muted);line-height:1.35}
+.prow .rc{display:flex;flex-direction:column;align-items:flex-end;gap:4px}.prow.dim{opacity:.55}
+.rec{display:inline-flex;align-items:center;gap:4px}.rec .dash{color:var(--faint);font-weight:600}
+.vtag{display:inline-block;border:1px solid currentColor;border-radius:999px;padding:0 9px;font-size:12px;font-weight:700;white-space:nowrap}
+.v-behind,.v-rhythm{color:#FF8A4C}.v-ahead,.v-dream{color:var(--yellow)}.v-even,.v-solid{color:#8EC3FF}.v-early,.v-blank,.v-work{color:var(--muted)}
+.dxc{background:var(--deep);border:1px solid var(--line2);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:12px;margin-top:14px;min-width:0}
+.dxc.hot{border-color:rgba(245,214,40,.55)}.dxc.blue{border-color:rgba(90,166,247,.6)}
+.dxc h3{font-family:var(--head);font-weight:400;font-size:24px;line-height:1;letter-spacing:.02em}
+.dxc .hrow{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.dxc .hrow>span:not(.vtag){font-size:13px;color:var(--muted);text-align:right}
+.dxc .note{margin:0}
+.court{display:grid;grid-template-columns:minmax(0,1fr) 6px minmax(0,1fr);border:2px solid rgba(237,237,247,.32);border-radius:12px;background:#15154A;overflow:hidden}
+.court .side{display:flex;flex-direction:column;gap:8px;padding:10px 9px 12px;min-width:0}
+.court .side>span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.court .net{background:repeating-linear-gradient(180deg,rgba(237,237,247,.75) 0 5px,transparent 5px 9px)}
+.cs{display:flex;align-items:center;gap:8px;min-height:52px;padding:6px 8px;border-radius:10px;background:var(--navy);border:1px solid var(--line2);font-size:14px;font-weight:700;color:var(--text);text-align:left;width:100%;min-width:0;line-height:1.2}
+.cs>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.cs small{display:block;font-size:11px;font-weight:600;color:var(--muted)}
+.cs.me{border-color:rgba(245,214,40,.65)}.cs.th{border-color:rgba(90,166,247,.75)}
+.cs.open{border-style:dashed;background:transparent;color:var(--muted);font-weight:600}
+.cs .plus{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:1px dashed rgba(237,237,247,.45);flex:none}.cs .plus svg{width:14px;height:14px}
+.pcard{display:flex;flex-direction:column;gap:4px}.pcard .nm{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}.pcard .nm b{font-size:17px}
+.flip{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:48px;padding:0 14px;border-radius:14px;border:1px solid var(--line2);background:none;color:var(--text);font-size:14px;margin-top:10px;text-align:left}
+.flip .go{font-weight:700;color:var(--yellow);white-space:nowrap}.flip .go.r{color:#5AA6F7}
+.vrd{font-family:var(--head);font-size:28px;line-height:1;letter-spacing:.02em;color:var(--yellow)}
+.vrd.v-behind,.vrd.v-rhythm{color:#FF8A4C}.vrd.v-even,.vrd.v-solid{color:#8EC3FF}.vrd.v-early,.vrd.v-blank,.vrd.v-work{color:var(--text)}
+.bigrec{display:flex;align-items:flex-end;justify-content:center;gap:14px}
+.bigrec .c{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
+.bigrec .st{--sh:58px}.bigrec .dash{font-family:var(--head);font-size:34px;color:var(--faint);padding-bottom:22px}
+.sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sbx{background:var(--navy);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:0;font-size:14px}
+.sbx .k{font-size:13px;color:var(--muted)}
+.wl{display:flex;flex-wrap:wrap;gap:3px}.st.w i{color:#8FD63A}.st.l i{color:#FF8A4C}.st.d i{color:var(--text)}
+.stk .st{--sh:36px}.stk .st i.dt{width:calc(var(--sh) * .34)}
+.bar2{height:10px;border-radius:10px;background:rgba(237,237,247,.12);overflow:hidden}.bar2 i{display:block;height:100%;background:var(--yellow);border-radius:10px}.bar2.g i{background:rgba(237,237,247,.5)}
+.ins{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.ins:first-child{border-top:0}.ins b{display:block;font-size:15px}.ins small{display:block;font-size:13px;color:var(--muted)}
+.dxc .m:first-of-type{border-top:0}
+.dx-more{align-self:flex-start;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:none;color:var(--text);font-size:14px;font-weight:600}
+.dx-wa{margin-top:14px}
+@media (min-width:700px){
+  .dx-start .dx-card{min-height:200px;padding:20px}.dx-card .big{font-size:36px}
+  .dx-h h1{font-size:52px}
+  .dxgrid .bigrec .st{--sh:64px}
+}
+@media (min-width:1024px){
+  .dx-home{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:0 28px;align-items:start}.dx-home .dx-h{grid-column:1/-1}
+  .dxgrid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0 24px;align-items:start}
+  .dxgrid>.dxl{position:sticky;top:12px}
+}
+
 @media (min-width:700px){
   #app{display:flex;flex-direction:column}
   .bar{order:0}.nav{order:1}#view{order:2}
@@ -520,6 +595,7 @@ import { getDatabase, ref, get, set, update, onValue, increment } from "https://
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut,
   signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { DSR } from "/shared/dsr.js";
+import * as MX from "/shared/matchup.js";
 import { subsToMatches, subState, counts, confirmers, canDispute, playersOf, setsOfSub, rawSets, isNew, hoursLeft, disputeHoursLeft, validSet, needsTb, validTb, finalSet, NEW_LEVELS, levelSeed, MAX_SETS, DAY_MS, isOutside, OUTSIDE_DAYS, validatedBy, markDuplicates, scoreFor } from "/shared/subs.js";
 
 const app = initializeApp({
@@ -801,6 +877,7 @@ function compute() {
   S._preview = {};
   buildPre();
   buildOutcomes();
+  buildDex();
   const firstShow = $('#app').classList.contains('hidden');
   // First time in: let the landed logo sit for a moment before opening the profile
   const wait = firstShow ? _introReadyAt - Date.now() : 0;
@@ -860,7 +937,7 @@ function render() {
   $('#navAv').textContent = initials(myName()); $('#navName').textContent = myName(); $('#navDex').textContent = dexLabel(pr0.dexNo || S.mine.dexNo);
   updateBadge();
   if (S.tab === 'record') { v.innerHTML = recordHTML(); watchSections(); return; }
-  if (S.tab === 'dex') return v.innerHTML = soon('Matchup Dex', 'Look up any player to see your record against them, as opponents and as partners, and the SDX at stake before you play.');
+  if (S.tab === 'dex') { v.innerHTML = dexHTML(); return; }
   if (S.tab === 'honours') return v.innerHTML = soon('Honours', 'Earned on court, never bought. Your club honours board is being built.');
   v.innerHTML = profileHTML();
   drawChart();
@@ -1052,7 +1129,7 @@ document.addEventListener('click', e => {
   if (e.target.closest('[data-act=allmatches]')) { S.showAll = true; track('matches_all'); render(); }
   if (e.target.closest(`a[href^="https://wa.me/${CLUB_WA}"]`)) track('whatsapp_staff');
   const o = e.target.closest('[data-open]'); if (o) openSheet(o.dataset.open);
-  const pl = e.target.closest('[data-player]'); if (pl) openSheet('player', pl.dataset.player);
+  const pl = e.target.closest('[data-player]'); if (pl) { const id = idOfName(pl.dataset.player); if (id) { track('dx_from_profile'); openDex(id, 'partner'); } else openSheet('player', pl.dataset.player); }
 });
 
 /* ── Sheets ── */
@@ -1232,6 +1309,308 @@ document.addEventListener('submit', async e => {
   }
 });
 
+/* ══════════ Matchup Dex ══════════ */
+// Flow: start (partner or rival) → pick → that pairing's stats, with a court to add the other players or leave them blank.
+const pnm = id => S.profiles[id]?.name || 'Player';
+const idOfName = n => Object.keys(S.profiles).find(id => S.profiles[id]?.name === n) || null;
+const personaOf = id => bandOf(playerOf(pnm(id)).r).persona;
+const quiet = id => S.profiles[id]?.active === false || !!playerOf(pnm(id)).hidden;
+function buildDex() {
+  // Expected games share for team A going into each match (for chemistry), from the SDX each player carried in
+  const eOf = m => { const pr = S.pre[m.id]; if (!pr) return null; const ra = (m.teamA || []).map(n => pr[n]), rb = (m.teamB || []).map(n => pr[n]);
+    return ra.concat(rb).some(x => x == null) ? null : DSR.expected(avg(ra), avg(rb)); };
+  S.dxSets = MX.setRows(S.ms.filter(validMatch), setsOf, eOf);
+  S.dxPeople = MX.people(S.dxSets, S.mid);
+  S._stake = {}; S._avgR = null;
+}
+const dx = () => (S.dx ||= { view: 'start', role: 'partner', main: null, p: null, o1: null, o2: null, q: '', more: {} });
+function openDex(id, role) {
+  S.dx = { view: 'view', role, main: role === 'partner' ? 'p' : 'o1', p: role === 'partner' ? id : null, o1: role === 'rival' ? id : null, o2: null, q: '', more: {} };
+  if (S.tab !== 'dex') switchTab('dex'); else { render(); scrollTo(0, 0); }
+}
+const relOf = id => S.dxPeople?.[id] || { with: MX.summary([]), vs: MX.summary([]) };
+const roleFor = id => { const r = relOf(id); return r.with.n > r.vs.n ? 'partner' : 'rival'; };
+const recTiles = (w, l) => `<span class="rec">${scoreTiles(w, tileCls(w, l))}<span class="dash" aria-hidden="true">–</span>${scoreTiles(l, tileCls(l, w))}</span>`;
+const vtag = v => `<span class="vtag v-${v.key}">${esc(v.text)}</span>`;
+const wlTiles = seq => `<span class="wl" role="img" aria-label="${seq.map(x => x === 'W' ? 'win' : x === 'L' ? 'loss' : 'level').join(', ')}">${seq.map(x => `<span class="st ${x === 'W' ? 'w' : x === 'L' ? 'l' : 'd'}" aria-hidden="true"><i>${x}</i></span>`).join('')}</span>`;
+const avI = (id, cls = '') => `<span class="av xs ${cls}" aria-hidden="true">${esc(initials(pnm(id)))}</span>`;
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : /(ch|sh|s|x)$/.test(w) ? 'es' : 's'}`;
+const fmtShort = d => { try { return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); } catch { return d; } };
+const IC = {
+  pair: svgI('<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2.5 19a5.5 5.5 0 0 1 11 0M10.5 19a5.5 5.5 0 0 1 11 0"/>'),
+  rival: svgI('<circle cx="6.5" cy="12" r="3"/><circle cx="17.5" cy="12" r="3"/><path d="M12 3v18" stroke-dasharray="2 2.6"/>'),
+  search: svgI('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
+  plus: svgI('<path d="M12 5v14M5 12h14"/>'), wa: svgI('<path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12Z"/>'),
+};
+const waShare = text => `https://wa.me/?text=${encodeURIComponent(text + `\n\nSmashDex: ${location.origin}/smashdex/`)}`;
+
+function dexHTML() {
+  const D = dx();
+  if (D.view === 'pick') return dexPick();
+  if (D.view === 'view' && (D.p || D.o1)) return dexView();
+  return dexStart();
+}
+
+/* Start: partner or rival */
+function lastSessionIds() {
+  const it = historyItems(); if (!it.length) return { date: null, ids: [] };
+  const day = it[0].date, ids = [];
+  for (const x of it.filter(y => y.date === day)) (x.kind === 'm' ? [...(x.m.teamAIds || []), ...(x.m.teamBIds || [])] : playersOf(x.s))
+    .forEach(id => { if (id && id !== S.mid && !isNew(id) && S.profiles[id] && !ids.includes(id)) ids.push(id); });
+  return { date: day, club: itemClub(it[0]), ids };
+}
+function dexStart() {
+  const P = S.dxPeople || {}, ids = Object.keys(P).filter(id => S.profiles[id]);
+  const nP = ids.filter(id => P[id].with.n).length, nR = ids.filter(id => P[id].vs.n).length;
+  const dream = ids.filter(id => P[id].with.n >= 5 && P[id].with.w / P[id].with.n >= 2 / 3 - 1e-9).sort((a, b) => P[b].with.w / P[b].with.n - P[a].with.w / P[a].with.n || P[b].with.n - P[a].with.n)[0];
+  const behind = ids.filter(id => P[id].vs.n >= 3 && P[id].vs.l - P[id].vs.w >= 2).sort((a, b) => P[b].vs.n - P[a].vs.n)[0];
+  const ls = lastSessionIds();
+  const streak = seq => { let k = 0; while (seq[k] === 'L') k++; return k; };
+  return `<div class="dx-home">
+    <div class="dx-h"><h1>Matchup Dex</h1><p>Who are you sizing up?</p></div>
+    <div>
+    <div class="dx-start">
+      <button class="dx-card" data-dxrole="partner"><span class="ico" aria-hidden="true">${IC.pair}</span><span class="big">With a partner</span><small>How you play together</small><span class="cnt"><b>${nP}</b> ${nP === 1 ? 'partner' : 'partners'}</span></button>
+      <button class="dx-card r" data-dxrole="rival"><span class="ico" aria-hidden="true">${IC.rival}</span><span class="big">Against a rival</span><small>How you match up</small><span class="cnt"><b>${nR}</b> ${nR === 1 ? 'rival' : 'rivals'}</span></button>
+    </div>
+    <label class="dx-search">${IC.search}<input id="dxQ0" placeholder="Or search any player" autocomplete="off" value="${esc(D_q0())}" aria-label="Search any player"></label>
+    <div id="dxRes0">${startResults()}</div>
+    </div>
+    <div>
+    ${ls.ids.length ? `<p class="dx-lbl">From your last session · ${fmtShort(ls.date)} at ${esc(clubName(ls.club))}</p>
+      <div class="dx-chips">${ls.ids.slice(0, 8).map(id => `<button class="dx-chip" data-dxperson="${id}">${avI(id)}${esc(pnm(id))}</button>`).join('')}</div>` : ''}
+    ${dream ? `<button class="hl" data-dxperson="${dream}" data-dxas="partner"><span class="duo">${avI(S.mid, 'me')}${avI(dream, 'me')}</span><span><span class="k">Dream team</span><b>You and ${esc(pnm(dream))}: ${P[dream].with.w}–${P[dream].with.l} together</b><small>You win ${Math.round(100 * P[dream].with.w / P[dream].with.n)}% of sets with them.</small></span>${ICON.chev}</button>` : ''}
+    ${behind ? `<button class="hl r" data-dxperson="${behind}" data-dxas="rival">${avI(behind, 'th')}<span><span class="k">Unfinished business</span><b>${esc(pnm(behind))} leads you ${P[behind].vs.l}–${P[behind].vs.w} in sets</b><small>${streak(P[behind].vs.seq) >= 2 ? `You lost the last ${streak(P[behind].vs.seq)}.` : 'Time for a rematch.'}</small></span>${ICON.chev}</button>` : ''}
+    ${!ids.length ? `<p class="empty" style="margin-top:14px">Your rivals and partners appear here once you've played a confirmed match. You can still look anyone up.</p>` : ''}
+    </div></div>`;
+}
+const D_q0 = () => S.dxQ0 || '';
+function searchPool(q, exclude = []) {
+  q = q.trim().toLowerCase().replace(/^#/, ''); if (!q) return [];
+  const num = /^\d+$/.test(q);
+  return Object.entries(S.profiles).filter(([id, p]) => p && p.name && id !== S.mid && !exclude.includes(id) &&
+    (p.name.toLowerCase().includes(q) || (num && String(p.dexNo || '').padStart(4, '0').includes(q))))
+    .sort((a, b) => quiet(a[0]) - quiet(b[0]) || (relOf(b[0]).with.n + relOf(b[0]).vs.n) - (relOf(a[0]).with.n + relOf(a[0]).vs.n) || a[1].name.localeCompare(b[1].name)).map(([id]) => id);
+}
+function personRow(id, role, attr) {
+  const r = relOf(id), rec = role === 'partner' ? r.with : role === 'rival' ? r.vs : null, p = S.profiles[id] || {};
+  const v = rec ? (role === 'partner' ? MX.verdictTogether(rec) : MX.verdictAgainst(rec)) : null;
+  const sub = role ? (rec.n ? `${plural(rec.n, 'set')} ${role === 'partner' ? 'together' : 'faced'}` : '')
+    : [r.with.n ? `partners in ${plural(r.with.n, 'set')}` : '', r.vs.n ? `faced in ${plural(r.vs.n, 'set')}` : ''].filter(Boolean).join(' · ') || 'Never played together or against';
+  return `<button class="prow${quiet(id) ? ' dim' : ''}" ${attr}="${id}">${avI(id, role === 'rival' ? 'th' : role === 'partner' ? 'me' : '')}<span><b>${esc(pnm(id))}</b><small>${[dexLabel(p.dexNo), esc(personaOf(id)), quiet(id) ? 'not seen lately' : ''].filter(Boolean).join(' · ')}</small>${sub ? `<small>${sub}</small>` : ''}</span>
+    <span class="rc">${rec && rec.n ? recTiles(rec.w, rec.l) : ''}${v && rec.n ? vtag(v) : ''}</span></button>`;
+}
+function startResults() {
+  const q = D_q0(); if (!q.trim()) return '';
+  const ids = searchPool(q).slice(0, 10);
+  return `<div class="plist" style="margin-top:10px">${ids.length ? ids.map(id => personRow(id, null, 'data-dxperson')).join('') : '<p class="empty">No member matches that.</p>'}</div>`;
+}
+
+/* Pick: sorted for the role */
+function dexPick() {
+  const D = dx(), role = D.role, P = S.dxPeople || {};
+  return `<button class="dx-back" data-dxview="start">${ICON.back}Matchup Dex</button>
+    <div class="dx-h"><h1 style="color:${role === 'partner' ? 'var(--yellow)' : '#5AA6F7'}">${role === 'partner' ? 'Pick your partner' : 'Pick your rival'}</h1><p>${role === 'partner' ? 'Sorted by sets you\'ve played together.' : 'Sorted by sets you\'ve played against them.'}</p></div>
+    <div class="seg2" style="margin:14px 0 12px" role="group" aria-label="Partner or rival">${[['partner', 'Partner'], ['rival', 'Rival']].map(([k, l]) => `<button class="fchip${role === k ? ' on' : ''}" data-dxrole="${k}" aria-pressed="${role === k}">${l}</button>`).join('')}</div>
+    <label class="dx-search">${IC.search}<input id="dxQ" placeholder="Search a name or Dex number" autocomplete="off" value="${esc(D.q)}" aria-label="Search players"></label>
+    <div id="dxList">${pickList()}</div>`;
+}
+function pickList() {
+  const D = dx(), role = D.role, P = S.dxPeople || {}, key = role === 'partner' ? 'with' : 'vs';
+  if (D.q.trim()) { const ids = searchPool(D.q).slice(0, 12); return `<div class="plist" style="margin-top:12px">${ids.length ? ids.map(id => personRow(id, role, 'data-dxpick')).join('') : '<p class="empty">No member matches that.</p>'}</div>`; }
+  const known = Object.keys(P).filter(id => S.profiles[id] && P[id][key].n).sort((a, b) => quiet(a) - quiet(b) || P[b][key].n - P[a][key].n || P[b][key].last.localeCompare(P[a][key].last));
+  const shown = D.more.pick ? known : known.slice(0, 10);
+  const never = recentIds().filter(id => S.profiles[id] && !known.includes(id)).slice(0, 6);
+  return `${known.length ? `<p class="dx-lbl">${role === 'partner' ? "People you've partnered" : "People you've faced"}</p><div class="plist">${shown.map(id => personRow(id, role, 'data-dxpick')).join('')}</div>
+      ${known.length > shown.length ? `<button class="dx-more" style="margin-top:10px" data-dxmore="pick">All ${known.length} ${role === 'partner' ? 'partners' : 'rivals'}</button>` : ''}` : `<p class="empty">No ${role === 'partner' ? 'partners' : 'rivals'} yet. Search for anyone above.</p>`}
+    ${never.length ? `<p class="dx-lbl">${role === 'partner' ? 'Never partnered' : 'Never faced'}</p><div class="plist">${never.map(id => personRow(id, role, 'data-dxpick')).join('')}</div>` : ''}
+    <p class="note" style="margin-top:12px">Picking someone new still shows your SDX at stake.</p>`;
+}
+
+/* SDX at stake: the real engine, run with one more set today (won 6–4 or lost 4–6). Empty spots are average players. */
+function avgR() {
+  if (S._avgR != null) return S._avgR;
+  const rs = Object.values(S.ratings).filter(p => !String(p.name).startsWith('~') && p.last != null && !p.hidden && p.sets >= 8).map(p => p.r);
+  return (S._avgR = rs.length ? avg(rs) : 2.5);
+}
+function stakeFor(mate, o1, o2) {
+  const key = [mate, o1, o2].join('|'); if (S._stake[key]) return S._stake[key];
+  const me = myName(), seeds = { ...S._seeds }, a = avgR();
+  const nm = (id, k) => { if (id && S.profiles[id]?.name) return S.profiles[id].name; const v = `~avg${k}`; seeds[v] = { seed: a }; return v; };
+  const A = [me, nm(mate, 1)], B = [nm(o1, 2), nm(o2, 3)], t = todayUTC();
+  const run = (x, y) => { const m = { id: '~stake', date: t, enteredAt: '~', format: 'openplay', status: 'confirmed', teamA: A, teamB: B, teamAIds: [], teamBIds: [], setsData: [{ a: x, b: y }], a: x, b: y };
+    const r = DSR.compute(seeds, S.ms.concat([m]), t, S._adj).players[me]; return r ? r.r : null; };
+  const base = playerOf(me).r, w = run(6, 4), l = run(4, 6);
+  return (S._stake[key] = w == null || l == null ? null : { win: Math.round((w - base) * 100) / 100, lose: Math.round((l - base) * 100) / 100 });
+}
+const stakeTiles = (d, cls) => `<span class="st ${cls}" role="img" aria-label="${d < 0 ? 'minus' : 'plus'} ${Math.abs(d).toFixed(2)}">${((d <= -0.005 ? '−' : d >= 0.005 ? '+' : '±') + Math.abs(d).toFixed(2)).split('').map(c => `<i aria-hidden="true"${c === '.' ? ' class="dt"' : ''}>${c}</i>`).join('')}</span>`;
+function stakeCard() {
+  const D = dx(), st = stakeFor(D.p, D.o1, D.o2); if (!st) return '';
+  const full = D.p && D.o1 && D.o2, pair = D.role === 'partner' && !D.o1 && !D.o2;
+  const why = Math.abs(st.lose) < 0.005 && st.win > 0 ? 'A close loss would leave your SDX about where it is; a win moves it up.'
+    : st.lose >= 0.005 ? `Even a close loss to ${full || D.o1 && D.o2 ? 'this pair' : 'them'} would nudge you up: you'd only be expected to win about 4 games.`
+    : st.win <= 0 ? "You're big favourites: you'd be expected to win by more than 6–4, so only a wider win moves you up."
+    : st.win > -st.lose + 0.004 ? 'More to win than to lose.' : st.win < -st.lose - 0.004 ? "You're the favourites here, so a win moves you less." : 'About as much to win as to lose.';
+  const cl = d => d >= 0.005 ? 'w' : d <= -0.005 ? 'l' : 'd';
+  return `<div class="dxc blue"><div class="hrow"><h3 style="color:#5AA6F7">SDX at stake${pair ? ' as a pair' : ''}</h3><span>Your SDX, per set</span></div>
+    <div class="sgrid stk">
+      <div class="sbx"><span class="k">Win ${scoreTiles(6)}<span class="dash"> – </span>${scoreTiles(4, 'lo')}</span>${stakeTiles(st.win, cl(st.win))}</div>
+      <div class="sbx"><span class="k">Lose ${scoreTiles(4, 'lo')}<span class="dash"> – </span>${scoreTiles(6)}</span>${stakeTiles(st.lose, cl(st.lose))}</div>
+    </div>
+    <p class="note">${full ? 'Exact for this line-up.' : 'Empty spots count as average club players.'} ${why} Only your own SDX is shown, rounded to 0.01.</p>
+    ${full ? '' : `<p class="note">A wider score moves it more; a closer one, less.</p>`}</div>`;
+}
+
+/* The court: you + three spots */
+function courtHTML() {
+  const D = dx();
+  const slot = (k, cls, tag) => { const id = D[k];
+    if (!id) return `<button class="cs open" data-dxslot="${k}"><span class="plus" aria-hidden="true">${IC.plus}</span><span>${k === 'p' ? 'Add partner' : 'Add opponent'}</span></button>`;
+    return `<button class="cs ${cls}" data-dxslot="${k}" aria-label="${esc(pnm(id))}, ${D.main === k ? 'change' : 'swap or remove'}">${avI(id, cls)}<span>${esc(pnm(id).split(' ')[0])}<small>${D.main === k ? tag : 'Added'} · #${String(S.profiles[id]?.dexNo || '').padStart(4, '0')}</small></span></button>`; };
+  const n = [D.p, D.o1, D.o2].filter(Boolean).length;
+  return `<div class="dxc"><div class="hrow"><h3>The court</h3><span>${n === 3 ? 'Tap a player to swap' : 'Add players or leave blank'}</span></div>
+    <div class="court"><div class="side"><span>Your side</span><div class="cs me">${avI(S.mid, 'me')}<span>You<small>${esc(dexLabel(S.profiles[S.mid]?.dexNo || S.mine.dexNo))}</small></span></div>${slot('p', 'me', 'Partner')}</div>
+      <div class="net" aria-hidden="true"></div>
+      <div class="side"><span>Their side</span>${slot('o1', 'th', 'Rival')}${slot('o2', 'th', 'Rival')}</div></div>
+    ${n < 3 ? `<p class="note">${D.role === 'partner' ? (n === 1 ? 'Opponents blank: you two against an average pair.' : 'One spot blank: it counts as an average player.') : (n === 1 ? 'Partners blank: average partners on both sides.' : 'One spot blank: it counts as an average player.')} Fill the court for every pair's record and the exact stake.</p>` : ''}</div>`;
+}
+function personCard(id) {
+  return `<div class="dxc pcard"><div class="nm"><b>${esc(pnm(id))}</b><span class="dex">${dexLabel(S.profiles[id]?.dexNo)}</span><span class="vtag v-even">${esc(personaOf(id))}</span></div>
+    <span>${esc(bandOf(playerOf(pnm(id)).r).quip)}</span><span class="note" style="margin:0">${esc(formLine(pnm(id)))}</span></div>`;
+}
+
+/* What the added players bring: pairs, these four, and records across the net */
+function courtInsights() {
+  const D = dx(), me = S.mid, X = S.dxSets || [], n = [D.p, D.o1, D.o2].filter(Boolean).length;
+  if (n < 2) return '';
+  const full = n === 3, rows = [], row = (av, title, sub, r) => rows.push(`<div class="ins">${av}<span><b>${title}</b>${sub ? `<small>${sub}</small>` : ''}</span>${r && r.n ? recTiles(r.w, r.l) : '<span class="note" style="margin:0">Never</span>'}</div>`);
+  let four = '';
+  if (full) { const f = MX.fourRecord(X, [me, D.p], [D.o1, D.o2]);
+    four = `<div class="dxc hot"><div class="hrow"><div><span class="k" style="font-size:13px;color:var(--muted)">These four</span><div class="vrd">${f.n ? `Met in ${plural(f.n, 'set')}` : 'A first meeting'}</div></div>${f.n ? recTiles(f.w, f.l) : recTiles(0, 0)}</div>
+      <p class="note">${f.n ? `Your side ${f.w}–${f.l} in sets, last on ${fmtShort(f.last)}.` : 'This exact line-up has never played.'}</p></div>`; }
+  const pairs = [];
+  if (D.p && (D.main !== 'p' || full)) { const r = MX.together(X, me, D.p); pairs.push([`<span class="duo">${avI(me, 'me')}${avI(D.p, 'me')}</span>`, `You &amp; ${esc(pnm(D.p))}`, r.n ? `${plural(r.n, 'set')} together · ${MX.verdictTogether(r).text}` : 'Never partnered', r]); }
+  if (D.o1 && D.o2) { const r = MX.pairRecord(X, D.o1, D.o2); pairs.push([`<span class="duo">${avI(D.o1, 'th')}${avI(D.o2, 'th')}</span>`, `${esc(pnm(D.o1))} &amp; ${esc(pnm(D.o2))}`, r.n ? `${plural(r.n, 'set')} together` : 'Never partnered each other', r]); }
+  pairs.forEach(x => row(...x));
+  const pairHTML = rows.splice(0).join('');
+  for (const o of [D.o1, D.o2].filter(Boolean)) {
+    if (!(D.main === 'o1' && o === D.o1) || full) { const r = MX.against(X, me, o); row(avI(o, 'th'), `You vs ${esc(pnm(o))}`, r.n ? MX.verdictAgainst(r).text : '', r); }
+    if (D.p) { const r = MX.against(X, D.p, o); row(avI(D.p, 'me'), `${esc(pnm(D.p))} vs ${esc(pnm(o))}`, "Your partner's sets", r); }
+  }
+  const acrossHTML = rows.join('');
+  return `${four}
+    ${pairHTML ? `<div class="dxc"><div class="hrow"><h3>The pairs</h3><span>Sets together</span></div><div>${pairHTML}</div></div>` : ''}
+    ${acrossHTML ? `<div class="dxc"><div class="hrow"><h3>Across the net</h3><span>Sets</span></div><div>${acrossHTML}</div></div>` : ''}`;
+}
+
+/* The main pairing's stats */
+function matchList(ids, key, label) {
+  const D = dx(), ms = S.ms.filter(m => ids.includes(m.id)).sort((x, y) => y.date.localeCompare(x.date) || String(y.enteredAt || '').localeCompare(String(x.enteredAt || '')));
+  if (!ms.length) return '';
+  const shown = D.more[key] ? ms : ms.slice(0, 3);
+  return `<div class="dxc"><div class="hrow"><h3>${label}</h3><span>${plural(ms.length, 'match')}</span></div><div>${shown.map(matchRow).join('')}</div>
+    ${ms.length > shown.length ? `<button class="dx-more" data-dxmore="${key}">All ${ms.length} matches</button>` : ''}</div>`;
+}
+function recCard(r, v, labels, extra = '') {
+  return `<div class="dxc hot"><div class="vrd v-${v.key}">${esc(v.text)}</div>
+    <div class="bigrec"><span class="c">${scoreTiles(r.w, tileCls(r.w, r.l))}${labels[0]}</span><span class="dash" aria-hidden="true">–</span><span class="c">${scoreTiles(r.l, tileCls(r.l, r.w))}${labels[1]}</span></div>
+    <p class="note" style="text-align:center">${labels[2]} · games ${r.gf}–${r.ga}</p>
+    <div class="sgrid"><div class="sbx"><span class="k">Last ${Math.min(5, r.n)} set${Math.min(5, r.n) === 1 ? '' : 's'}, newest first</span>${wlTiles(r.seq.slice(0, 5))}</div>
+      <div class="sbx"><span class="k">${labels[3]}</span><span><b>${plural(r.sessions, 'session')}</b> since ${fmtShort(r.first)}. Last on ${fmtShort(r.last)}.</span></div></div>${extra}</div>`;
+}
+function togetherDetail(x) {
+  const D = dx(), X = S.dxSets || [], me = S.mid, r = MX.together(X, me, x), v = MX.verdictTogether(r), nm = esc(pnm(x));
+  if (!r.n) { const vs = MX.against(X, me, x);
+    return `<div class="dxc hot"><div class="vrd v-blank">Never partnered</div><p class="note">You and ${nm} haven't played on the same side yet.${vs.n ? ` Across the net you're ${vs.w}–${vs.l} in sets.` : ''}</p></div>`; }
+  const all = MX.overall(X, me), on = all.n - r.n, ow = all.w - r.w, chem = MX.chemistry(r);
+  const chemHTML = r.n >= 3 ? `<div class="dxc"><div class="hrow"><h3>Chemistry</h3>${chem != null ? `<span class="vtag ${chem >= 0 ? 'v-dream' : 'v-behind'}">${chem >= 0 ? '+' : '−'}${Math.abs(chem)}</span>` : ''}</div>
+    ${chem != null ? `<p class="note">Together you win ${Math.round(100 * r.share)}% of games. Against those opponents, the ratings expected ${Math.round(100 * r.eShare)}%.</p>` : ''}
+    <div><div class="hrow"><span style="color:var(--text);font-size:14px">You with ${nm}</span><b class="yel" style="font-size:14px">${Math.round(100 * r.w / r.n)}%</b></div><div class="bar2"><i style="width:${Math.round(100 * r.w / r.n)}%"></i></div></div>
+    ${on ? `<div><div class="hrow"><span style="color:var(--text);font-size:14px">You with everyone else</span><b style="font-size:14px">${Math.round(100 * ow / on)}%</b></div><div class="bar2 g"><i style="width:${Math.round(100 * ow / on)}%"></i></div></div>` : ''}
+    <p class="note">Your sets won, as a share of sets played. ${nm}'s own numbers stay on their profile.</p></div>` : '';
+  const pf = MX.pairsFaced(X, me, x), pfs = D.more.pairs ? pf : pf.slice(0, 4);
+  const pfHTML = pf.length ? `<div class="dxc"><div class="hrow"><h3>Pairs you've faced together</h3><span>Sets</span></div><div>${pfs.map((p, i) => `<div class="ins"><span class="duo">${avI(p.ids[0], 'th')}${avI(p.ids[1], 'th')}</span><span><b>${esc(pnm(p.ids[0]))} &amp; ${esc(pnm(p.ids[1]))}</b><small>${plural(p.rec.n, 'set')} · last ${fmtShort(p.rec.last)}</small></span>${recTiles(p.rec.w, p.rec.l)}</div>`).join('')}</div>
+    ${pf.length > pfs.length ? `<button class="dx-more" data-dxmore="pairs">All ${pf.length} pairs</button>` : ''}</div>` : '';
+  return recCard(r, v, ['Won', 'Lost', 'Sets on the same side', 'Together']) + chemHTML + pfHTML + matchList(r.matches, 'mt', 'Matches together');
+}
+function againstDetail(x) {
+  const X = S.dxSets || [], me = S.mid, r = MX.against(X, me, x), v = MX.verdictAgainst(r), nm = esc(pnm(x));
+  if (!r.n) {
+    const cg = MX.commonGround(X, me, x), sp = MX.sharedPartners(X, me, x), w = r => r.n ? r.w / r.n : 0;
+    return `<div class="dxc hot" style="align-items:center;text-align:center">${recTiles(0, 0)}<div class="vrd">A blank page</div><p class="note">You and ${nm} have never been across the net from each other.${cg.length ? " Here's what you have in common." : ''}</p></div>
+      ${cg.length ? `<div class="dxc"><div class="hrow"><h3>Common ground</h3><span>Opponents you've both faced</span></div><div>${cg.slice(0, 5).map(c => `<div class="ins">${avI(c.id)}<span><b>vs ${esc(pnm(c.id))}</b><small>You ${c.mine.w}–${c.mine.l} · ${nm} ${c.theirs.w}–${c.theirs.l}</small></span>${Math.abs(w(c.mine) - w(c.theirs)) < 0.1 ? '<span class="vtag v-early">Too close</span>' : w(c.mine) > w(c.theirs) ? '<span class="vtag v-ahead">You did better</span>' : `<span class="vtag v-even">${esc(pnm(x).split(' ')[0])} did better</span>`}</div>`).join('')}</div>
+        <p class="note">Sets only.${sp.length ? ` Partners you've both had: ${sp.slice(0, 4).map(id => esc(pnm(id))).join(', ')}.` : ''}</p></div>` : ''}`;
+  }
+  const lw = r.lastWin && r.seq[0] !== 'W' ? `<p class="note">Your last win against ${nm} was ${r.lastWin.my}–${r.lastWin.th} on ${fmtShort(r.lastWin.date)}. It can be done.</p>` : '';
+  return recCard(r, v, ['You', esc(pnm(x).split(' ')[0]), 'Sets on opposite sides', 'Met'], lw) + matchList(r.matches, 'meet', 'Your meetings') +
+    `<p class="note" style="margin-top:10px">Only sets where you and ${nm} were on opposite sides count here.</p>`;
+}
+function waHTML() {
+  const D = dx(), X = S.dxSets || [], me = S.mid, full = D.p && D.o1 && D.o2, x = D[D.main], first = pnm(x).split(' ')[0];
+  let text, label;
+  if (full) { const f = MX.fourRecord(X, [me, D.p], [D.o1, D.o2]);
+    text = `${myName()} & ${pnm(D.p)} vs ${pnm(D.o1)} & ${pnm(D.o2)}. ${f.n ? `These four: ${f.w}–${f.l} in sets.` : 'First time as these four.'} Game this week? 🎾`; label = 'Send this line-up on WhatsApp'; }
+  else if (D.role === 'partner') { const r = MX.together(X, me, x);
+    text = r.n ? `Hi ${first}, we're ${r.w}–${r.l} together on SmashDex. Same pair this week? 🎾` : `Hi ${first}, fancy teaming up for a padel match this week? 🎾`; label = `Team up with ${first}`; }
+  else { const r = MX.against(X, me, x);
+    text = !r.n ? `Hi ${first}, we've never played each other. Fancy a padel match this week? 🎾` : `Hi ${first}, ${r.w > r.l ? `I lead you ${r.w}–${r.l}` : r.w < r.l ? `you lead me ${r.l}–${r.w}` : `we're level at ${r.w}–${r.l}`} in sets on SmashDex. Rematch this week? 🎾`; label = r.n ? `Challenge ${first}` : `Invite ${first} to a first match`; }
+  return `<a class="btn wa full big dx-wa" href="${waShare(text)}" target="_blank" rel="noopener" data-track="${full ? 'dx_wa_lineup' : D.role === 'partner' ? 'dx_wa_team' : 'dx_wa_challenge'}">${IC.wa}${esc(label)}</a>`;
+}
+function dexView() {
+  const D = dx(), x = D[D.main], r = relOf(x), other = D.role === 'partner' ? r.vs : r.with, X = S.dxSets || [];
+  const flip = `<button class="flip" data-dxflip>${D.role === 'partner'
+    ? `<span>As rivals you're <b>${other.w}–${other.l}</b> across the net</span><span class="go r">See as rival</span>`
+    : `<span>As partners you're <b>${other.w}–${other.l}</b> together</span><span class="go">See as partner</span>`}</button>`;
+  const detail = D.role === 'partner' ? togetherDetail(x) : againstDetail(x);
+  return `<button class="dx-back" data-dxview="pick">${ICON.back}${D.role === 'partner' ? 'Pick a partner' : 'Pick a rival'}</button>
+    <div class="dxgrid">
+      <div class="dxl">${courtHTML()}${personCard(x)}${other.n ? flip : ''}${stakeCard()}</div>
+      <div class="dxr">${courtInsights()}${detail}${waHTML()}</div>
+    </div>`;
+}
+
+/* Picker for an extra spot on the court */
+function slotSheet(k) {
+  const D = dx(); D.slotKey = k; D.sq = '';
+  S.sheetKind = 'dxslot';
+  sheet(`<h2>${k === 'p' ? 'Add your partner' : 'Add an opponent'}</h2>
+    <label class="dx-search" style="margin-top:12px">${IC.search}<input id="dxSlotQ" placeholder="Search a name or Dex number" autocomplete="off" aria-label="Search players"></label>
+    <div id="dxSlotRes">${slotResults()}</div>
+    ${D[k] ? `<button class="btn full" style="margin-top:12px" data-dxclear>Leave this spot empty</button>` : ''}`);
+  if (matchMedia('(hover:hover)').matches) $('#dxSlotQ')?.focus();
+}
+function slotResults() {
+  const D = dx(), k = D.slotKey, taken = ['p', 'o1', 'o2'].filter(j => j !== k).map(j => D[j]).filter(Boolean), P = S.dxPeople || {};
+  let ids;
+  if (D.sq.trim()) ids = searchPool(D.sq, taken).slice(0, 10);
+  else {
+    const key = k === 'p' ? 'with' : 'vs';
+    ids = Object.keys(P).filter(id => S.profiles[id] && !taken.includes(id) && P[id][key].n && !quiet(id)).sort((a, b) => P[b][key].n - P[a][key].n).slice(0, 6);
+    recentIds().forEach(id => { if (ids.length < 8 && S.profiles[id] && !taken.includes(id) && !ids.includes(id)) ids.push(id); });
+  }
+  return `${!D.sq.trim() && ids.length ? `<p class="dx-lbl">${k === 'p' ? 'Your usual partners' : 'Your usual rivals'}</p>` : ''}<div class="plist">${ids.length ? ids.map(id => personRow(id, k === 'p' ? 'partner' : 'rival', 'data-dxslotpick')).join('') : '<p class="empty">No member matches that.</p>'}</div>`;
+}
+
+document.addEventListener('click', e => {
+  const t = e.target, D = S.dx || dx();
+  let el;
+  if ((el = t.closest('[data-dxrole]'))) { const role = el.dataset.dxrole; S.dx = { ...dx(), view: 'pick', role, q: D.view === 'pick' ? D.q : '', more: {} }; track('dx_start_' + role); render(); return; }
+  if ((el = t.closest('[data-dxview]'))) { D.view = el.dataset.dxview; if (D.view === 'start') { S.dxQ0 = ''; } render(); scrollTo(0, 0); return; }
+  if ((el = t.closest('[data-dxpick]'))) { track('dx_pick'); openDex(el.dataset.dxpick, D.role); return; }
+  if ((el = t.closest('[data-dxperson]'))) { const id = el.dataset.dxperson; track('dx_person'); openDex(id, el.dataset.dxas || roleFor(id)); return; }
+  if ((el = t.closest('[data-dxslotpick]'))) { D[D.slotKey] = el.dataset.dxslotpick; D.more = {}; closeSheet(); track([D.p, D.o1, D.o2].every(Boolean) ? 'dx_full' : 'dx_add'); render(); return; }
+  if (t.closest('[data-dxclear]')) { D[D.slotKey] = null; closeSheet(); render(); return; }
+  if ((el = t.closest('[data-dxslot]'))) { const k = el.dataset.dxslot; if (k === D.main) { D.view = 'pick'; D.q = ''; render(); scrollTo(0, 0); return; } slotSheet(k); return; }
+  if (t.closest('[data-dxflip]')) { const x = D[D.main]; track('dx_flip'); openDex(x, D.role === 'partner' ? 'rival' : 'partner'); return; }
+  if ((el = t.closest('[data-dxmore]'))) { D.more[el.dataset.dxmore] = true; render(); return; }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'dxQ0') { S.dxQ0 = t.value; $('#dxRes0').innerHTML = startResults(); if (t.value.trim().length === 2) track('dx_search'); }
+  if (t.id === 'dxQ') { dx().q = t.value; $('#dxList').innerHTML = pickList(); if (t.value.trim().length === 2) track('dx_search'); }
+  if (t.id === 'dxSlotQ') { dx().sq = t.value; $('#dxSlotRes').innerHTML = slotResults(); }
+});
+
 /* ══════════ Record score ══════════ */
 const CLUB_DEFAULT = 'deuce-and-smash';
 const clubList = () => Object.entries(S.clubs || {}).filter(([, c]) => c && c.name && c.approved !== false).sort((a, b) => (a[1].order || 99) - (b[1].order || 99)).map(([k, c]) => [k, c.name]);
@@ -1372,6 +1751,8 @@ function attnCard(x, ctx) {
     btns = open24 ? `<a class="btn wa full" href="${waLink(nudgeText(sid, s))}" target="_blank" rel="noopener" data-track="rec_nudge">Nudge the club on WhatsApp</a>`
       : `<p class="note" style="margin:0">If it's still open 24 hours after the score was entered, you can nudge the club from here.</p>`;
   }
+  const vsBy = ctx === 'act' && s.by !== S.mid && setsOfSub(s).some(t => (t.A.includes(S.mid) && t.B.includes(s.by)) || (t.B.includes(S.mid) && t.A.includes(s.by))) ? S.dxPeople?.[s.by]?.vs : null;
+  if (vsBy && vsBy.n) note += ` So far you're ${vsBy.w}–${vsBy.l} against ${esc(pName(s, s.by))} in sets.`;
   return `<div class="acard${conf ? ' hot' : ''}">
     <div class="ah"><span>${fmtDate(s.date)} · ${esc(clubName(s.club, s.clubOther))} · ${s.format === 'competitive' ? 'Competitive' : 'Casual'}</span>${tag}</div>
     <div class="m bare${s.rotate ? ' rot' : ''}">${subCore(sid, s)}</div>
