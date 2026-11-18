@@ -1,0 +1,7 @@
+{
+  "name": "smashdex-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Scheduled jobs for SmashDex (season close). Not part of the website build.",
+  "dependencies": { "firebase-admin": "^12.7.0" }
+}

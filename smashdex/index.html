@@ -473,9 +473,9 @@ select.fchip option,.clubrow select option{background:var(--deep);color:var(--te
   .nav button.on{background:var(--yellow);border-color:var(--yellow);color:var(--navy);font-weight:700}
   .wrap{max-width:900px;padding:0 32px 48px}
   .pgrid{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:18px;align-items:start;padding-top:22px;
-    grid-template-areas:"head head" "sdx stats" "chart chart" "matches matches" "prefs people" "prefs clubs";grid-template-rows:auto auto auto auto auto 1fr}
+    grid-template-areas:"head head" "sdx stats" "chart chart" "matches matches" "seasons seasons" "prefs people" "prefs clubs";grid-template-rows:auto auto auto auto auto auto 1fr}
   .pgrid>.who{grid-area:head;padding:0}
-  .g-sdx{grid-area:sdx}.g-chart{grid-area:chart}.g-matches{grid-area:matches}.g-stats{grid-area:stats}.g-prefs{grid-area:prefs}.g-people{grid-area:people}.g-clubs{grid-area:clubs}
+  .g-sdx{grid-area:sdx}.g-chart{grid-area:chart}.g-matches{grid-area:matches}.g-stats{grid-area:stats}.g-prefs{grid-area:prefs}.g-people{grid-area:people}.g-clubs{grid-area:clubs}.g-seasons{grid-area:seasons}
   .pgrid .strip{display:none}
   .pgrid>.sec{margin:0;background:var(--deep);border:1px solid var(--line);border-radius:20px;padding:18px 22px}
   .g-stats .stat{gap:16px}
@@ -521,7 +521,7 @@ select.fchip option,.clubrow select option{background:var(--deep);color:var(--te
   .nav-out{width:44px;height:44px;border-radius:12px;border:1px solid var(--line2);background:none;color:rgba(237,237,247,.75);display:flex;align-items:center;justify-content:center}
   .wrap{max-width:1200px;padding:0 28px 48px}
   .pgrid{grid-template-columns:repeat(12,minmax(0,1fr));gap:20px;padding-top:26px;
-    grid-template-areas:"head head head head head head head head head head head head" "sdx sdx sdx sdx sdx chart chart chart chart chart chart chart" "matches matches matches matches matches matches matches stats stats stats stats stats" "matches matches matches matches matches matches matches prefs prefs prefs prefs prefs" "matches matches matches matches matches matches matches . . . . ." "people people people people people people people clubs clubs clubs clubs clubs";grid-template-rows:auto auto auto auto 1fr auto}
+    grid-template-areas:"head head head head head head head head head head head head" "sdx sdx sdx sdx sdx chart chart chart chart chart chart chart" "matches matches matches matches matches matches matches stats stats stats stats stats" "matches matches matches matches matches matches matches prefs prefs prefs prefs prefs" "matches matches matches matches matches matches matches . . . . ." "seasons seasons seasons seasons seasons seasons seasons seasons seasons seasons seasons seasons" "people people people people people people people clubs clubs clubs clubs clubs";grid-template-rows:auto auto auto auto 1fr auto auto}
   .g-people .people{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 /* ───────── Laptop: full sidebar ───────── */
@@ -554,6 +554,228 @@ select.fchip option,.clubrow select option{background:var(--deep);color:var(--te
   .slot.col{grid-column:1/-1}
   .m.bare{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"teams sets"}
 }
+
+/* ── Honours ── */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.card-ish{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:rgba(23,23,63,.6)}
+.card-ish h3{font-size:16px;margin-bottom:8px}
+.hn{padding-top:18px;width:100%;min-width:0}
+#view:has(>.hn){width:100%}
+.hn-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.hn-h h1{font-family:var(--head);font-weight:400;font-size:40px;letter-spacing:.02em;line-height:1}
+.hn-meta{text-align:right;font-size:13px;color:var(--muted)}.hn-meta b{display:block;color:var(--text);font-size:14px}.hn-meta span{display:block}
+.hn-tabs{display:flex;gap:4px;margin:14px 0 12px;border-bottom:1px solid var(--line);overflow-x:auto}
+.hn-tab{background:none;border:0;border-bottom:2px solid transparent;padding:10px 12px;font-size:15px;font-weight:600;color:var(--muted);white-space:nowrap}
+.hn-tab.on{color:var(--text);border-bottom-color:var(--yellow)}
+.hn-ctl,.hn-ctl2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.hn-chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line2);border-radius:999px;background:none;padding:6px 10px 6px 12px;font-size:14px;color:var(--text)}
+.hn-chip svg{width:16px;height:16px}
+.hn-vsw{margin-left:auto;display:inline-flex;border:1px solid var(--line2);border-radius:12px;padding:3px;gap:2px}
+.hn-vsw button{background:none;border:0;border-radius:9px;width:40px;height:34px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.hn-vsw button.on{background:var(--yellow);color:var(--navy)}
+.hn-vsw svg,.hn-flipb svg,.hn-back svg,.hn-replay svg,.rp-play svg{width:18px;height:18px}
+.hn-lv{display:flex;gap:6px;flex-wrap:wrap}
+.hn-pill{border:1px solid var(--line2);background:none;border-radius:999px;padding:6px 12px;font-size:14px;color:var(--muted)}
+.hn-pill.on{border-color:var(--text);color:var(--text);font-weight:600}
+.hn-club{margin-left:auto}
+.hn-club select{background:var(--deep);border:1px solid var(--line2);border-radius:999px;color:var(--text);padding:6px 10px;font-size:14px}
+.hn-club select:disabled{opacity:.55}
+.hn-sum{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:12px}
+.hn-infob{margin-left:auto}
+.hn-info ul{padding-left:18px;font-size:14px;color:var(--muted);line-height:1.5}.hn-info li+li{margin-top:6px}
+.hn>.hn-info{margin-bottom:14px}
+.hn-grid{display:grid;gap:18px}
+.hn-main{min-width:0}
+.hn-side{display:none}
+.hn-empty{border:1px dashed var(--line2);border-radius:16px;padding:22px;color:var(--muted);text-align:center}
+.hn-note{font-size:13px;color:var(--muted);margin-top:10px}
+.hn-lh{display:flex;align-items:baseline;gap:10px;margin:20px 0 8px}.hn-lh h2{font-size:16px}.hn-lh small{color:var(--muted);font-size:13px}
+.hav{flex:none;width:34px;height:34px;border-radius:50%;background:var(--deep);border:1px solid var(--line2);display:inline-flex;align-items:center;justify-content:center;font-family:var(--head);font-size:15px;letter-spacing:.03em;overflow:hidden;color:var(--text)}
+.hav img{width:100%;height:100%;object-fit:cover}
+.hav.me{border-color:var(--yellow)}
+.hav.md{width:44px;height:44px;font-size:19px}.hav.lg{width:56px;height:56px;font-size:23px;border-width:2px}
+.hav.ph{visibility:hidden}
+/* podium */
+.hn-pod{display:grid;grid-template-columns:1fr 1.1fr 1fr;align-items:end;gap:8px;margin-top:6px}
+.pc{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:0}
+.pc>b{font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pc>small{font-size:12px;color:var(--muted)}
+.pc .st{--sh:24px}.pc .l5 i{width:14px;height:16px;font-size:10px}
+.plinth{width:100%;border-radius:12px 12px 4px 4px;background:var(--deep);border:1px solid var(--line);border-top:3px solid var(--c);display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font-family:var(--head);font-size:30px;color:var(--c)}
+.p1{--c:#D8C36A}.p1 .plinth{height:96px}.p2{--c:#A9B8D0}.p2 .plinth{height:70px}.p3{--c:#C4946E}.p3 .plinth{height:54px}
+.p1 .hav{border-color:#D8C36A}.p2 .hav{border-color:#A9B8D0}.p3 .hav{border-color:#C4946E}
+/* rows */
+.hn-rows{border-top:1px solid var(--line)}
+.hn-row{display:grid;grid-template-columns:22px 34px minmax(0,1fr) 92px auto;grid-template-areas:"rk av nm rb sc" "rk av nm l5 sc";align-items:center;gap:2px 10px;padding:10px 4px;border-bottom:1px solid var(--line);position:relative}
+.hn-row .rk{grid-area:rk;font-family:var(--head);font-size:20px;color:var(--muted);text-align:center}
+.hn-row .hav{grid-area:av}.hn-row .nm{grid-area:nm;min-width:0}.hn-row .rbar{grid-area:rb}.hn-row .l5{grid-area:l5}.hn-row>.st,.hn-row .sc{grid-area:sc}
+.hn-row .c2{display:none}
+.hn-row .nm b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hn-row .nm small{display:block;font-size:12px;color:var(--muted)}
+.hn-row.me{background:rgba(245,214,40,.07);border-radius:10px}
+.hn-row.me .rk{color:var(--yellow)}
+.hn-row .st{--sh:22px}
+.hn-rowh{display:none}
+.hn-why{position:absolute;right:-6px;top:-6px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line2);background:var(--navy);color:var(--yellow);font-size:12px;font-weight:700}
+.rbar{display:flex;flex-direction:column;gap:3px;min-width:0}
+.rbar b{font-size:12px;font-weight:600;white-space:nowrap}.rbar em{font-style:normal;color:var(--muted);font-weight:500}.rbar .sets{display:none}
+.rb{display:flex;height:6px;border-radius:3px;overflow:hidden;background:rgba(237,237,247,.08)}
+.rb i{height:100%}.rb .w{background:#9DB67C}.rb .l{background:rgba(237,237,247,.28)}.rb .t{background:#A9B8D0}
+.l5{display:inline-flex;gap:2px}
+.l5 i{width:15px;height:17px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font:400 11px/1 var(--head);font-style:normal;background:#1E1E4A;color:var(--faint)}
+.l5 i.w{color:#F5D628}.l5 i.d{color:var(--text)}
+.hn-plan{display:flex;justify-content:space-between;gap:10px;width:100%;margin:6px 0;border:1px dashed rgba(245,214,40,.45);border-radius:12px;background:rgba(245,214,40,.06);color:var(--text);padding:9px 12px;font-size:13px;text-align:left}
+.hn-plan span:last-child{color:var(--yellow);font-weight:600;white-space:nowrap}
+.hn-replay{margin-top:18px;gap:8px}
+/* ladder */
+.hn-zoom{margin-bottom:10px}
+.hn-lad{position:relative;height:430px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,rgba(23,23,63,.7),rgba(14,14,44,.4));overflow:hidden}
+.hn-lad .tv{position:absolute;left:0;right:0;top:calc(var(--y) * 1px);border-top:1px dashed rgba(237,237,247,.08)}
+.hn-lad .tv b{position:absolute;left:8px;top:-9px;font:400 14px/1 var(--head);color:var(--faint)}
+.hn-lad .th{display:none}
+.tk{position:absolute;left:calc(46% + var(--c) * 46px);top:calc(var(--y) * 1px - 18px);width:36px;height:36px;border-radius:50%;border:1px solid var(--line2);background:var(--deep);color:var(--text);font:400 15px/1 var(--head);display:flex;align-items:center;justify-content:center;padding:0;transition:top .45s ease,left .45s ease;overflow:visible}
+.tk img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.tk em{position:absolute;right:calc(100% + 8px);top:50%;transform:translateY(-50%);font:600 12px/1 var(--ui);font-style:normal;white-space:nowrap;color:var(--muted)}
+.tk.me{border:2px solid var(--yellow)}.tk.me em{color:var(--yellow)}
+.tk.sel{box-shadow:0 0 0 3px rgba(245,214,40,.3)}
+.tk.outv{display:none}
+.hn-lad .more{position:absolute;right:10px;font-size:12px;color:var(--muted)}.more.up{top:6px}.more.dn{bottom:6px}
+.gapv{position:absolute;left:calc(46% - 14px);width:2px;top:calc(var(--y1) * 1px);height:calc((var(--y2) - var(--y1)) * 1px);background:var(--yellow);opacity:.6}
+.gapc{position:absolute;left:44px;top:calc(var(--y) * 1px - 18px);font-size:12px;color:var(--muted);max-width:40%}.gapc b{display:block;color:var(--yellow)}
+.gaph{display:none}
+.hn-lad.gap .tk.me em{display:none}
+.hn-ladk{display:none;justify-content:space-between;font-size:12px;color:var(--faint);margin-top:6px}
+.hn-selc{display:grid;grid-template-columns:44px minmax(0,1fr) auto;grid-template-areas:"av t sc" "l5 l5 go";align-items:center;gap:8px 12px;margin-top:12px;border:1px solid var(--line2);border-radius:16px;padding:12px 14px;background:var(--deep)}
+.hn-selc .hav{grid-area:av}.hn-selc .t{grid-area:t;min-width:0}.hn-selc>.st{grid-area:sc;--sh:26px}.hn-selc .l5{grid-area:l5}.hn-selc .linkish{grid-area:go;justify-self:end}
+.hn-selc .t b{display:block}.hn-selc .t small{font-weight:500;color:var(--muted);font-size:12px}.hn-selc .t span{display:block;font-size:13px;color:var(--muted)}.hn-selc .gy{color:var(--text)!important}
+/* table */
+.hn-tblh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}.hn-tblh h2{font-size:17px}.hn-tblh small{color:var(--muted);font-size:13px}
+.hn-flipb{border:1px solid var(--line2);background:none;border-radius:10px;width:38px;height:34px;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.hn-tscroll{border-top:1px solid var(--line)}
+.hn-tr{display:grid;grid-template-columns:62px minmax(0,1fr) auto;grid-template-areas:"ps pl sc" "ps rb l5";align-items:center;gap:4px 10px;padding:10px 4px;border-bottom:1px solid var(--line)}
+.hn-tr .ps{grid-area:ps;display:flex;align-items:center;gap:4px}.hn-tr .pl{grid-area:pl;display:flex;align-items:center;gap:8px;min-width:0}.hn-tr .rbar{grid-area:rb}.hn-tr .l5{grid-area:l5;justify-self:end}.hn-tr>.st{grid-area:sc;justify-self:end}
+.hn-tr .c2,.hn-tr .c3,.hn-tr .c4{display:none}
+.hn-tr .st{--sh:22px}.hn-tr .ps .st{--sh:24px}
+.hn-tr .nm{min-width:0}.hn-tr .nm b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hn-tr .nm small{display:block;font-size:12px;color:var(--muted)}
+.hn-tr .full{display:none}
+.hn-tr.me{background:rgba(245,214,40,.07)}
+.hn-trh{display:none}
+.mv{font-size:11px;font-weight:700;color:var(--faint)}.mv.up,.up{color:#9DB67C}.mv.down,.down{color:#D98C7A}
+.hn-tr.mvd.fa .ps .st i,.hn-tr.mvd.fb .ps .st i{animation:hnflip .5s ease both;animation-delay:var(--d)}
+@keyframes hnflip{0%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+@media (prefers-reduced-motion: reduce){.hn-tr .ps .st i{animation:none!important}.tk,.rp-lane{transition:none!important}}
+.st-hot{color:#E8A15A}.st-up{color:#9DB67C}.st-down{color:#D98C7A}.st-hold,.st-dim{color:var(--muted)}.st-gold{color:#D8C36A}
+/* working / plan */
+.hn-work .wl-r{display:flex;justify-content:space-between;font-size:14px;padding:5px 0;border-bottom:1px solid var(--line)}
+.hn-work .wl-t{font-weight:700;margin:8px 0}
+.hn-work p{font-size:14px;margin-top:8px;color:var(--muted)}.hn-work p b{color:var(--text)}
+.hn-work .wl-f{font-family:var(--head);font-size:22px;color:var(--yellow)}
+.hn-planb .pj{display:flex;align-items:center;gap:12px}.hn-planb .pj b{display:block}.hn-planb .pj span{font-size:13px}.hn-planb .st{--sh:30px}
+.hn-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.hn-opts button:not(.linkish){display:flex;gap:6px;align-items:center;border:1px solid var(--line2);background:var(--deep);border-radius:10px;padding:7px 10px;font-size:13px;color:var(--text)}
+.hn-opts b.w{color:#9DB67C}.hn-opts b.c{color:#D8C36A}.hn-opts b.l{color:var(--faint)}
+.hn-mlist{display:grid;gap:8px;margin:12px 0 16px}
+.hn-mlist button{display:flex;align-items:center;gap:10px;justify-content:space-between;text-align:left;border:1px solid var(--line2);background:var(--deep);border-radius:14px;padding:12px 14px;color:var(--text)}
+.hn-mlist button.on{border-color:var(--yellow)}
+.hn-mlist small{display:block;color:var(--muted);font-size:13px}.hn-mlist em{font-style:normal;font-size:11px;font-weight:700;color:var(--navy);background:var(--yellow);border-radius:6px;padding:2px 6px}
+/* replay */
+.hn-back{display:inline-flex;align-items:center;gap:4px;text-decoration:none;margin-bottom:10px;padding-left:0}
+.rp-h{display:flex;justify-content:space-between;gap:10px;margin-bottom:12px}.rp-h small{color:var(--muted);font-size:13px}
+.rp-day{display:flex;align-items:center;gap:6px;font-family:var(--head);font-size:18px;color:var(--muted)}.rp-day .st{--sh:30px}
+.rp-lanes{position:relative}
+.rp-lane{position:absolute;left:0;right:0;height:44px;display:grid;grid-template-columns:22px 34px 80px minmax(0,1fr) auto;align-items:center;gap:8px;transition:top .5s ease}
+.rp-lane .rk{font-family:var(--head);font-size:18px;color:var(--muted);text-align:center}.rp-lane .nm{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-lane .bar{height:8px;border-radius:4px;background:rgba(237,237,247,.06);overflow:hidden}.rp-lane .bar i{display:block;height:100%;background:rgba(237,237,247,.3);border-radius:4px;transition:width .5s ease}
+.rp-lane.me .bar i{background:var(--yellow)}.rp-lane.me .nm{color:var(--yellow);font-weight:700}
+.rp-lane .st{--sh:22px}
+.rp-cap{font-size:14px;color:var(--muted);margin-top:10px}.rp-cap b{color:var(--text)}
+.rp-ctl{display:flex;align-items:center;gap:12px;margin-top:14px}
+.rp-play{flex:none;width:48px;height:48px;border-radius:50%;border:0;background:var(--yellow);color:var(--navy);display:flex;align-items:center;justify-content:center}
+.rp-sl{flex:1;font-size:13px;color:var(--muted)}.rp-sl input{width:100%;accent-color:#F5D628}
+/* court regular */
+.hn-crown .cr-t{display:flex;align-items:center;gap:12px}.hn-crown .cr-t>div{flex:1;min-width:0}.hn-crown small{color:var(--muted);font-size:12px;display:block}.hn-crown b{display:block;font-size:18px}.hn-crown span{font-size:13px;color:var(--muted)}
+.hn-crown .st{--sh:34px}
+.cr-av{position:relative}.cr-av i{position:absolute;left:50%;top:-14px;transform:translateX(-50%);width:26px;height:26px}.cr-av i svg{width:100%;height:100%}
+.cr-av .hav{border-color:#9DB67C}
+.strip30{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;min-width:0}
+.strip30 i{height:12px;border-radius:2px;background:rgba(237,237,247,.07)}
+.strip30 i.on{background:rgba(237,237,247,.45)}.strip30.gold i.on{background:#9DB67C}.strip30.me i.on{background:var(--yellow)}
+.hn-crown .strip30{margin-top:14px}.hn-crown .strip30 i{height:18px}
+.cr-k{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:4px}
+.hn-crme{margin-top:12px}.hn-crme .t{display:block;margin-bottom:8px}.hn-crme p{font-size:14px;margin-top:8px}.hn-crme p span{color:var(--muted)}
+.hn-row.cr{grid-template-columns:22px 34px minmax(0,1fr) auto;grid-template-areas:"rk av nm sc" "rk av rb sc"}
+.hn-row.cr .strip30{grid-area:rb}.hn-row.cr .strip30 i{height:8px}
+/* pairs */
+.hn-duo{display:inline-flex;grid-area:av}.hn-duo .hav{width:30px;height:30px;font-size:13px}.hn-duo .hav+.hav{margin-left:-6px;box-shadow:-2px 0 0 var(--navy)}
+.hn-duo.lg .hav{width:46px;height:46px;font-size:19px}
+.hn-row.pr .nm b{white-space:normal;line-height:1.2}
+.hn-toppair small{color:var(--muted);font-size:12px}.hn-toppair .tp{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}.hn-toppair .tp>div:nth-child(2){flex:1;min-width:140px}
+.hn-toppair .tp b{display:block;font-size:17px}.hn-toppair .tp span{font-size:13px;color:var(--muted)}
+.hn-toppair .tps{text-align:right}.hn-toppair .tps .st{--sh:32px}.hn-toppair .tps small{display:block;margin-top:4px}
+.hn-mine{margin-top:12px}.mp+.mp{margin-top:12px}.mp-t{display:flex;justify-content:space-between;gap:8px;font-size:14px}.mp-t span{color:var(--muted);font-size:13px}
+.mp-b{display:block;height:6px;border-radius:3px;background:rgba(237,237,247,.08);margin:6px 0 3px;overflow:hidden}.mp-b i{display:block;height:100%;background:rgba(237,237,247,.35)}.mp-b i.r{background:#9DB67C}
+.mp small{font-size:12px;color:var(--muted)}
+.hn-row.pr{grid-template-columns:22px 56px minmax(0,1fr) 92px auto}
+/* seals + my seasons */
+.seal{display:inline-block;vertical-align:middle;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
+.msch{display:flex;align-items:flex-end;gap:10px;overflow-x:auto;padding:8px 2px 4px}
+.msb{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;color:var(--text);min-width:48px}
+.msb b{font-family:var(--head);font-weight:400;font-size:17px}.msb span{width:28px;border-radius:6px 6px 2px 2px;background:rgba(237,237,247,.22)}
+.msb.on span{background:var(--yellow)}.msb.live span{background:repeating-linear-gradient(45deg,rgba(245,214,40,.4) 0 4px,rgba(245,214,40,.15) 4px 8px)}
+.msb em{font-style:normal;font-size:12px;color:var(--muted)}.msb small{font-size:11px;color:var(--faint)}
+.mscmp{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr));gap:6px 8px;font-size:13px;margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:12px}
+.mscmp>span:nth-child(-n+4){color:var(--muted);font-size:12px}.mscmp .y{color:var(--yellow)!important}
+.mslist{margin-top:12px;border-top:1px solid var(--line)}
+.msr{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.msr .t b{display:block;font-size:15px}.msr .t small{font-size:12px;color:var(--muted)}.msr .st{--sh:22px}.msr .sl{display:flex;gap:2px}
+.msh{font-size:14px;margin:16px 0 8px}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px}
+.shelf>div{text-align:center;border:1px solid var(--line);border-radius:14px;padding:10px 6px}.shelf b{display:block;font-size:12px;margin-top:4px}.shelf small{font-size:11px;color:var(--muted)}
+.who .av img,.av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.who .av{overflow:hidden}
+.photo-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}.photo-row .av{width:56px;height:56px;font-size:22px;overflow:hidden}
+.photo-row label.btn{cursor:pointer;padding:9px 14px}.photo-row input{position:absolute;opacity:0;width:1px;height:1px}
+@media (min-width:700px){
+  .hn-h h1{font-size:48px}
+  .hn-row{grid-template-columns:28px 36px minmax(150px,1.4fr) minmax(130px,1fr) 52px 96px auto;grid-template-areas:"rk av nm rb c2 l5 sc";gap:10px 14px}
+  .hn-row .c2{display:block;grid-area:c2;font-size:13px;color:var(--muted);text-align:right}
+  .hn-row .rbar .pct{display:none}.hn-row .rbar .sets{display:inline}
+  .hn-rowh{display:grid;font-size:12px;color:var(--faint);padding:6px 4px;border-bottom:1px solid var(--line)}
+  .hn-rowh .rbar,.hn-rowh .l5,.hn-rowh .sc{display:block;font-size:12px}.hn-rowh .sc{grid-area:sc;text-align:right}
+  .hn-row.cr{grid-template-columns:28px 36px minmax(150px,1fr) minmax(200px,1.6fr) auto;grid-template-areas:"rk av nm rb sc"}
+  .hn-row.pr{grid-template-columns:28px 60px minmax(150px,1.4fr) minmax(130px,1fr) 96px auto;grid-template-areas:"rk av nm rb l5 sc"}
+  .hn-pod{max-width:560px;margin:6px auto 0}
+  .pc .st{--sh:28px}.p1 .plinth{height:110px}.p2 .plinth{height:82px}.p3 .plinth{height:62px}
+  .hn-tscroll{overflow-x:auto}
+  .hn-tr,.hn-trh{min-width:820px;grid-template-columns:96px minmax(220px,1.6fr) minmax(150px,1fr) 100px auto 56px 44px 120px;grid-template-areas:"ps pl rb l5 sc c2 c3 c4";gap:12px}
+  .hn-trh{display:grid;font-size:12px;color:var(--faint);padding:8px 4px;border-bottom:1px solid var(--line)}
+  .hn-tr .c2,.hn-tr .c3,.hn-tr .c4{display:block;font-size:13px}.hn-tr .c2{grid-area:c2;text-align:right;color:var(--muted)}.hn-tr .c3{grid-area:c3;text-align:right;color:var(--muted)}.hn-tr .c4{grid-area:c4}
+  .hn-tr .rbar .pct{display:none}.hn-tr .rbar .sets{display:inline}.hn-tr .l5{justify-self:start}
+  .hn-tr .full{display:inline}.hn-tr .short{display:none}
+}
+@media (min-width:1024px){
+  .hn-grid{grid-template-columns:minmax(0,1fr) 320px;align-items:start}
+  .hn-side{display:grid;gap:14px;position:sticky;top:90px}
+  .hn-sum .hn-infob,.hn>.hn-info{display:none}
+  .hn-grid .hn-main .hn-info{display:none}
+  .hn-lad{height:300px}
+  .hn-lad .tv{display:none}
+  .hn-lad .th{display:block;position:absolute;top:0;bottom:24px;left:calc(var(--x) * 1%);border-left:1px dashed rgba(237,237,247,.08)}
+  .hn-lad .th b{position:absolute;bottom:-20px;left:-12px;font:400 14px/1 var(--head);color:var(--faint)}
+  .tk{left:calc(var(--x) * 1% - 18px);top:calc(46% - 18px + var(--ln) * 38px)}
+  .tk em{right:auto;left:50%;top:auto;bottom:calc(100% + 6px);transform:translateX(-50%)}
+  .tk.outv{display:flex}
+  .hn-lad .more,.gapv,.gapc{display:none}
+  .gaph{display:block;position:absolute;left:calc(var(--x1) * 1%);width:calc((var(--x2) - var(--x1)) * 1%);top:calc(50% + 26px);border-top:2px solid rgba(245,214,40,.6)}
+  .gaph b{position:absolute;left:50%;transform:translateX(-50%);top:4px;font-size:12px;color:var(--yellow);white-space:nowrap}
+  .hn-ladk{display:flex}
+  .hn-zoom{display:none}
+  .hn-lad.gap .tk.me em{display:block}
+  .hn-why{display:none}
+  .hn.tbl .hn-grid{grid-template-columns:minmax(0,1fr)}
+  .hn.tbl .hn-side{display:none}
+  .hn.tbl .hn-sum .hn-infob{display:inline}
+  .hn.tbl>.hn-info{display:block}
+}
+@media (min-width:1280px){ .hn-grid{grid-template-columns:minmax(0,1fr) 340px} }
 </style>
 </head>
 <body>
@@ -596,6 +818,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRe
   signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { DSR } from "/shared/dsr.js";
 import * as MX from "/shared/matchup.js";
+import * as H from "/shared/honours.js";
+import { HONOURS, LEVELS } from "/shared/honours.js";
 import { subsToMatches, subState, counts, confirmers, canDispute, playersOf, setsOfSub, rawSets, isNew, hoursLeft, disputeHoursLeft, validSet, needsTb, validTb, finalSet, NEW_LEVELS, levelSeed, MAX_SETS, DAY_MS, isOutside, OUTSIDE_DAYS, validatedBy, markDuplicates, scoreFor } from "/shared/subs.js";
 
 const app = initializeApp({
@@ -626,7 +850,7 @@ const BANDS = [
 const bandOf = r => { let b = BANDS[0]; for (const x of BANDS) if (r >= x.lo - 1e-9) b = x; return b; };
 
 /* State */
-const S = { user: null, mid: null, profiles: {}, matches: {}, adjustments: {}, subs: {}, clubs: {}, mine: {}, ratings: {}, ms: [], outcomes: {}, pre: {}, newSeeds: {},
+const S = { seasons: {}, hset: {}, user: null, mid: null, profiles: {}, matches: {}, adjustments: {}, subs: {}, clubs: {}, mine: {}, ratings: {}, ms: [], outcomes: {}, pre: {}, newSeeds: {},
   tab: 'profile', chartN: 10, sel: null, showAll: false, hFilter: 'all', hClub: '', hShown: 20, ready: { profiles: false, matches: false, adjustments: false, subs: false } };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -845,6 +1069,9 @@ async function boot(user) {
   _unsubs.push(onValue(ref(db, 'submissions'), snap => { S.subs = snap.val() || {}; S.ready.subs = true; schedule(); }, e => { console.warn('submissions', e); S.subs = {}; S.ready.subs = true; schedule(); }));
   clearInterval(S._tick); S._tick = setInterval(schedule, 5 * 60 * 1000); // pending scores auto-confirm after 24 hours
   get(ref(db, 'clubs')).then(s => { S.clubs = s.val() || {}; schedule(); }).catch(() => {});
+  // Honours: closed seasons and settings. Optional, so they never hold up the app.
+  _unsubs.push(onValue(ref(db, 'seasons'), snap => { S.seasons = snap.val() || {}; S._hb = {}; if (S.tab === 'honours' || S.tab === 'profile') schedule(); }, e => { console.warn('seasons', e); S.seasons = {}; }));
+  get(ref(db, 'honoursSettings')).then(s => { S.hset = s.val() || {}; S._hb = {}; }).catch(() => { S.hset = {}; });
 }
 
 /* ── Compute: same engine and inputs as the staff tool ── */
@@ -878,6 +1105,7 @@ function compute() {
   buildPre();
   buildOutcomes();
   buildDex();
+  buildHonours();
   const firstShow = $('#app').classList.contains('hidden');
   // First time in: let the landed logo sit for a moment before opening the profile
   const wait = firstShow ? _introReadyAt - Date.now() : 0;
@@ -938,7 +1166,7 @@ function render() {
   updateBadge();
   if (S.tab === 'record') { v.innerHTML = recordHTML(); watchSections(); return; }
   if (S.tab === 'dex') { v.innerHTML = dexHTML(); return; }
-  if (S.tab === 'honours') return v.innerHTML = soon('Honours', 'Earned on court, never bought. Your club honours board is being built.');
+  if (S.tab === 'honours') { v.innerHTML = honoursHTML(); if (hn().replay) updateReplay(); return; }
   v.innerHTML = profileHTML();
   drawChart();
   watchSections();
@@ -967,7 +1195,7 @@ function profileHTML() {
   const hist = historyItems(), r5 = hist.map(itemRes).filter(x => x !== 'P' && x !== 'V').slice(0, 5);
   return `<div class="pgrid">
   <section class="who">
-    <div class="av" aria-hidden="true">${esc(initials(me))}</div>
+    <div class="av" aria-hidden="true">${photoOf(S.mid) ? `<img src="${photoOf(S.mid)}" alt="">` : esc(initials(me))}</div>
     <div><h2>${esc(me)}</h2><div class="sub">${dexLabel(prof.dexNo || S.mine.dexNo)}</div></div>
     <button class="btn edit" data-open="edit">Edit profile</button>
   </section>
@@ -999,6 +1227,11 @@ function profileHTML() {
     ${r5.length ? `<div class="trendc"><div><b>${r5.filter(x => x === 'W').length} win${r5.filter(x => x === 'W').length === 1 ? '' : 's'} in your last ${r5.length}</b><span>Newest on the left</span></div><div class="trend" role="img" aria-label="${r5.map(x => x === 'W' ? 'win' : x === 'L' ? 'loss' : 'draw').join(', ')}">${r5.map(x => `<span class="st ${x === 'W' ? '' : x === 'L' ? 'lo' : 'even'}" aria-hidden="true"><i>${x}</i></span>`).join('')}</div></div>` : ''}
     ${hist.length ? hist.slice(0, 5).map(itemRow).join('') + `<button class="btn full" style="margin-top:12px" data-go="record">${hist.length > 5 ? `All ${hist.length} matches in Record score` : 'Record a score'}</button>`
       : `<p class="empty">No matches yet. Record a score or play an open-play session and they'll appear here.</p><button class="btn full" style="margin-top:8px" data-go="record">Record a score</button>`}
+  </section>
+
+  <section class="sec g-seasons" data-sec="seasons">
+    <div class="sec-h"><h3>My seasons</h3><span class="aside"><button class="linkish" data-go="honours">Honours board</button></span></div>
+    ${mySeasonsHTML()}
   </section>
 
   <section class="sec g-stats" data-sec="stats">
@@ -1231,7 +1464,10 @@ function openSheet(kind, arg) {
     const m = S.mine;
     return sheet(`
       <h2>Edit profile</h2>
-      <form id="editForm" style="margin-top:14px">
+      <div class="photo-row" style="margin-top:14px"><div class="av" id="photoPrev" aria-hidden="true">${photoOf(S.mid) ? `<img src="${photoOf(S.mid)}" alt="">` : esc(initials(me))}</div>
+        <div><label class="btn">Upload a photo<input type="file" id="photoIn" accept="image/*"></label>${photoOf(S.mid) ? ' <button type="button" class="linkish" data-act="photo-remove">Remove</button>' : ''}
+        <div class="msg" id="photoMsg" style="margin-top:4px">Shown on the Honours boards. Saved as a small square.</div></div></div>
+      <form id="editForm">
         <label class="field"><span>Display name, shown to other players</span><input name="name" required maxlength="40" value="${esc(m.name || me)}"></label>
         <label class="field"><span>Full name</span><input name="fullName" maxlength="60" value="${esc(m.fullName || '')}"></label>
         <label class="field"><span>Phone</span><input name="phone" inputmode="tel" maxlength="20" value="${esc(m.phone || '')}"></label>
@@ -1304,9 +1540,453 @@ document.addEventListener('submit', async e => {
     e.preventDefault(); const f = new FormData(e.target), prefs = {};
     for (const k of ['hand', 'side', 'matchType']) if (f.get(k)) prefs[k] = f.get(k);
     const tm = f.getAll('time'); if (tm.length) prefs.time = tm;
+    const hv = S.profiles[S.mid]?.prefs?.honoursView; if (hv) prefs.honoursView = hv;
     try { await set(ref(db, `profiles/${S.mid}/prefs`), prefs); closeSheet(); track('prefs_saved'); toast('Preferences saved'); }
     catch (err) { toast('Could not save preferences: ' + err.message, 4000); }
   }
+});
+
+
+/* ── Honours: Season (Podium / Ladder / Table), Court Regular, Pairs, Season Replay, My seasons ──
+   Rules and maths live in /shared/honours.js (also used by the monthly season-close job). */
+const hn = () => (S.hn ||= { board: 'season', view: 'season', mode: ['podium', 'ladder', 'table'].includes(S.profiles[S.mid]?.prefs?.honoursView) ? S.profiles[S.mid].prefs.honoursView : 'podium',
+  lv: 'all', club: 'home', month: null, zoom: 'near', sel: null, plan: [], k: 0, info: false, replay: false, rday: null, cmp: null });
+const HS = () => { const x = S.hset || {}; const n = (v, d) => (isFinite(+v) && +v > 0 ? +v : d);
+  return { ...HONOURS, K: n(x.K, HONOURS.K), K_PAIR: n(x.K_PAIR, HONOURS.K_PAIR), MIN_SEASON: n(x.MIN_SEASON, HONOURS.MIN_SEASON), MIN_ALL: n(x.MIN_ALL, HONOURS.MIN_ALL), MIN_PAIR: n(x.MIN_PAIR, HONOURS.MIN_PAIR) }; };
+const liveMonth = () => { const m = todayLocal().slice(0, 7); return m < HONOURS.FIRST_SEASON ? HONOURS.FIRST_SEASON : m; };
+const curMonth = () => hn().month || liveMonth();
+const isLive = () => curMonth() === liveMonth();
+// Last month stays open here until the close job runs on the 2nd
+const pendingMonth = () => { const pm = H.prevMonth(liveMonth()); return pm >= HONOURS.FIRST_SEASON && liveMonth() > HONOURS.FIRST_SEASON && !S.seasons?.[pm]?.standings ? pm : null; };
+const isPending = m => m === pendingMonth();
+const monthList = () => [liveMonth(), ...(pendingMonth() ? [pendingMonth()] : []), ...Object.keys(S.seasons || {}).filter(m => m !== liveMonth() && S.seasons[m]?.standings).sort().reverse()];
+const photoOf = id => { const p = S.profiles[id]?.photo; return typeof p === 'string' && p.startsWith('data:image/') ? p : null; };
+const hav = (id, cls = '') => { const ph = photoOf(id); return `<span class="hav ${cls}${id === S.mid ? ' me' : ''}" aria-hidden="true">${ph ? `<img src="${ph}" alt="">` : esc(initials(pnm(id)))}</span>`; };
+const nmShort = id => { const w = pnm(id).trim().split(/\s+/); return w.length > 1 ? `${w[0]} ${w[w.length - 1][0]}.` : w[0]; };
+const nmFirst = id => pnm(id).trim().split(/\s+/)[0];
+const dexOf = id => dexLabel(S.profiles[id]?.dexNo);
+const ordn = n => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+const lvLabel = id => (LEVELS.find(l => l.id === id) || {}).label || '';
+const HNI = {
+  podium: svgI('<rect x="9" y="5" width="6" height="15"/><rect x="3" y="10" width="6" height="10"/><rect x="15" y="13" width="6" height="7"/>'),
+  ladder: svgI('<path d="M7 3v18M17 3v18M7 7h10M7 12h10M7 17h10"/>'),
+  table: svgI('<path d="M4 6h16M4 12h16M4 18h16"/>'),
+  play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" fill="currentColor"/><rect x="14" y="5" width="4" height="14" fill="currentColor"/></svg>',
+  back: svgI('<path d="M15 6l-6 6 6 6"/>'), down: svgI('<path d="M6 9l6 6 6-6"/>'), flip: svgI('<path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/>'),
+  crown: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18l-1.5-10-4.5 4-3-7-3 7-4.5-4z" fill="#D8C36A" stroke="#4F4418" stroke-width="1.2"/></svg>',
+};
+
+function buildHonours() {
+  const P = S.profiles;
+  const preR = (m, id) => { const nm = P[id]?.name; const v = nm ? S.pre[m.id]?.[nm] : null; return v != null ? v : (nm ? playerOf(nm).r : null); };
+  S.hRows = H.rowsFrom(S.ms.filter(validMatch), setsOf, preR);
+  S.hLevels = {}; for (const [id, p] of Object.entries(P)) if (p?.name) S.hLevels[id] = H.levelOf(playerOf(p.name).r);
+  S._hb = {}; S._hpairs = {}; S._hrep = {};
+}
+
+// Seals won, from the closed seasons
+const sealFile = x => x.type === 'level' ? 'level' : x.type === 'regular' ? 'regular' : `${x.type === 'pairs' ? 'pairs' : 'season'}-${x.kind}`;
+const sealName = x => x.type === 'level' ? `${lvLabel(x.level)} Champion` : x.type === 'regular' ? 'Court Regular'
+  : x.type === 'pairs' ? ['Pairs Champions', 'Pairs Runners-up', 'Pairs Third'][x.place - 1] : ['Season Champion', 'Season Runner-up', 'Season Third'][x.place - 1];
+const sealImg = (x, size = 28) => `<img class="seal" src="/assets/smashdex/seals/${sealFile(x)}.webp" width="${size}" height="${size}" alt="${esc(sealName(x))}${x.month ? ', ' + H.monthLabel(x.month) : ''}" loading="lazy">`;
+function sealsOf(id) { const out = []; for (const mo of Object.keys(S.seasons || {}).sort()) for (const x of S.seasons[mo]?.seals?.[id] || []) out.push({ ...x, month: mo }); return out; }
+const podiumsOf = id => sealsOf(id).filter(x => x.type === 'season').length;
+
+// Boards
+function closedBoard(month) {
+  const s = S.seasons[month];
+  const ranked = Object.entries(s.standings || {}).map(([id, x]) => ({ id, ...x, l5: String(x.l5 || '').split('').filter(Boolean), streak: 0, opp: {} })).sort((a, b) => a.rank - b.rank);
+  return { avg: s.meta?.clubAvg || HONOURS.FALLBACK_AVG, ranked, warming: Array(s.meta?.warming || 0).fill(null), all: Object.fromEntries(ranked.map(x => [x.id, x])), closed: s };
+}
+function hBoard(view = hn().view, month = curMonth(), club = hn().club) {
+  const key = `${view}|${month}|${club}`; if (S._hb?.[key]) return S._hb[key];
+  const st = HS(); let out;
+  if (view === 'all') out = H.table(S.hRows || [], { from: st.DATA_START, club: club === 'all' ? 'all' : 'home', K: st.K, min: st.MIN_ALL, levels: S.hLevels });
+  else if (month !== liveMonth() && S.seasons?.[month]?.standings) out = closedBoard(month);
+  else { const b = H.monthBounds(month); out = H.table(S.hRows || [], { from: b.from, to: b.to, club: 'home', K: st.K, min: st.MIN_SEASON, levels: S.hLevels }); }
+  return (S._hb ||= {})[key] = out;
+}
+// Movement since the member's last visit to the same board
+function prevRanks(key) {
+  S.hnPrev ||= (() => { try { return JSON.parse(localStorage.getItem('sdx_hn_prev') || '{}'); } catch { return {}; } })();
+  S.hnSaved ||= {};
+  return S.hnPrev[key] || {};
+}
+function saveRanks(key, list) {
+  if (S.hnSaved[key]) return; S.hnSaved[key] = true;
+  try { const all = JSON.parse(localStorage.getItem('sdx_hn_prev') || '{}'); all[key] = Object.fromEntries(list.map(x => [x.id, x.pos])); localStorage.setItem('sdx_hn_prev', JSON.stringify(all)); } catch {}
+}
+function hList() {
+  const h = hn(), b = hBoard(), key = `${h.view}|${curMonth()}|${h.lv}|${h.club}`;
+  let list = (h.lv === 'all' ? b.ranked : b.ranked.filter(x => x.level === h.lv)).map((x, i) => ({ ...x, pos: h.lv === 'all' ? x.rank : i + 1 }));
+  const prev = prevRanks(key), first = !Object.keys(prev).length;
+  list.forEach(x => { x.mv = prev[x.id] ? prev[x.id] - x.pos : 0; });
+  saveRanks(key, list);
+  const maxN = Math.max(1, ...list.map(x => x.sets));
+  return { b, list, me: list.find(x => x.id === S.mid) || null, mine: b.all[S.mid] || null, maxN, key, first };
+}
+const statusOf = (x, season) => {
+  if (!season) { const n = podiumsOf(x.id); return n ? [`${n} podium${n > 1 ? 's' : ''}`, 'gold'] : ['—', 'dim']; }
+  if (x.streak >= 5) return [`On fire · ${x.streak}`, 'hot'];
+  if (x.mv > 0) return [`Climbing ▲${x.mv}`, 'up'];
+  if (x.mv < 0) return [`Drifting ▼${-x.mv}`, 'down'];
+  return ['Holding', 'hold'];
+};
+const moveTxt = x => x.mv > 0 ? `<span class="mv up">▲${x.mv}</span>` : x.mv < 0 ? `<span class="mv down">▼${-x.mv}</span>` : '<span class="mv">–</span>';
+
+// Small pieces
+function recBar(x, maxN, withSets) {
+  const N = x.sets || 0, w = x.w || 0, l = x.l || 0, t = x.t || 0, pw = N ? Math.round(w / N * 100) : 0, pl = N ? Math.round(l / N * 100) : 0;
+  const vol = Math.max(20, Math.round(N / maxN * 100));
+  return `<span class="rbar" role="img" aria-label="${w} won, ${l} lost${t ? `, ${t} tied` : ''} of ${N} sets, ${pw}% won"><b>${w}–${l}${t ? '–' + t : ''}<em class="pct"> ${pw}%</em><em class="sets"> · ${N} sets</em></b>
+    <span class="rb" style="width:${vol}%"><i class="w" style="width:${pw}%"></i><i class="l" style="width:${pl}%"></i><i class="t" style="width:${Math.max(0, 100 - pw - pl)}%"></i></span></span>`;
+}
+const l5HTML = seq => `<span class="l5" role="img" aria-label="Last ${seq.length} sets: ${seq.map(x => x === 'W' ? 'won' : x === 'L' ? 'lost' : 'tied').join(', ')}">${seq.map(x => `<i class="${x === 'W' ? 'w' : x === 'L' ? 'l' : 'd'}">${x}</i>`).join('')}</span>`;
+const hTiles = (n, cls = '') => scoreTiles(n, cls);
+const pill = (on, attr, label, extra = '') => `<button class="hn-pill${on ? ' on' : ''}" ${attr}${extra}>${label}</button>`;
+
+function honoursHTML() {
+  const h = hn();
+  if (h.replay) return replayHTML();
+  const tabs = [['season', 'Season'], ['regular', 'Court Regular'], ['pairs', 'Pairs']];
+  const head = `<div class="hn-h"><h1>Honours</h1><div class="hn-meta">${h.board === 'regular' ? '<b>Rolling 30 days</b><span>Updated every night</span>'
+    : h.view === 'all' && h.board === 'season' ? '<b>All-time</b><span>Every counted set</span>' : `<b>Season · ${esc(H.monthLabel(curMonth()))}</b><span>${isLive() ? daysLeftTxt() : isPending(curMonth()) ? 'Finalising…' : 'Final'}</span>`}</div></div>
+    <nav class="hn-tabs" aria-label="Boards">${tabs.map(([k, l]) => `<button class="hn-tab${h.board === k ? ' on' : ''}" data-hn="board:${k}"${h.board === k ? ' aria-current="page"' : ''}>${l}</button>`).join('')}</nav>`;
+  const body = h.board === 'regular' ? regularHTML() : h.board === 'pairs' ? pairsHTML() : seasonHTML();
+  return `<div class="hn${h.board === 'season' && h.mode === 'table' ? ' tbl' : ''}">${head}${body}</div>`;
+}
+function daysLeftTxt() { const b = H.monthBounds(liveMonth()); const n = daysBetween(todayLocal(), b.to); return n <= 0 ? 'Last day' : `${n} day${n === 1 ? '' : 's'} left`; }
+
+function explainerHTML() {
+  const st = HS(), h = hn();
+  if (h.view === 'all') return `<h3>How all-time works</h3><ul>
+    <li>Every counted set since score recording began (18 Oct 2026), scored exactly like a season.</li>
+    <li>Play ${st.MIN_ALL} or more sets to be ranked.</li>
+    <li>Choose Deuce &amp; Smash only, or all clubs to include sets recorded at other venues.</li>
+    <li>Seals show podium finishes from past seasons: gold for 1st, silver for 2nd, bronze for 3rd.</li></ul>`;
+  return `<h3>What is a season?</h3><ul>
+    <li>A season is one calendar month at Deuce &amp; Smash. Everyone starts level on the 1st.</li>
+    <li>Every set earns points: a win against a stronger pair 4, an equal pair 3, a weaker pair 2; a close loss (2 games or fewer) 1; a clear loss 0.</li>
+    <li>Your Season Score is your points per set, steadied with ${st.K} sets at the club average so a few lucky sets can’t top the table, shown out of 1,000.</li>
+    <li>Play ${st.MIN_SEASON} or more sets to be ranked. The season closes by itself on the 2nd of the next month: the top 3, and the top player in each level, earn a permanent seal.</li></ul>`;
+}
+
+function seasonHTML() {
+  const h = hn(), st = HS(), season = h.view === 'season', { b, list, me, mine, maxN, first } = hList();
+  const months = monthList();
+  const ctl = `<div class="hn-ctl">
+      <div class="seg hn-seg" role="group" aria-label="Season or all-time">${['season', 'all'].map(v => `<button class="${h.view === v ? 'on' : ''}" data-hn="view:${v}">${v === 'season' ? 'Season' : 'All-time'}</button>`).join('')}</div>
+      ${season && months.length > 1 ? `<button class="hn-chip" data-hn="months">${esc(H.monthLabel(curMonth()))}${HNI.down}</button>` : ''}
+      <div class="hn-vsw" role="group" aria-label="View">${['podium', 'ladder', 'table'].map(m => `<button class="${h.mode === m ? 'on' : ''}" data-hn="mode:${m}" aria-label="${m[0].toUpperCase() + m.slice(1)} view" aria-pressed="${h.mode === m}">${HNI[m]}</button>`).join('')}</div>
+    </div>
+    <div class="hn-ctl2">
+      <div class="hn-lv" role="group" aria-label="Level">${[{ id: 'all', label: 'All levels' }, ...LEVELS].map(l => pill(h.lv === l.id, `data-hn="lv:${l.id}"`, l.label)).join('')}</div>
+      <label class="hn-club"><span class="sr">Club</span><select data-hn-club ${season ? 'disabled title="Seasons count Deuce &amp; Smash matches only"' : ''}><option value="home"${h.club !== 'all' || season ? ' selected' : ''}>Deuce &amp; Smash</option><option value="all"${h.club === 'all' && !season ? ' selected' : ''}>All clubs</option></select></label>
+    </div>
+    <div class="hn-sum"><span>${h.lv !== 'all' ? `${esc(lvLabel(h.lv))} · ${esc((LEVELS.find(l => l.id === h.lv) || {}).range)} · ` : ''}${season ? (isLive() ? `Closes ${fmtShort(H.monthBounds(curMonth()).to)} · Deuce &amp; Smash matches` : isPending(curMonth()) ? 'Finalising… late scores still count until the season closes on the 2nd' : `Final · closed ${b.closed?.meta?.closedAt ? new Date(b.closed.meta.closedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'automatically'} · seals awarded`) : (h.club === 'all' ? 'Every counted set, all clubs' : 'Every counted set at Deuce &amp; Smash')}</span>
+      <button class="linkish hn-infob" data-hn="info" aria-expanded="${h.info}">${h.info ? 'Hide' : season ? 'How seasons work' : 'How all-time works'}</button></div>
+    ${h.info ? `<div class="hn-info card-ish">${explainerHTML()}</div>` : ''}`;
+  let main;
+  if (!list.length) main = `<div class="hn-empty"><p>${season ? `No one has played ${st.MIN_SEASON} sets ${isLive() ? 'yet this season' : 'in this season'}${h.lv !== 'all' ? ' at this level' : ''}.` : `No one has ${st.MIN_ALL} sets yet${h.lv !== 'all' ? ' at this level' : ''}.`}</p>${mine ? `<p>You have ${plural(mine.sets, 'set')} so far.</p>` : ''}${season && isLive() && pendingMonth() ? `<p style="margin-top:12px"><button class="btn" data-hn="month:${pendingMonth()}">See ${esc(H.monthLabel(pendingMonth()))} standings</button></p>` : ''}</div>`;
+  else main = h.mode === 'ladder' ? ladderHTML(list, me, maxN) : h.mode === 'table' ? tableHTML(list, maxN, b, first) : podiumHTML(list, me, maxN, b);
+  const side = sideHTML(list, me, b);
+  return `${ctl}<div class="hn-grid"><div class="hn-main">${main}
+    ${season && list.length ? `<button class="btn full hn-replay" data-hn="replay">${HNI.play}Replay the month</button>` : ''}</div>${side}</div>`;
+}
+
+function aboveMe(list, me) { return me && me.pos > 1 ? list[me.pos - 2] : null; }
+function chipTxt(list, me, b) {
+  const up = aboveMe(list, me); if (!up) return '';
+  const k = H.winsToPass(me, up.score, b.avg, HS().K);
+  return `${up.score - me.score} pts behind ${esc(nmFirst(up.id))}${k ? ` · ${k} win${k > 1 ? 's' : ''} vs a stronger pair passes` : ''}`;
+}
+function rowHTML(x, maxN, opts = {}) {
+  const season = hn().view === 'season', isMe = x.id === S.mid;
+  return `<div class="hn-row${isMe ? ' me' : ''}">
+    <span class="rk">${x.pos}</span>${hav(x.id)}
+    <span class="nm"><b>${isMe ? 'You' : esc(opts.full ? pnm(x.id) : nmShort(x.id))}</b><small>${esc(dexOf(x.id))}</small></span>
+    ${recBar(x, maxN)}
+    <span class="c2">${season ? `${x.sets ? Math.round(x.w / x.sets * 100) : 0}%` : (() => { const n = podiumsOf(x.id); return n ? `${n} seal${n > 1 ? 's' : ''}` : '—'; })()}</span>
+    ${l5HTML(x.l5 || [])}
+    ${hTiles(x.score)}
+    ${isMe && season && hn().view === 'season' ? `<button class="hn-why" data-hn="why" aria-label="How your score is worked out">?</button>` : ''}
+  </div>`;
+}
+function podiumHTML(list, me, maxN, b) {
+  const h = hn(), season = h.view === 'season';
+  const top = [list[1], list[0], list[2]].filter(Boolean);
+  const pod = `<section class="hn-pod" aria-label="Top three">${top.map(x => `<div class="pc p${x.pos}">
+      ${hav(x.id, 'lg')}<b>${x.id === S.mid ? 'You' : esc(nmFirst(x.id))}</b><small>${season ? `${x.w}–${x.l}` : (() => { const n = podiumsOf(x.id); return n ? `${n} seal${n > 1 ? 's' : ''}` : esc(dexOf(x.id)); })()}</small>
+      ${l5HTML(x.l5 || [])}${hTiles(x.score)}<div class="plinth"><span>${x.pos}</span></div></div>`).join('')}</section>`;
+  const idx = me ? me.pos - 1 : -1, slice = me ? list.slice(Math.max(0, idx - 3), idx + 4) : list.slice(0, 7);
+  const up = aboveMe(list, me), live = season && isLive();
+  const rows = slice.map(x => rowHTML(x, maxN, { full: true }) + (live && up && x.id === up.id ? `<button class="hn-plan" data-hn="plan"><span>${chipTxt(list, me, b)}</span><span>Plan it →</span></button>` : '')).join('');
+  return `${pod}<div class="hn-lh"><h2>${me ? 'Your neighbourhood' : 'Top of the table'}</h2></div>
+    <div class="hn-rows"><div class="hn-row hn-rowh" aria-hidden="true"><span class="rk">#</span><span class="hav ph"></span><span class="nm">Player</span><span class="rbar">Sets</span><span class="c2">${season ? 'Win %' : 'Seals'}</span><span class="l5">Last 5</span><span class="sc">Score</span></div>${rows}</div>
+    ${!me ? `<p class="hn-note">${b.all[S.mid] ? `You’re warming up: ${plural(b.all[S.mid].sets, 'set')} of ${season ? HS().MIN_SEASON : HS().MIN_ALL} needed.` : 'Play a few sets to join the table.'}</p>` : ''}`;
+}
+function ladderHTML(list, me, maxN) {
+  const h = hn(), centre = me || list[0], H_ = 380, padT = 22;
+  const lo = h.zoom === 'near' ? centre.score - 55 : Math.floor((list[list.length - 1].score - 15) / 25) * 25;
+  const hi = h.zoom === 'near' ? centre.score + 55 : Math.ceil((list[0].score + 15) / 25) * 25;
+  const xlo = Math.floor((list[list.length - 1].score - 15) / 25) * 25, xhi = Math.ceil((list[0].score + 15) / 25) * 25;
+  const y = s => padT + (hi - s) / (hi - lo) * H_, x = s => (s - xlo) / (xhi - xlo || 1) * 100;
+  const sel = h.sel && list.find(p => p.id === h.sel) ? h.sel : centre.id;
+  const lastY = [-999, -999, -999, -999], lanes = [0, -1, 1, -2, 2, -3, 3], used = {};
+  const toks = list.map(p => {
+    const yy = y(p.s ?? p.score), inV = p.score >= lo && p.score <= hi; let col = 0;
+    if (inV) { while (col < 3 && Math.abs(yy - lastY[col]) < 42) col++; lastY[col] = yy; }
+    const xx = x(p.score); let ln = 0;
+    for (const L of lanes) { if ((used[L] || []).every(v => Math.abs(v - xx) > 5.2)) { ln = L; break; } }
+    (used[ln] ||= []).push(xx);
+    return `<button class="tk${p.id === S.mid ? ' me' : ''}${p.id === sel ? ' sel' : ''}${inV ? '' : ' outv'}" data-hn="sel:${p.id}" style="--y:${Math.round(yy)};--c:${col};--x:${xx.toFixed(2)};--ln:${ln}" aria-label="${esc(pnm(p.id))}, ${ordn(p.pos)}, ${p.score}">${photoOf(p.id) ? `<img src="${photoOf(p.id)}" alt="">` : esc(initials(pnm(p.id)))}${p.id === S.mid || p.pos === 1 || p.id === sel ? `<em>${p.id === S.mid ? 'You' : esc(nmFirst(p.id))} · ${ordn(p.pos)}</em>` : ''}</button>`;
+  }).join('');
+  const ticksV = []; for (let v = Math.ceil(lo / 25) * 25; v <= hi; v += (h.zoom === 'near' ? 25 : 50)) ticksV.push(`<i class="tv" style="--y:${Math.round(y(v))}"><b>${v}</b></i>`);
+  const ticksH = []; for (let v = xlo + 25; v < xhi; v += 25) ticksH.push(`<i class="th" style="--x:${x(v).toFixed(2)}"><b>${v}</b></i>`);
+  const up = aboveMe(list, me);
+  const gap = up ? `<span class="gapv" style="--y1:${Math.round(y(up.score))};--y2:${Math.round(y(me.score))}"></span><span class="gapc" style="--y:${Math.round((y(up.score) + y(me.score)) / 2)}"><b>You · ${ordn(me.pos)}</b>${up.score - me.score} pts behind ${esc(nmFirst(up.id))}</span>
+    <span class="gaph" style="--x1:${x(me.score).toFixed(2)};--x2:${x(up.score).toFixed(2)}"><b>${up.score - me.score} pts to ${ordn(up.pos)}</b></span>` : '';
+  const out = list.filter(p => p.score > hi).length, below = list.filter(p => p.score < lo).length;
+  const sp = list.find(p => p.id === sel);
+  const card = `<div class="hn-selc">${hav(sp.id, 'md')}<div class="t"><b>${sp.id === S.mid ? 'You' : esc(pnm(sp.id))} <small>${ordn(sp.pos)} · ${esc(dexOf(sp.id))}</small></b>
+      <span>${sp.w}–${sp.l} · ${sp.sets} sets</span>${me && sp.id !== S.mid ? `<span class="gy">${sp.score > me.score ? `${sp.score - me.score} pts ahead of you` : `${me.score - sp.score} pts behind you`}</span>` : ''}</div>${hTiles(sp.score)}
+      ${l5HTML(sp.l5 || [])}${hn().view === 'season' ? `<button class="linkish" data-hn="why:${sp.id}">See the working →</button>` : ''}</div>`;
+  return `<div class="hn-zoom seg" role="group" aria-label="Zoom">${[['near', 'Near me'], ['whole', 'Whole table']].map(([k, l]) => `<button class="${h.zoom === k ? 'on' : ''}" data-hn="zoom:${k}">${l}</button>`).join('')}</div>
+    <div class="hn-lad${up ? ' gap' : ''}">${ticksV.join('')}${ticksH.join('')}${out ? `<span class="more up">▲ ${out} more above</span>` : ''}${below ? `<span class="more dn">▼ ${below} more below</span>` : ''}${gap}${toks}</div>
+    <div class="hn-ladk"><span>◀ Score (out of 1,000)</span><span>Tap any player</span></div>${card}`;
+}
+function tableHTML(list, maxN, b, first) {
+  const h = hn(), season = h.view === 'season', anim = h.k % 2 ? 'a' : 'b';
+  const moves = list.filter(x => x.mv).length;
+  return `<section class="hn-tbl">
+    <div class="hn-tblh"><div><h2>${season ? `Season · ${esc(H.monthLabel(curMonth()))}` : 'All-time'}${h.lv !== 'all' ? ' · ' + esc(lvLabel(h.lv)) : ''}</h2><small>${season ? (first ? 'Movement shows from your next visit' : `${moves} move${moves === 1 ? '' : 's'} since your last visit`) : `Every counted set · ${HS().MIN_ALL}+ sets to be ranked`}</small></div>
+      <button class="hn-flipb" data-hn="flip" aria-label="Replay the flips">${HNI.flip}</button></div>
+    <div class="hn-tscroll"><div class="hn-tr hn-trh" aria-hidden="true"><span>Pos</span><span>Player</span><span>Sets</span><span>Last 5</span><span>Score</span><span class="c2">${season ? 'Win %' : 'Seals'}</span><span class="c3">${season ? 'Days' : ''}</span><span class="c4">${season ? 'Status' : 'Podiums'}</span></div>
+    ${list.map((x, i) => { const [stt, cls] = statusOf(x, season); return `<div class="hn-tr${x.id === S.mid ? ' me' : ''}${x.mv ? ' mvd f' + anim : ''}" style="--d:${i * 60}ms">
+      <span class="ps">${hTiles(String(x.pos).padStart(2, '0'))}${season ? moveTxt(x) : ''}</span>
+      <span class="pl">${hav(x.id)}<span class="nm"><b>${x.id === S.mid ? 'You' : `<span class="full">${esc(pnm(x.id))}</span><span class="short">${esc(nmShort(x.id))}</span>`}</b><small>${esc(dexOf(x.id))}</small></span></span>
+      ${recBar(x, maxN, true)}${l5HTML(x.l5 || [])}${hTiles(x.score)}
+      <span class="c2">${season ? `${x.sets ? Math.round(x.w / x.sets * 100) : 0}%` : (() => { const n = sealsOf(x.id).length; return n ? `${n} seal${n > 1 ? 's' : ''}` : '—'; })()}</span>
+      <span class="c3">${season ? x.days : ''}</span><span class="c4 st-${cls}">${esc(stt)}</span></div>`; }).join('')}
+    </div>
+    ${b.warming?.length ? `<p class="hn-note">+ ${b.warming.length} warming up (fewer than ${season ? HS().MIN_SEASON : HS().MIN_ALL} sets)</p>` : ''}
+  </section>`;
+}
+function workingHTML(id) {
+  const b = hBoard('season', curMonth(), 'home'), x = b.all[id]; if (!x) return '<p class="hn-note">No sets this season yet.</p>';
+  const K = b.closed?.meta?.K || HS().K, avgv = b.avg, v = (x.pts + K * avgv) / (x.sets + K);
+  const line = (t, n) => `<div class="wl-r"><span>${t}</span><b>${n}</b></div>`;
+  return `<div class="hn-work">${line(`${x.ws} wins vs stronger pairs × 4`, 4 * x.ws)}${line(`${x.we} wins vs equal pairs × 3`, 3 * x.we)}${line(`${x.ww} wins vs weaker pairs × 2`, 2 * x.ww)}
+    ${line(`${x.cl + (x.t || 0)} close losses${x.t ? ' and ties' : ''} × 1`, x.cl + (x.t || 0))}${line(`${x.lc} clear losses × 0`, 0)}
+    <div class="wl-t">${x.pts} pts from ${x.sets} sets</div>
+    <p>Steadied with ${K} sets at the club average:<br><b>(${x.pts} + ${K} × ${avgv.toFixed(2)}) ÷ (${x.sets} + ${K}) = ${v.toFixed(2)} pts per set</b></p>
+    <p class="wl-f">${v.toFixed(2)} ÷ 4 × 1,000 = ${H.toScore(v)}</p>
+    <p class="hn-note">Club average this ${isLive() ? 'month so far' : 'season'}: ${avgv.toFixed(2)} pts per set, from every counted set.</p></div>`;
+}
+function planHTML(list, me, b) {
+  const plan = hn().plan, st = HS(), opts = [['Win vs stronger', 4, 'w'], ['Win vs equal', 3, 'w'], ['Win vs weaker', 2, 'w'], ['Close loss', 1, 'c'], ['Loss', 0, 'l']];
+  const pj = H.project(me, plan, b.avg, st.K), pr = 1 + list.filter(x => x.id !== S.mid && x.score > pj.score).length, d = me.pos - pr;
+  return `<div class="hn-planb"><div class="pj">${hTiles(pj.score)}<div><b>Projected ${ordn(pr)}</b><span class="${d > 0 ? 'up' : d < 0 ? 'down' : ''}">${d > 0 ? `▲ ${d} place${d > 1 ? 's' : ''}` : d < 0 ? `▼ ${-d} place${d < -1 ? 's' : ''}` : `Holding ${ordn(me.pos)}`}</span></div></div>
+    <p class="hn-note">${plan.length ? plan.map(v => opts.find(o => o[1] === v)[0]).join(' · ') : 'Tap results to see where a session could take you.'}</p>
+    <div class="hn-opts">${opts.map(([l, v, c]) => `<button data-hn="padd:${v}"><span>${l}</span><b class="${c}">+${v}</b></button>`).join('')}<button class="linkish" data-hn="preset">Reset</button></div></div>`;
+}
+function sideHTML(list, me, b) {
+  const h = hn(), season = h.view === 'season', live = season && isLive();
+  const sp = h.mode === 'ladder' && h.sel ? h.sel : S.mid;
+  return `<aside class="hn-side"><div class="card-ish hn-info">${explainerHTML()}</div>
+    ${season && b.all[sp] ? `<div class="card-ish"><h3>${sp === S.mid ? 'How your' : `How ${esc(nmFirst(sp))}’s`} ${b.all[sp].score} is worked out</h3>${workingHTML(sp)}</div>` : ''}
+    ${live && me && h.mode === 'podium' ? `<div class="card-ish"><h3>Plan your next session</h3>${planHTML(list, me, b)}</div>` : ''}</aside>`;
+}
+
+// Season Replay
+function replayData(month) {
+  const key = month; if (S._hrep?.[key]) return S._hrep[key];
+  return (S._hrep ||= {})[key] = H.replay(S.hRows || [], month, { club: 'home', K: HS().K, min: HS().MIN_SEASON, levels: S.hLevels });
+}
+function replayHTML() {
+  const h = hn(), month = curMonth(), days = replayData(month);
+  if (!days.length) return `<div class="hn"><button class="linkish hn-back" data-hn="replayback">${HNI.back}Back to the board</button><div class="hn-empty"><p>No ranked sets in ${esc(H.monthLabel(month))} yet.</p></div></div>`;
+  const last = days[days.length - 1];
+  const track = Object.entries(last.rank).sort((a, b) => a[1] - b[1]).slice(0, 8).map(e => e[0]);
+  if (last.rank[S.mid] && !track.includes(S.mid)) track.push(S.mid);
+  const di = Math.min(days.length - 1, Math.max(0, h.rday ?? days.length - 1));
+  return `<div class="hn hn-rp"><button class="linkish hn-back" data-hn="replayback">${HNI.back}Back to the board</button>
+    <section class="card-ish"><div class="rp-h"><div><h2>Season Replay · ${esc(H.monthLabel(month))}</h2><small>The top ${track.length} as it stood each day</small></div><span class="rp-day" id="rpDay"></span></div>
+    <div class="rp-lanes" style="height:${track.length * 48}px">${track.map(id => `<div class="rp-lane${id === S.mid ? ' me' : ''}" data-id="${id}"><span class="rk"></span>${hav(id)}<span class="nm">${id === S.mid ? 'You' : esc(nmShort(id))}</span><span class="bar"><i></i></span><span class="sc"></span></div>`).join('')}</div>
+    <p class="rp-cap" id="rpCap"></p></section>
+    <div class="rp-ctl"><button class="rp-play" data-hn="rplay" aria-label="Play the replay">${HNI.play}</button>
+      <label class="rp-sl"><span>Drag through the month</span><input type="range" min="0" max="${days.length - 1}" value="${di}" data-hn-rday></label></div></div>`;
+}
+function updateReplay() {
+  const h = hn(), days = replayData(curMonth()); if (!days.length || !$('.rp-lanes')) return;
+  const di = Math.min(days.length - 1, Math.max(0, h.rday ?? days.length - 1)), d = days[di], prev = days[Math.max(0, di - 1)];
+  const lanes = [...document.querySelectorAll('.rp-lane')];
+  const order = lanes.map(el => el.dataset.id).sort((a, b) => (d.rank[a] || 999) - (d.rank[b] || 999));
+  const scores = Object.values(d.score), lo = Math.min(...scores) - 20, hi = Math.max(...scores) + 10;
+  lanes.forEach(el => { const id = el.dataset.id, r = d.rank[id], s = d.score[id];
+    el.style.top = order.indexOf(id) * 48 + 'px';
+    el.querySelector('.rk').textContent = r || '–';
+    el.querySelector('.sc').innerHTML = s != null ? hTiles(s) : '<span class="hn-note">warming up</span>';
+    el.querySelector('.bar i').style.width = s != null ? Math.max(4, (s - lo) / (hi - lo) * 100) + '%' : '0%'; });
+  const dd = d.date.slice(8); $('#rpDay').innerHTML = `<span>${esc(H.monthLabel(curMonth()).split(' ')[0])}</span>${hTiles(dd)}`;
+  const leader = Object.entries(d.rank).find(e => e[1] === 1)?.[0];
+  let best = null, jump = 0; for (const [id, r] of Object.entries(d.rank)) { const j = (prev.rank[id] || 99) - r; if (di > 0 && j > jump && prev.rank[id]) { jump = j; best = id; } }
+  $('#rpCap').innerHTML = `<b>${fmtShort(d.date)}:</b> ${leader === S.mid ? 'You lead' : `${esc(nmFirst(leader))} leads`}.${d.rank[S.mid] ? ` You’re ${ordn(d.rank[S.mid])}.` : ''}${best ? ` Mover: ${best === S.mid ? 'you' : esc(nmFirst(best))} ▲${jump}.` : ''}`;
+  const sl = document.querySelector('[data-hn-rday]'); if (sl) sl.value = di;
+}
+function stopReplay() { clearInterval(S._rpT); S._rpT = null; const b = $('.rp-play'); if (b) { b.innerHTML = HNI.play; b.setAttribute('aria-label', 'Play the replay'); } }
+
+// Court Regular
+function regularHTML() {
+  const cr = H.courtRegular(S.hRows || [], todayLocal()), L = cr.list;
+  if (!L.length) return `<div class="hn-empty"><p>No one has played at Deuce &amp; Smash in the last 30 days.</p></div>`;
+  const lead = L[0], me = L.find(x => x.id === S.mid), up = me && me.rank > 1 ? L[me.rank - 2] : null;
+  const strip = (x, cls = '') => `<span class="strip30 ${cls}" role="img" aria-label="${x.days} of the last 30 days">${x.strip.map(on => `<i${on ? ' class="on"' : ''}></i>`).join('')}</span>`;
+  const gap1 = up ? `${up.days - me.days + (up.sets >= me.sets ? 1 : 0)} more day${up.days - me.days + (up.sets >= me.sets ? 1 : 0) > 1 ? 's' : ''} passes ${esc(nmFirst(up.id))}` : me ? 'You hold the crown' : '';
+  const maxS = Math.max(...L.map(x => x.sets));
+  return `<div class="hn-grid"><div class="hn-main">
+    <section class="card-ish hn-crown"><div class="cr-t"><span class="cr-av">${hav(lead.id, 'lg')}<i>${HNI.crown}</i></span><div><small>Court Regular · crown holder</small><b>${lead.id === S.mid ? 'You' : esc(pnm(lead.id))}</b><span>${plural(lead.sets, 'set')} in that time</span></div>${hTiles(lead.days)}</div>
+      ${strip(lead, 'gold')}<div class="cr-k"><span>30 days ago</span><span>Today</span></div></section>
+    ${me ? `<section class="card-ish hn-crme"><b class="t">You · ${ordn(me.rank)} · ${me.days} days</b>${strip(me, 'me')}<p><b>${gap1}</b>${me.rank > 1 ? `<br><span>${lead.days - me.days} days behind ${esc(nmFirst(lead.id))} for the crown</span>` : ''}</p></section>` : `<p class="hn-note">Play a set at Deuce &amp; Smash to join the race.</p>`}
+    <div class="hn-lh"><h2>Days played · last 30</h2></div>
+    <div class="hn-rows">${L.map(x => `<div class="hn-row cr${x.id === S.mid ? ' me' : ''}"><span class="rk">${x.rank}</span>${hav(x.id)}<span class="nm"><b>${x.id === S.mid ? 'You' : esc(nmShort(x.id))}</b><small>${esc(dexOf(x.id))} · ${plural(x.sets, 'set')}</small></span>${strip(x, x.id === S.mid ? 'me' : '')}${hTiles(String(x.days).padStart(2, '0'))}</div>`).join('')}</div>
+  </div><aside class="hn-side"><div class="card-ish hn-info"><h3>How Court Regular works</h3><ul>
+    <li>The most days played at Deuce &amp; Smash in the last 30 days. Any level, any result: one counted set on court counts the day.</li>
+    <li>It’s a rolling window, so old days drop off every night and the crown can change hands any day.</li>
+    <li>Ties go to whoever played more sets in those 30 days. Whoever holds the crown when a month closes keeps a Court Regular seal.</li></ul></div></aside></div>`;
+}
+
+// Pairs
+function pairsHTML() {
+  const st = HS(), month = curMonth(), b = H.monthBounds(month);
+  const closed = month !== liveMonth() && S.seasons?.[month]?.pairs;
+  const pr = closed ? { ranked: Object.entries(S.seasons[month].pairs).map(([k, x]) => ({ key: k, ...x, l5: [] })).sort((a, b) => a.rank - b.rank), warming: [], all: {} }
+    : H.pairs(S.hRows || [], { from: b.from, to: b.to, club: 'home', K: st.K_PAIR, min: st.MIN_PAIR });
+  const L = pr.ranked, maxN = Math.max(1, ...L.map(x => x.sets));
+  const duo = (ids, cls = '') => `<span class="hn-duo ${cls}">${hav(ids[0])}${hav(ids[1])}</span>`;
+  const pname = ids => ids.map(id => id === S.mid ? 'You' : nmFirst(id)).sort((a, b) => (a === 'You' ? -1 : b === 'You' ? 1 : 0)).join(' & ');
+  const mine = Object.values(pr.all || {}).filter(x => x.ids.includes(S.mid)).sort((a, b) => b.sets - a.sets).slice(0, 4);
+  const top = L[0];
+  return `<div class="hn-grid"><div class="hn-main">
+    ${top ? `<section class="card-ish hn-toppair"><small>Top pair this season</small><div class="tp">${duo(top.ids, 'lg')}<div><b>${esc(pname(top.ids))}</b><span>${top.w}–${top.l} together · ${Math.round(top.w / top.sets * 100)}% of sets won</span></div><div class="tps">${hTiles(top.score)}<small>Pair score · from ${top.sets} sets together</small></div></div></section>`
+      : `<div class="hn-empty"><p>No pair has played ${st.MIN_PAIR} sets together ${isLive() ? 'yet this season' : 'this season'}.</p></div>`}
+    ${mine.length ? `<section class="card-ish hn-mine"><h3>Your partnerships</h3>${mine.map(x => { const ranked = x.sets >= st.MIN_PAIR, other = x.ids.find(i => i !== S.mid);
+      return `<div class="mp"><div class="mp-t"><b>You &amp; ${esc(nmFirst(other))}</b><span>${ranked ? `${ordn(x.rank || L.findIndex(y => y.key === x.key) + 1)} · ${x.w}–${x.l} · ${x.score} / 1,000` : `${x.sets} of ${st.MIN_PAIR} sets together`}</span></div>
+        <span class="mp-b"><i style="width:${Math.min(100, Math.round(x.sets / st.MIN_PAIR * 100))}%" class="${ranked ? 'r' : ''}"></i></span><small>${ranked ? 'Ranked' : `${st.MIN_PAIR - x.sets} more set${st.MIN_PAIR - x.sets > 1 ? 's' : ''} together to be ranked`}</small></div>`; }).join('')}</section>` : ''}
+    ${L.length ? `<div class="hn-lh"><h2>Pair standings</h2><small>Pair score · sets played together only</small></div>
+    <div class="hn-rows">${L.map(x => `<div class="hn-row pr${x.ids.includes(S.mid) ? ' me' : ''}"><span class="rk">${x.rank}</span>${duo(x.ids)}<span class="nm"><b>${esc(pname(x.ids))}</b><small>${x.sets} sets together</small></span>${recBar(x, maxN)}${l5HTML(x.l5 || [])}${hTiles(x.score)}</div>`).join('')}</div>
+    ${pr.warming?.length ? `<p class="hn-note">+ ${pr.warming.length} pairs warming up (fewer than ${st.MIN_PAIR} sets together)</p>` : ''}` : ''}
+  </div><aside class="hn-side"><div class="card-ish hn-info"><h3>How Pairs works</h3><ul>
+    <li>Ranks partnerships, not players: only the sets the two of you play together count.</li>
+    <li>The pair score is the partnership’s own score, not either player’s and not the two added together: points per set, steadied with ${st.K_PAIR} sets at the club average, out of 1,000.</li>
+    <li>Play ${st.MIN_PAIR} or more sets together this season to be ranked. The top 3 pairs share a Season seal.</li></ul></div></aside></div>`;
+}
+
+// Sheets
+function openHnSheet(kind, arg) {
+  const h = hn(), { list, me, b } = hList();
+  if (kind === 'why') { const id = arg || S.mid, x = hBoard('season', curMonth(), 'home').all[id];
+    return sheet(`<h2>${id === S.mid ? 'How your' : `How ${esc(nmFirst(id))}’s`} ${x ? x.score : ''} is worked out</h2>${workingHTML(id)}`); }
+  if (kind === 'plan' && me) return sheet(`<h2>Plan your next session</h2>${planHTML(list, me, b)}`);
+  if (kind === 'months') {
+    const months = monthList();
+    return sheet(`<h2>Choose a season</h2><p class="hn-note">Past seasons open their final podium, table and replay.</p><div class="hn-mlist">${months.map(m => {
+      const s = S.seasons?.[m], champ = s ? Object.entries(s.standings || {}).find(e => e[1].rank === 1)?.[0] : null, mine = s?.standings?.[S.mid];
+      return `<button class="${m === curMonth() ? 'on' : ''}" data-hn="month:${m}"><span><b>${esc(H.monthLabel(m))}</b><small>${m === liveMonth() ? `Live · ${daysLeftTxt()}` : isPending(m) ? 'Finalising… final results on the 2nd' : `Final${champ ? ` · Champion: ${champ === S.mid ? 'You' : esc(nmShort(champ))}` : ''}${mine ? ` · you ${ordn(mine.rank)}` : ''}`}</small></span>${m === liveMonth() ? '<em>LIVE</em>' : `<span class="sl">${(s?.seals?.[S.mid] || []).slice(0, 3).map(x => sealImg({ ...x, month: m }, 26)).join('')}</span>`}</button>`; }).join('')}</div>
+      <button class="btn full" data-hn="myseasons">Compare my seasons</button>`);
+  }
+}
+
+// My seasons (Profile)
+function mySeasons() {
+  const rows = [];
+  for (const m of Object.keys(S.seasons || {}).sort()) { const x = S.seasons[m]?.standings?.[S.mid]; if (x) rows.push({ m, ...x, of: S.seasons[m].meta?.ranked || 0, seals: S.seasons[m].seals?.[S.mid] || [] }); }
+  const live = hBoard('season', liveMonth(), 'home'), lx = live.all[S.mid];
+  const pm = pendingMonth();
+  if (pm) { const pb = hBoard('season', pm, 'home'), px = pb.all[S.mid]; if (px) rows.push({ m: pm, live: true, pending: true, rank: px.rank || null, of: pb.ranked.length, score: px.score, sets: px.sets, w: px.w, l: px.l, ws: px.ws, cl: px.cl, seals: [] }); }
+  if (lx) rows.push({ m: liveMonth(), live: true, rank: lx.rank || null, of: live.ranked.length, score: lx.score, sets: lx.sets, w: lx.w, l: lx.l, ws: lx.ws, cl: lx.cl, seals: [] });
+  return rows;
+}
+function mySeasonsHTML() {
+  const rows = mySeasons(), done = rows.filter(r => !r.live);
+  if (!rows.length) return `<p class="note">Your seasons appear here once you’ve played a set this month. The first season closes on 2 Dec 2026.</p>`;
+  const lo = Math.min(...rows.map(r => r.score)) - 30, hi = Math.max(...rows.map(r => r.score)) + 10;
+  S.msCmp ||= done.length >= 2 ? [done.length - 2, done.length - 1] : null;
+  const [ai, bi] = S.msCmp || [];
+  const bars = rows.map((r, i) => `<button class="msb${r.live ? ' live' : ''}${S.msCmp && (i === ai || i === bi) ? ' on' : ''}" ${r.live ? 'disabled' : `data-mscmp="${i}"`} aria-label="${esc(H.monthLabel(r.m))}: ${r.score}${r.rank ? `, ${ordn(r.rank)}` : ''}">
+      <b>${r.score}</b><span style="height:${Math.round(18 + (r.score - lo) / (hi - lo || 1) * 90)}px"></span><em>${esc(H.monthLabel(r.m).split(' ')[0])}</em><small>${r.rank ? ordn(r.rank) : '—'}</small></button>`).join('');
+  let cmp = `<p class="note">Comparing months unlocks after two finished seasons.</p>`;
+  if (S.msCmp && done.length >= 2) {
+    const A = rows[ai], B = rows[bi], pct = r => r.sets ? Math.round(r.w / r.sets * 100) : 0;
+    const d = (a, b, rank) => { const v = rank ? a - b : b - a; return `<b class="${v > 0 ? 'up' : v < 0 ? 'down' : ''}">${v === 0 ? '=' : (v > 0 ? '+' : '') + v}${rank && v ? ' places' : ''}</b>`; };
+    cmp = `<div class="mscmp"><span></span><span>${esc(H.monthLabel(A.m))}</span><span class="y">${esc(H.monthLabel(B.m))}</span><span>Change</span>
+      <span>Season Score</span><span>${A.score}</span><span>${B.score}</span>${d(A.score, B.score)}
+      <span>Rank</span><span>${ordn(A.rank)}</span><span>${ordn(B.rank)}</span>${d(A.rank, B.rank, true)}
+      <span>Sets played</span><span>${A.sets}</span><span>${B.sets}</span>${d(A.sets, B.sets)}
+      <span>Win rate</span><span>${pct(A)}%</span><span>${pct(B)}%</span>${d(pct(A), pct(B))}
+      <span>Wins vs stronger</span><span>${A.ws}</span><span>${B.ws}</span>${d(A.ws, B.ws)}</div><p class="note">Tap any two finished months to compare them.</p>`;
+  }
+  const shelf = rows.flatMap(r => r.seals.map(x => ({ ...x, month: r.m })));
+  return `<div class="msch">${bars}</div>${cmp}
+    <div class="mslist">${rows.slice().reverse().map((r, i, arr) => { const prev = arr[i + 1]; const mv = prev && r.rank && prev.rank ? prev.rank - r.rank : 0;
+      return `<div class="msr"><span class="t"><b>${esc(H.monthLabel(r.m))}</b><small>${r.pending ? 'Finalising' : r.live ? 'Live' : 'Final'} · ${r.rank ? `${ordn(r.rank)} of ${r.of}` : 'warming up'} · ${r.w}–${r.l} · ${r.sets} sets</small></span>
+        <span class="sl">${r.seals.map(x => sealImg({ ...x, month: r.m }, 24)).join('')}</span><span class="mv ${mv > 0 ? 'up' : mv < 0 ? 'down' : ''}">${mv > 0 ? '▲' + mv : mv < 0 ? '▼' + (-mv) : '–'}</span>${hTiles(r.score)}</div>`; }).join('')}</div>
+    ${shelf.length ? `<h4 class="msh">Seal shelf · ${shelf.length}</h4><div class="shelf">${shelf.map(x => `<div>${sealImg(x, 56)}<b>${esc(sealName(x))}</b><small>${esc(H.monthLabel(x.month))}</small></div>`).join('')}</div>` : ''}`;
+}
+
+// Events
+function hnSet(patch, { keepSheet = false } = {}) { Object.assign(hn(), patch); if (!keepSheet) closeSheet(); render(); }
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-hn]'); if (!t) { const c = e.target.closest('[data-mscmp]'); if (c) { const i = +c.dataset.mscmp, cur = S.msCmp || []; S.msCmp = cur.includes(i) ? cur : [cur[1] ?? i, i].sort((a, b) => a - b); if (S.msCmp[0] === S.msCmp[1]) S.msCmp = cur; track('hn_compare'); render(); } return; }
+  const [k, v] = t.dataset.hn.split(/:(.*)/s);
+  const h = hn();
+  if (k === 'board') { stopReplay(); track('hn_board_' + v); return hnSet({ board: v, replay: false }); }
+  if (k === 'view') { track('hn_' + (v === 'all' ? 'alltime' : 'season')); return hnSet({ view: v, club: v === 'season' ? 'home' : h.club, k: h.k + 1 }); }
+  if (k === 'mode') { track('hn_mode_' + v); if (S.mid && (S.profiles[S.mid]?.prefs?.honoursView || 'podium') !== v) set(ref(db, `profiles/${S.mid}/prefs/honoursView`), v).catch(() => {}); return hnSet({ mode: v, k: h.k + 1 }); }
+  if (k === 'lv') { track('hn_level'); return hnSet({ lv: v, k: h.k + 1 }); }
+  if (k === 'zoom') return hnSet({ zoom: v });
+  if (k === 'sel') return hnSet({ sel: v });
+  if (k === 'info') { if (!h.info) track('hn_info'); return hnSet({ info: !h.info }); }
+  if (k === 'flip') return hnSet({ k: h.k + 1 });
+  if (k === 'why') { track('hn_working'); return openHnSheet('why', v || S.mid); }
+  if (k === 'plan') { track('hn_plan'); return openHnSheet('plan'); }
+  if (k === 'padd') { h.plan = h.plan.concat([+v]).slice(-6); return $('#sheet').classList.contains('hidden') ? render() : openHnSheet('plan'); }
+  if (k === 'preset') { h.plan = []; return $('#sheet').classList.contains('hidden') ? render() : openHnSheet('plan'); }
+  if (k === 'months') { track('hn_months'); return openHnSheet('months'); }
+  if (k === 'month') { track('hn_month_pick'); return hnSet({ month: v === liveMonth() ? null : v, k: h.k + 1 }); }
+  if (k === 'myseasons') { closeSheet(); switchTab('profile'); setTimeout(() => document.querySelector('[data-sec=seasons]')?.scrollIntoView({ behavior: 'smooth' }), 80); return; }
+  if (k === 'replay') { track('hn_replay'); hnSet({ replay: true, rday: null }); scrollTo(0, 0); return updateReplay(); }
+  if (k === 'replayback') { stopReplay(); hnSet({ replay: false }); return document.querySelector('.hn-replay')?.scrollIntoView({ block: 'center' }); }
+  if (k === 'rplay') {
+    if (S._rpT) return stopReplay();
+    const days = replayData(curMonth()); if (!days.length) return;
+    if ((h.rday ?? days.length - 1) >= days.length - 1) h.rday = 0;
+    t.innerHTML = HNI.pause; t.setAttribute('aria-label', 'Pause the replay'); updateReplay();
+    S._rpT = setInterval(() => { if (h.rday >= days.length - 1 || !$('.rp-lanes')) return stopReplay(); h.rday++; updateReplay(); }, REDUCED ? 1200 : 650);
+  }
+});
+document.addEventListener('input', e => { if (e.target.matches('[data-hn-rday]')) { stopReplay(); hn().rday = +e.target.value; updateReplay(); } });
+document.addEventListener('change', e => { if (e.target.matches('[data-hn-club]')) { track('hn_club_' + e.target.value); hnSet({ club: e.target.value, k: hn().k + 1 }); } });
+
+// Profile photo: a small square thumbnail stored on the member's profile (no file storage needed)
+async function photoThumb(file) {
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); });
+  const s = Math.min(img.naturalWidth, img.naturalHeight), c = document.createElement('canvas'); c.width = c.height = 96;
+  c.getContext('2d').drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, 96, 96);
+  URL.revokeObjectURL(img.src);
+  let url = c.toDataURL('image/webp', 0.82); if (!url.startsWith('data:image/webp')) url = c.toDataURL('image/jpeg', 0.82);
+  return url;
+}
+document.addEventListener('change', async e => {
+  if (e.target.id !== 'photoIn' || !e.target.files?.[0]) return;
+  const msg = $('#photoMsg'); if (msg) msg.textContent = 'Saving…';
+  try { const url = await photoThumb(e.target.files[0]); if (url.length > 24000) throw new Error('too large'); await set(ref(db, `profiles/${S.mid}/photo`), url); track('photo_saved'); if (msg) msg.textContent = 'Photo saved.'; const pv = $('#photoPrev'); if (pv) pv.innerHTML = `<img src="${url}" alt="">`; }
+  catch (err) { if (msg) msg.textContent = 'Could not save the photo: ' + (err.code || err.message); }
+});
+document.addEventListener('click', async e => {
+  if (!e.target.closest('[data-act=photo-remove]')) return;
+  try { await set(ref(db, `profiles/${S.mid}/photo`), null); $('#photoPrev') && ($('#photoPrev').textContent = initials(myName())); $('#photoMsg') && ($('#photoMsg').textContent = 'Photo removed.'); } catch (err) { $('#photoMsg') && ($('#photoMsg').textContent = 'Could not remove it: ' + (err.code || err.message)); }
 });
 
 /* ══════════ Matchup Dex ══════════ */

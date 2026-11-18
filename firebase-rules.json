@@ -38,9 +38,15 @@
       "$mid": {
         "name":  { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid", ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40" },
         "prefs": { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid" },
-        "seenHonours": { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid" }
+        "seenHonours": { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid" },
+        // Profile photo: a small square thumbnail (data URL, ~96 px) shown on the Honours boards
+        "photo": { ".write": "auth != null && root.child('links').child(auth.uid).val() === $mid", ".validate": "newData.isString() && newData.val().beginsWith('data:image/') && newData.val().length <= 24000" }
       }
     },
+
+    // Honours: closed seasons (written once a month by the season-close job using a service account) and settings. Members read only.
+    "seasons": { ".read": "auth != null" },
+    "honoursSettings": { ".read": "auth != null" },
 
     // Private member record: the linked member can read/edit only their own contact fields
     "members": {
