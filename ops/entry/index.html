@@ -1048,17 +1048,19 @@ function gpInitAll(container) {
     const gk = hiddenIn.dataset.gk;
     const tr = wrap.closest('tr');
     const getPool = () => { const e2 = E; return e2 ? gamePool(e2) : []; };
-    textIn.addEventListener('click', ev => {
+    const openPicker = ev => {
       if (textIn.disabled) return;
-      ev.stopPropagation();
+      ev.preventDefault(); ev.stopPropagation();
       const wasOpen = dd.classList.contains('open');
       gpCloseAll(null);
       if (wasOpen) return;
       gpFillList(listEl, getPool(), '', hiddenIn.value);
       dd.classList.add('open');
       searchIn.value = '';
-      searchIn.focus();
-    });
+      setTimeout(() => searchIn.focus(), 50);
+    };
+    textIn.addEventListener('click', openPicker);
+    textIn.addEventListener('touchend', openPicker);
     searchIn.addEventListener('input', () => {
       gpFillList(listEl, getPool(), searchIn.value, hiddenIn.value);
     });
@@ -1085,8 +1087,13 @@ function gpInitAll(container) {
       hiddenIn.dispatchEvent(new Event('change', { bubbles: true }));
     });
   });
-  // Close dropdowns on outside click
-  document.addEventListener('click', gpCloseAll.bind(null, null), { once: false, capture: false });
+  // Close dropdowns on outside click (only one listener at a time)
+  if (gpInitAll._closeHandler) document.removeEventListener('click', gpInitAll._closeHandler, true);
+  if (gpInitAll._closeTouchHandler) document.removeEventListener('touchstart', gpInitAll._closeTouchHandler, true);
+  gpInitAll._closeHandler = ev => { if (!ev.target.closest('.gp-wrap')) gpCloseAll(null); };
+  gpInitAll._closeTouchHandler = ev => { if (!ev.target.closest('.gp-wrap')) gpCloseAll(null); };
+  document.addEventListener('click', gpInitAll._closeHandler, true);
+  document.addEventListener('touchstart', gpInitAll._closeTouchHandler, { passive: true, capture: true });
 }
 // 4 players: every partner pairing once. More players: spread games evenly and avoid repeating partners.
 function suggestRotation(keys, count) {
