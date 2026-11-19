@@ -244,6 +244,17 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 .gtable .st{width:96px;text-align:center}
 .gtable .x{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card2)}
 .gwrap{overflow-x:auto}
+/* searchable player picker inside game rows */
+.gp-wrap{position:relative;min-width:90px}
+.gp-wrap input.gp-text{width:100%;padding:8px 8px;font-size:15px;cursor:pointer;box-sizing:border-box}
+.gp-wrap input.gp-text.has-val{color:var(--text);font-weight:600}
+.gp-dd{position:absolute;left:0;top:100%;margin-top:3px;min-width:200px;background:var(--card2);border:1px solid var(--axis);border-radius:12px;overflow:hidden;z-index:50;box-shadow:0 12px 30px rgba(0,0,0,.55);display:none}
+.gp-dd.open{display:block}
+.gp-dd button{display:block;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:11px 14px;font-size:16px;text-align:left;color:var(--text);white-space:nowrap}
+.gp-dd button:last-child{border-bottom:0}
+.gp-dd button:hover,.gp-dd button.hl{background:var(--card3)}
+.gp-dd .gp-none{padding:10px 14px;font-size:14px;color:var(--muted)}
+.gp-dd .gp-clear{color:var(--muted);font-size:14px}
 
 /* footer */
 .foot{position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;justify-content:center;pointer-events:none}
@@ -947,6 +958,7 @@ function renderEditor() {
   h += `</div>`;
   const st = $('#sheet').scrollTop;
   $('#sheet').innerHTML = h; $('#sheet').scrollTop = st;
+  gpInitAll($('#sheet'));
   $('#footHost').innerHTML = `<div class="foot"><div class="foot-in"><div class="tot" id="tot"></div><div class="fsp" style="flex:1"></div><div id="saveErr" class="sub" style="color:#ffb3b3;max-width:280px"></div>
     ${EDIT_LOCK ? '<button class="btn" data-act="close">Close</button>' : `<button class="btn btn-ghost" data-act="close">Cancel</button><button class="btn btn-primary" data-act="save" id="saveBtn">${saveLabel(c)}</button>`}</div></div>`;
   refresh();
@@ -977,22 +989,104 @@ function gamePool(e) {
   }
   return pool;
 }
+function gpPicker(pool, selKey, gk, disabled) {
+  const p = pool.find(x => x.key === selKey);
+  const label = p ? esc(p.name) : '';
+  const dis = disabled ? 'disabled' : '';
+  return `<div class="gp-wrap">
+    <input type="hidden" data-gk="${gk}" value="${esc(selKey)}">
+    <input type="text" class="gp-text${selKey ? ' has-val' : ''}" value="${label}" placeholder="—" readonly ${dis}
+      data-gpkey="${gk}" autocomplete="off">
+    <div class="gp-dd" id="gpdd-${gk}-ROWID">
+      <div style="padding:7px 8px;border-bottom:1px solid var(--line)">
+        <input type="text" class="gp-search" placeholder="Search…" style="width:100%;background:var(--card3);border:0;border-radius:8px;padding:7px 10px;font-size:15px;color:var(--text)" autocomplete="off">
+      </div>
+      <div class="gp-list"></div>
+    </div>
+  </div>`;
+}
 function gamesSection(e) {
   const pool = gamePool(e), dis = EDIT_LOCK ? 'disabled' : '';
-  const opts = sel => `<option value="">—</option>` + pool.map(p => `<option value="${esc(p.key)}" ${sel === p.key ? 'selected' : ''}>${esc(p.name)}${p.from ? ' (' + p.from + ')' : ''}</option>`).join('');
   let h = `<div class="sec"><h4>Games & scores <small>every game this session · saved to Smash Ratings${e.type === 'open_play' ? " and the day's open play" : ''} when you save</small></h4>`;
   if (pool.length < 4) return h + `<div class="msg info">Add at least 4 member players to record games${e.type === 'open_play' ? ' (players on other open-play courts at the same time count too)' : ''}.</div></div>`;
   if (pool.some(p => p.from)) h += `<div class="sub" style="margin-bottom:8px">Includes players from the other open-play court running at the same time, so rotations across courts can be scored here.</div>`;
   h += `<div class="gwrap"><table class="gtable"><tbody>${e.games.map((g, i) => {
     const st = g.matchId ? (g._saved === JSON.stringify([g.a1, g.a2, g.b1, g.b2, g.score]) ? '<span class="chip ok">Saved</span>' : '<span class="chip warn">Changed</span>') : '<span class="chip info">New</span>';
-    return `<tr data-g="${g.lid}"><td class="num">${i + 1}</td><td><select data-gk="a1" ${dis}>${opts(g.a1)}</select></td><td><select data-gk="a2" ${dis}>${opts(g.a2)}</select></td><td class="vs">vs</td>
-      <td><select data-gk="b1" ${dis}>${opts(g.b1)}</select></td><td><select data-gk="b2" ${dis}>${opts(g.b2)}</select></td>
+    const mk = k => gpPicker(pool, g[k], k, !!EDIT_LOCK).replace(/ROWID/g, g.lid);
+    return `<tr data-g="${g.lid}"><td class="num">${i + 1}</td><td>${mk('a1')}</td><td>${mk('a2')}</td><td class="vs">vs</td>
+      <td>${mk('b1')}</td><td>${mk('b2')}</td>
       <td class="sc"><input data-gk="score" value="${esc(g.score)}" placeholder="6-4" ${dis}></td><td class="st">${st}</td>
       <td>${EDIT_LOCK ? '' : `<button class="x" data-rmg="${g.lid}" aria-label="Remove game">✕</button>`}</td></tr>`; }).join('')}</tbody></table></div>
     ${EDIT_LOCK ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-act="addgame">+ Add game</button>
       <button class="btn btn-sm" data-act="rotate">Suggest rotation (${pool.length} players)</button></div>
       <div class="sub" style="margin-top:8px">Score per game like 6-4, or sets like 6-3, 4-6, 10-8. Rows left completely empty are ignored.</div>`}</div>`;
   return h;
+}
+// Populate a gp-dd list given a search query and pool
+function gpFillList(listEl, pool, query, selectedKey) {
+  const q = query.trim().toLowerCase();
+  const hits = q ? pool.filter(p => p.name.toLowerCase().includes(q)) : pool;
+  let html = '';
+  if (selectedKey) html += `<button class="gp-clear" data-gpsel="">— Clear —</button>`;
+  if (hits.length === 0) { html += `<div class="gp-none">No match</div>`; }
+  else { html += hits.map(p => `<button class="gp-sel${p.key === selectedKey ? ' hl' : ''}" data-gpsel="${esc(p.key)}">${esc(p.name)}${p.from ? ` <small style="color:var(--muted);font-size:13px">(${esc(p.from)})</small>` : ''}</button>`).join(''); }
+  listEl.innerHTML = html;
+}
+// Close all open gp dropdowns except one (pass null to close all)
+function gpCloseAll(except) {
+  document.querySelectorAll('.gp-dd.open').forEach(dd => { if (dd !== except) dd.classList.remove('open'); });
+}
+// Wire up all gp pickers in a container (call after renderEditor)
+function gpInitAll(container) {
+  container.querySelectorAll('.gp-wrap').forEach(wrap => {
+    const textIn = wrap.querySelector('.gp-text');
+    const hiddenIn = wrap.querySelector('input[data-gk]');
+    const dd = wrap.querySelector('.gp-dd');
+    const searchIn = wrap.querySelector('.gp-search');
+    const listEl = wrap.querySelector('.gp-list');
+    if (!textIn || !hiddenIn || !dd || !searchIn || !listEl) return;
+    const gk = hiddenIn.dataset.gk;
+    const tr = wrap.closest('tr');
+    const getPool = () => { const e2 = E; return e2 ? gamePool(e2) : []; };
+    textIn.addEventListener('click', ev => {
+      if (textIn.disabled) return;
+      ev.stopPropagation();
+      const wasOpen = dd.classList.contains('open');
+      gpCloseAll(null);
+      if (wasOpen) return;
+      gpFillList(listEl, getPool(), '', hiddenIn.value);
+      dd.classList.add('open');
+      searchIn.value = '';
+      searchIn.focus();
+    });
+    searchIn.addEventListener('input', () => {
+      gpFillList(listEl, getPool(), searchIn.value, hiddenIn.value);
+    });
+    searchIn.addEventListener('keydown', ev => {
+      const btns = [...listEl.querySelectorAll('button')];
+      let i = btns.findIndex(b => b.classList.contains('hl'));
+      if (ev.key === 'ArrowDown') { ev.preventDefault(); i = Math.min(btns.length - 1, i + 1); btns.forEach((b, j) => b.classList.toggle('hl', j === i)); }
+      else if (ev.key === 'ArrowUp') { ev.preventDefault(); i = Math.max(0, i - 1); btns.forEach((b, j) => b.classList.toggle('hl', j === i)); }
+      else if (ev.key === 'Enter') { ev.preventDefault(); const hl = listEl.querySelector('button.hl') || listEl.querySelector('button'); if (hl) hl.click(); }
+      else if (ev.key === 'Escape') { dd.classList.remove('open'); textIn.focus(); }
+    });
+    dd.addEventListener('click', ev => {
+      const btn = ev.target.closest('[data-gpsel]');
+      if (!btn) return;
+      ev.stopPropagation();
+      const val = btn.dataset.gpsel; // '' means clear
+      const pool = getPool();
+      const p = pool.find(x => x.key === val);
+      hiddenIn.value = val;
+      textIn.value = p ? p.name : '';
+      textIn.classList.toggle('has-val', !!val);
+      dd.classList.remove('open');
+      // Fire change on the hidden input so the existing handler picks it up
+      hiddenIn.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
+  // Close dropdowns on outside click
+  document.addEventListener('click', gpCloseAll.bind(null, null), { once: false, capture: false });
 }
 // 4 players: every partner pairing once. More players: spread games evenly and avoid repeating partners.
 function suggestRotation(keys, count) {
@@ -1206,7 +1300,7 @@ $('#sheet').addEventListener('input', ev => {
 $('#sheet').addEventListener('change', ev => {
   const t = ev.target; if (!E) return;
   if (t.dataset.pp) { const k = t.dataset.pp; if (t.checked) { if (!E._pay.payers.includes(k)) E._pay.payers.push(k); } else E._pay.payers = E._pay.payers.filter(x => x !== k); E._pay.amount = null; return redraw(); }
-  if (t.dataset.gk) { const g = E.games.find(x => x.lid === t.closest('tr').dataset.g); if (g) g[t.dataset.gk] = t.value; if (t.tagName === 'INPUT') return; return renderEditor(); }
+  if (t.dataset.gk) { const g = E.games.find(x => x.lid === t.closest('tr').dataset.g); if (g) g[t.dataset.gk] = t.value; if (t.type === 'text') return; return renderEditor(); }
   const f = t.dataset.f;
   if (f === 'date' && t.value) { E.date = t.value; return renderEditor(); }
   if (f === 'start') { E.start = +t.value; return renderEditor(); }
