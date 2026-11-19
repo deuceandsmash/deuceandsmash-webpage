@@ -159,6 +159,8 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 .pl{display:inline-flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:6px 6px 6px 12px;font-size:16px;font-weight:600}
 .pl.fill{border-color:#6b5310;background:#2a2412}
 .pl .x,.pl .star{width:28px;height:28px;border-radius:50%;border:0;background:var(--card3);font-size:14px;display:flex;align-items:center;justify-content:center}
+.pl .fi{height:28px;border-radius:999px;border:1px solid var(--line);background:var(--card3);font-size:11px;font-weight:800;padding:0 8px;color:var(--muted,#aab)}
+.pl .fi.on{background:#6b5310;border-color:#c99a1a;color:#ffe08a}
 .pl .star.on{background:var(--yellow);color:var(--navy)}
 .pl small{color:var(--muted);font-weight:500;font-family:var(--ui);font-size:12px}
 .search{position:relative;margin-bottom:10px}
@@ -386,7 +388,7 @@ const TYPES = [['group', 'Group'], ['individual', 'Individual'], ['open_play', '
 const STATUSES = [['booked', 'Booked / in play'], ['played', 'Played'], ['no_show', 'No-show'], ['cancelled', 'Cancelled']];
 const OP_LEVELS = ['Beginner', 'Beginner / Beginner+', 'Beginner+', 'Beginner+ / Inter', 'Inter', 'Inter / Inter+', 'Inter+', 'Strong Inter', 'Advanced'];
 const OP_GROUPS = ['Community', 'Team Smash'];
-const OVERRIDE_REASONS = ['Discount', 'Member rate', 'Complimentary', 'Launch / promo price', 'Other'];
+const OVERRIDE_REASONS = ['D&S fill-in', 'Discount', 'Member rate', 'Complimentary', 'Launch / promo price', 'Other'];
 const BASE_METHODS = [['upi', 'UPI'], ['card', 'Card'], ['cash', 'Cash']];
 const CATS = [['beverage', 'Drinks'], ['racquet', 'Racquets & paddles'], ['balls', 'Balls'], ['other', 'Other']];
 const DEFAULT_CONFIG = {
@@ -479,7 +481,7 @@ function itemsCost(map, e) { let t = 0; for (const [k, q] of Object.entries(map 
 function calc(e) {
   const nC = Math.max(1, e.courts.length), isEv = e.type === 'event' || e.type === 'party';
   const cc = courtCharge(e.sport, e.date, e.start, e.minutes), auto = cc.amount * nC;
-  const players = e.players.length, fills = e.players.filter(p => p.fill).length, expected = PLAYERS_PER_COURT[e.sport] * nC;
+  const players = e.players.length; let fills = e.players.filter(p => p.fill).length; const expected = PLAYERS_PER_COURT[e.sport] * nC;
   let court, share, perPerson = null;
   if (isEv) { court = +e.charge.eventFee || 0; share = players ? court / players : 0; }
   else if (e.charge.mode === 'player') {
@@ -489,7 +491,14 @@ function calc(e) {
     court = e.charge.override != null && e.charge.override !== '' ? +e.charge.override : auto;
     share = court / Math.max(players, expected);
   }
-  const fillLoss = Math.round(share * fills), courtDue = Math.max(0, court - fillLoss);
+  // D&S fill-in: one player's court share per fill-in is not charged (tracked as revenue lost).
+  // If the court charge was overridden with reason "D&S fill-in", the override already is the reduced amount, so don't deduct again.
+  let fillLoss = Math.round(share * fills), fillByOverride = false;
+  if (!isEv && e.charge.mode !== 'player' && e.charge.overrideReason === 'D&S fill-in' && e.charge.override != null && e.charge.override !== '') {
+    fillByOverride = true; fills = Math.max(fills, 1); fillLoss = Math.max(0, auto - court); court = auto; share = auto / Math.max(players, expected);
+  }
+  fillLoss = Math.min(fillLoss, court);
+  const courtDue = Math.max(0, court - fillLoss);
   const P = payersOf(e), pkeys = new Set(P.map(p => p.key));
   // items by category, and by whose tab (items left on a removed / fill-in player fall back to shared)
   const ex = { racquet: 0, balls: 0, beverage: 0, other: 0 };
@@ -519,7 +528,7 @@ function calc(e) {
     credit += left;
   }
   for (const x of per) x.balance = x.charge - x.paid;
-  return { cc, auto, court, share, perPerson, ex, extras, fills, fillLoss, courtDue, bill, due, paid, remaining: due - paid, expected, nC, isEv, per, byMethod, sharedCost, credit };
+  return { cc, auto, court, share, perPerson, ex, extras, fills, fillLoss, fillByOverride, courtDue, bill, due, paid, remaining: due - paid, expected, nC, isEv, per, byMethod, sharedCost, credit };
 }
 
 /* ── Conflicts ── */
@@ -889,7 +898,7 @@ function renderEditor() {
     <div class="chips-pick">${sorted(CFG.sources).map(([k, s]) => `<button class="pick ${e.source === k ? 'on' : ''}" data-source="${k}" ${dis}>${esc(s.label)}</button>`).join('')}</div></div>`;
 
   h += `<div class="sec"><h4>Players <small>${e.players.length} of ${c.expected} · can be completed during play · ★ = who booked</small></h4>
-    <div class="players">${e.players.map((p, i) => `<span class="pl ${p.fill ? 'fill' : ''}"><button class="star ${p.booker ? 'on' : ''}" data-booker="${i}" title="Booked by" ${dis}>★</button>${esc(p.name)}${p.fill ? ' <small>D&S fill-in</small>' : p.id ? '' : ' <small>not a member</small>'}<button class="x" data-rmp="${i}" aria-label="Remove" ${dis}>✕</button></span>`).join('') || '<span class="sub">No players yet. Add at least who booked.</span>'}</div>
+    <div class="players">${e.players.map((p, i) => `<span class="pl ${p.fill ? 'fill' : ''}"><button class="star ${p.booker ? 'on' : ''}" data-booker="${i}" title="Booked by" ${dis}>★</button>${esc(p.name)}${p.fill ? ' <small>D&S fill-in</small>' : p.id ? '' : ' <small>not a member</small>'}${e.type === 'event' || e.type === 'party' ? '' : `<button class="fi ${p.fill ? 'on' : ''}" data-fillp="${i}" title="${p.fill ? 'Charge this player again' : 'Mark as D&S fill-in (court share not charged)'}" ${dis}>D&S</button>`}<button class="x" data-rmp="${i}" aria-label="Remove" ${dis}>✕</button></span>`).join('') || '<span class="sub">No players yet. Add at least who booked.</span>'}</div>
     ${EDIT_LOCK ? '' : `<div class="search"><input id="pq" placeholder="Search members by name or phone…" autocomplete="off"><div class="dd hidden" id="pdd"></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-act="fill">+ D&S fill-in player</button><button class="btn btn-sm" data-act="newmember">+ New member</button></div>
     <div id="nmForm"></div>`}</div>`;
@@ -945,9 +954,9 @@ function renderEditor() {
 function refresh() {
   if (!E || E._quick) return;
   const c = calc(E), bl = $('#billLines');
-  if (bl) bl.innerHTML = `<div class="ln"><span>${c.isEv ? (E.type === 'party' ? 'Party fee' : 'Event fee') : E.charge.mode === 'player' ? `Court · ${inr(c.perPerson)} × ${Math.max(E.players.length, 1)} players` : 'Court charge' + (E.charge.override !== '' && E.charge.override != null ? ' (overridden)' : '')}</span><b>${inr(c.court)}</b></div>
+  if (bl) bl.innerHTML = `<div class="ln"><span>${c.isEv ? (E.type === 'party' ? 'Party fee' : 'Event fee') : E.charge.mode === 'player' ? `Court · ${inr(c.perPerson)} × ${Math.max(E.players.length, 1)} players` : 'Court charge' + (E.charge.override !== '' && E.charge.override != null && !c.fillByOverride ? ' (overridden)' : '')}</span><b>${inr(c.court)}</b></div>
     ${CATS.map(([k, l]) => c.ex[k] ? `<div class="ln"><span>${l}</span><b>${inr(c.ex[k])}</b></div>` : '').join('')}
-    ${c.fills ? `<div class="ln minus"><span>D&S fill-in · ${c.fills} player${c.fills > 1 ? 's' : ''} × ${inr(c.share)} not charged</span><b>−${inr(c.fillLoss)}</b></div>` : ''}
+    ${c.fillByOverride ? `<div class="ln minus"><span>D&S fill-in · court charge set to ${inr(c.courtDue)}</span><b>−${inr(c.fillLoss)}</b></div>` : c.fills ? `<div class="ln minus"><span>D&S fill-in · ${c.fills} player${c.fills > 1 ? 's' : ''} × ${inr(c.share)} not charged</span><b>−${inr(c.fillLoss)}</b></div>` : ''}
     <div class="ln total"><span>Amount due</span><b>${inr(c.due)}</b></div>`;
   const bw = $('#balWrap'); if (bw) bw.innerHTML = balanceTable(E, c, true);
   const rem = c.remaining, cls = Math.abs(rem) < 1 ? 'zero' : rem < 0 ? 'over' : '';
@@ -1156,6 +1165,10 @@ $('#sheet').addEventListener('click', async ev => {
   if (d.payfor) { const c = calc(E); E._pay = { payers: d.payfor === '*' ? c.per.map(p => p.key) : [d.payfor], method: 'upi', amount: null }; return renderEditor(); }
   if (d.act === 'prepaid') { const c = calc(E); if (c.courtDue > 0) E.pays.push({ id: uid(), method: E.source, amount: Math.round(c.courtDue), payers: [], at: new Date().toISOString(), by: USER }); return renderEditor(); }
   if (d.rmpay != null) { E.pays.splice(+d.rmpay, 1); return renderEditor(); }
+  if (d.fillp != null) { const p = E.players[+d.fillp]; if (!p) return;
+    if (!p.fill && p.booker) { const o = E.players.find(x => x !== p && !x.fill); if (!o) return toast('The player who booked can\'t be the D&S fill-in. Mark someone else as booker first.'); p.booker = false; o.booker = true; }
+    p.fill = !p.fill; if (p.fill && E._owner === p.key) E._owner = 'shared';
+    toast(p.fill ? `${p.name} marked as D&S fill-in — their court share is taken off the bill` : `${p.name} will be charged again`); return renderEditor(); }
   if (d.booker != null) { E.players.forEach((p, i) => p.booker = i === +d.booker); return renderEditor(); }
   if (d.rmp != null) { const [p] = E.players.splice(+d.rmp, 1); if (p && p.booker && E.players[0]) E.players[0].booker = true; return renderEditor(); }
   if (d.act === 'fill') { const n = E.players.filter(p => p.fill).length + 1; addPlayer({ key: 'fill-' + uid(), id: '', name: 'D&S fill-in' + (n > 1 ? ' ' + n : ''), fill: true }); return; }
