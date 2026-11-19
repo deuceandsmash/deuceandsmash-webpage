@@ -1903,6 +1903,75 @@ window.wormClearAll = () => {
   renderWormChart();
 };
 
+// ===== Open Play searchable picker =====
+function opPicker(id, placeholder, names) {
+  return `<div class="op-pick-wrap" style="position:relative;flex:1;min-width:0">
+    <input type="hidden" id="${id}-val" value="">
+    <input type="text" id="${id}" class="form-input op-pick-text" placeholder="${placeholder}" readonly autocomplete="off"
+      style="cursor:pointer;width:100%;box-sizing:border-box">
+    <div class="op-pick-dd" id="${id}-dd"
+      style="display:none;position:absolute;left:0;top:100%;margin-top:3px;width:100%;min-width:200px;
+             background:var(--card2,#1e2130);border:1px solid var(--border,#333);border-radius:10px;
+             overflow:hidden;z-index:200;box-shadow:0 12px 30px rgba(0,0,0,.6)">
+      <div style="padding:7px 8px;border-bottom:1px solid var(--border,#333)">
+        <input type="text" class="op-pick-search form-input" placeholder="Search…"
+          style="width:100%;box-sizing:border-box;padding:7px 10px;font-size:15px" autocomplete="off">
+      </div>
+      <div class="op-pick-list" style="max-height:220px;overflow-y:auto">
+        ${names.map(n=>`<button type="button" data-name="${n.replace(/"/g,'&quot;')}"
+          style="display:block;width:100%;background:none;border:0;border-bottom:1px solid var(--border,#222);
+                 padding:11px 14px;font-size:16px;text-align:left;color:var(--text,#eee);cursor:pointer"
+          onmouseover="this.style.background='var(--card3,#2a2d3e)'" onmouseout="this.style.background='none'">${n}</button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+function opPickerInit(container) {
+  container.querySelectorAll('.op-pick-wrap').forEach(wrap => {
+    const textIn = wrap.querySelector('.op-pick-text');
+    const hiddenIn = wrap.querySelector('input[type=hidden]');
+    const dd = wrap.querySelector('.op-pick-dd');
+    const searchIn = wrap.querySelector('.op-pick-search');
+    const listEl = wrap.querySelector('.op-pick-list');
+    const allBtns = () => [...listEl.querySelectorAll('button')];
+    const filterList = q => {
+      q = q.trim().toLowerCase();
+      allBtns().forEach(b => { b.style.display = !q || b.dataset.name.toLowerCase().includes(q) ? 'block' : 'none'; });
+    };
+    const openDD = ev => {
+      ev.preventDefault(); ev.stopPropagation();
+      const wasOpen = dd.style.display !== 'none';
+      opCloseAll();
+      if (wasOpen) return;
+      dd.style.display = 'block';
+      searchIn.value = ''; filterList('');
+      setTimeout(() => searchIn.focus(), 50);
+    };
+    textIn.addEventListener('click', openDD);
+    textIn.addEventListener('touchend', openDD);
+    searchIn.addEventListener('input', () => filterList(searchIn.value));
+    listEl.addEventListener('click', ev => {
+      const btn = ev.target.closest('button[data-name]'); if (!btn) return;
+      ev.stopPropagation();
+      hiddenIn.value = btn.dataset.name;
+      textIn.value = btn.dataset.name;
+      dd.style.display = 'none';
+    });
+    listEl.addEventListener('touchend', ev => {
+      const btn = ev.target.closest('button[data-name]'); if (!btn) return;
+      ev.preventDefault(); ev.stopPropagation();
+      hiddenIn.value = btn.dataset.name;
+      textIn.value = btn.dataset.name;
+      dd.style.display = 'none';
+    });
+  });
+  if (opPickerInit._closeH) { document.removeEventListener('click', opPickerInit._closeH, true); document.removeEventListener('touchstart', opPickerInit._closeH, true); }
+  opPickerInit._closeH = ev => { if (!ev.target.closest('.op-pick-wrap')) opCloseAll(); };
+  document.addEventListener('click', opPickerInit._closeH, true);
+  document.addEventListener('touchstart', opPickerInit._closeH, { passive: true, capture: true });
+}
+function opCloseAll() { document.querySelectorAll('.op-pick-dd').forEach(d => d.style.display = 'none'); }
+
 // ===== Open Play tab =====
 window.showOpForm = () => {
   const memberNames = Object.values(members).filter(m => m.active !== false).map(m => m.name).sort();
@@ -1923,14 +1992,14 @@ window.showOpForm = () => {
       <div class="match-block">
         <h4>Team A</h4>
         <div style="display:flex;gap:8px">
-          <select class="form-input" id="op-a1"><option value="">Player 1</option>${memberNames.map(n=>`<option>${n}</option>`).join('')}</select>
-          <select class="form-input" id="op-a2"><option value="">Player 2</option>${memberNames.map(n=>`<option>${n}</option>`).join('')}</select>
+          ${opPicker('op-a1','Player 1',memberNames)}
+          ${opPicker('op-a2','Player 2',memberNames)}
         </div>
         <div class="vs">vs</div>
         <h4>Team B</h4>
         <div style="display:flex;gap:8px">
-          <select class="form-input" id="op-b1"><option value="">Player 3</option>${memberNames.map(n=>`<option>${n}</option>`).join('')}</select>
-          <select class="form-input" id="op-b2"><option value="">Player 4</option>${memberNames.map(n=>`<option>${n}</option>`).join('')}</select>
+          ${opPicker('op-b1','Player 3',memberNames)}
+          ${opPicker('op-b2','Player 4',memberNames)}
         </div>
       </div>
       <div class="form-row">
@@ -1943,15 +2012,16 @@ window.showOpForm = () => {
       </div>
       <div id="op-result" style="margin-top:10px;font-size:0.85rem;"></div>
     </div>`;
+  opPickerInit(document.getElementById('op-area'));
 };
 
 window.submitMatch = async () => {
   const date = document.getElementById('op-date').value;
   const format = document.getElementById('op-format').value;
-  const a1 = document.getElementById('op-a1').value;
-  const a2 = document.getElementById('op-a2').value;
-  const b1 = document.getElementById('op-b1').value;
-  const b2 = document.getElementById('op-b2').value;
+  const a1 = document.getElementById('op-a1-val').value;
+  const a2 = document.getElementById('op-a2-val').value;
+  const b1 = document.getElementById('op-b1-val').value;
+  const b2 = document.getElementById('op-b2-val').value;
   const scoreText = document.getElementById('op-score').value.trim();
   const res = document.getElementById('op-result');
   if (!date || !a1 || !a2 || !b1 || !b2) { res.innerHTML = '<span style="color:var(--danger)">Fill in all 4 players</span>'; return; }
