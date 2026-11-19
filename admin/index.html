@@ -290,6 +290,8 @@
   .badge-inter-a { background: rgba(59,170,255,0.12); color: #3baaff; }
   .badge-adv { background: rgba(180,125,255,0.15); color: #b47dff; }
   .badge-elite { background: rgba(232,255,59,0.15); color: var(--accent); }
+.va-size,#va-tab{background:transparent;color:inherit;border:1px solid var(--border);text-decoration:none}
+.va-size.active{border-color:#F5D628;color:#F5D628;background:rgba(245,214,40,.12)}
 </style>
 </head>
 <body>
@@ -322,6 +324,7 @@
   <button class="tab" onclick="showTab('tournaments')">🏆 Tournaments</button>
   <button class="tab" onclick="showTab('add-member')">➕ Add Member</button>
   <button class="tab" onclick="showTab('smashdex')">📊 SmashDex</button>
+  <button class="tab" onclick="showTab('viewas')">👁 View as member</button>
   <button class="tab" onclick="showTab('scores')">📝 Member scores <span id="scores-badge" style="display:none;background:#E05A00;color:#fff;border-radius:999px;padding:0 7px;font-size:.75rem;margin-left:4px"></span></button>
 </div>
 
@@ -434,6 +437,28 @@
 <!-- Add Member tab -->
 <div class="section" id="tab-smashdex">
   <div id="sdx-analytics"><div style="color:var(--muted);padding:20px">Loading SmashDex usage…</div></div>
+</div>
+
+<div class="section" id="tab-viewas">
+  <div style="padding:4px 2px">
+    <p style="color:var(--muted);margin:0 0 10px">See exactly what a member sees in SmashDex, on every tab. It's read-only: nothing you tap is saved, it doesn't count as their visit, and each view is logged below.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <input class="filter-select" id="va-q" list="va-members" placeholder="Member name or Dex number" style="flex:1;min-width:220px;max-width:420px" aria-label="Choose a member" autocomplete="off">
+      <datalist id="va-members"></datalist>
+      <button class="btn btn-primary btn-sm" id="va-go">View</button>
+      <a class="btn btn-sm" id="va-tab" target="_blank" rel="noopener" style="display:none">Open in a new tab</a>
+    </div>
+    <div id="va-sizes" style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0" role="group" aria-label="Screen size">
+      <button class="btn btn-sm va-size active" data-w="390" data-h="844">Phone</button>
+      <button class="btn btn-sm va-size" data-w="834" data-h="1112">Tablet</button>
+      <button class="btn btn-sm va-size" data-w="1194" data-h="834">Tablet landscape</button>
+      <button class="btn btn-sm va-size" data-w="1440" data-h="900">Laptop</button>
+    </div>
+    <p id="va-who" style="margin:4px 0 8px;color:var(--muted)"></p>
+    <div id="va-stage" style="width:100%;overflow:hidden;display:none"><div id="va-scaler" style="transform-origin:top left"><iframe id="va-frame" title="Member view" style="border:1px solid var(--border);border-radius:14px;background:#0E0E2C;display:block"></iframe></div></div>
+    <h3 style="margin:22px 0 6px">Recent views</h3>
+    <div id="va-log" style="color:var(--muted)">Loading…</div>
+  </div>
 </div>
 
 <div class="section" id="tab-scores">
@@ -986,6 +1011,58 @@ document.addEventListener('click', async e => {
     await update(ref(db), upd); showToast('Saved', 'ok');
   } catch (err) { showToast('Could not save: ' + (err.code || err.message), 'err'); }
 });
+
+
+// ===== View as member (read-only SmashDex in a frame; SmashDex itself enforces read-only and logs the view) =====
+let _vaId = null, _vaW = 390, _vaH = 844;
+const _vaLabel = (id, m) => `${m.name || '?'}${m.dexNo ? ' · ' + dexLabel(m) : ''}${m.smashdexUid ? '' : ' (not signed up yet)'}`;
+function _vaFind(q) {
+  q = String(q || '').trim().toLowerCase(); if (!q) return null;
+  const list = Object.entries(members);
+  const exact = list.find(([id, m]) => _vaLabel(id, m).toLowerCase() === q);
+  if (exact) return exact[0];
+  const dex = q.replace(/^dex\s*#?|^#/, '');
+  if (/^\d+$/.test(dex)) { const d = list.find(([, m]) => +m.dexNo === +dex); if (d) return d[0]; }
+  const byName = list.filter(([, m]) => (m.name || '').toLowerCase().includes(q));
+  return byName.length === 1 ? byName[0][0] : null;
+}
+function _vaFit() {
+  const st = document.getElementById('va-stage'), sc = document.getElementById('va-scaler'), fr = document.getElementById('va-frame');
+  if (!st || !_vaId) return;
+  const k = Math.min(1, (st.clientWidth || _vaW) / _vaW);
+  fr.style.width = _vaW + 'px'; fr.style.height = _vaH + 'px';
+  sc.style.transform = `scale(${k})`; st.style.height = Math.ceil(_vaH * k) + 'px';
+}
+function _vaOpen(id) {
+  const m = members[id]; if (!m) return showToast('Choose a member from the list', 'err');
+  _vaId = id;
+  const url = `/smashdex/?as=${encodeURIComponent(id)}`;
+  document.getElementById('va-stage').style.display = 'block';
+  document.getElementById('va-frame').src = url;
+  const nt = document.getElementById('va-tab'); nt.href = url; nt.style.display = '';
+  document.getElementById('va-who').innerHTML = `Viewing <b>${_esc(m.name || '?')}</b>${m.dexNo ? ' · ' + dexLabel(m) : ''}${m.smashdexUid ? '' : ' · hasn’t signed up yet, so this is what they’ll see once linked'}`;
+  _vaFit(); setTimeout(loadViewLog, 1500);
+}
+window.initViewAs = () => {
+  const dl = document.getElementById('va-members');
+  if (dl && !dl.children.length) dl.innerHTML = Object.entries(members).sort((a, b) => (a[1].name || '').localeCompare(b[1].name || '')).map(([id, m]) => `<option value="${_esc(_vaLabel(id, m))}"></option>`).join('');
+  loadViewLog(); _vaFit();
+};
+document.addEventListener('click', e => {
+  if (e.target.id === 'va-go') { const id = _vaFind(document.getElementById('va-q').value); if (!id) return showToast('No single member matches. Pick one from the list.', 'err'); _vaOpen(id); }
+  const sz = e.target.closest('.va-size');
+  if (sz) { document.querySelectorAll('.va-size').forEach(b => b.classList.toggle('active', b === sz)); _vaW = +sz.dataset.w; _vaH = +sz.dataset.h; _vaFit(); }
+});
+document.addEventListener('keydown', e => { if (e.target.id === 'va-q' && e.key === 'Enter') document.getElementById('va-go').click(); });
+window.addEventListener('resize', () => { if (currentTab === 'viewas') _vaFit(); });
+async function loadViewLog() {
+  const box = document.getElementById('va-log'); if (!box) return;
+  try {
+    const snap = await get(ref(db, 'viewAsLog'));
+    const rows = Object.values(snap.val() || {}).sort((a, b) => (b.at || 0) - (a.at || 0)).slice(0, 30);
+    box.innerHTML = rows.length ? `<table style="width:100%;border-collapse:collapse;font-size:.85rem"><thead><tr><th style="text-align:left;padding:4px 6px">When</th><th style="text-align:left;padding:4px 6px">Staff</th><th style="text-align:left;padding:4px 6px">Member</th></tr></thead><tbody>${rows.map(r => `<tr style="border-top:1px solid var(--border)"><td style="padding:4px 6px">${new Date(r.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td><td style="padding:4px 6px">${_esc(r.by || '')}</td><td style="padding:4px 6px">${_esc(members[r.mid]?.name || r.name || r.mid)}</td></tr>`).join('')}</tbody></table>` : 'No views yet.';
+  } catch (e) { box.textContent = 'Could not load the log: ' + (e.code || e.message); }
+}
 
 // ===== SmashDex usage analytics =====
 const SDX_EVENTS = {
@@ -2436,6 +2513,7 @@ window.showTab = (name) => {
   if (name === 'ratings') requestAnimationFrame(renderWormChart);
   if (name === 'smashdex') loadSmashdexAnalytics();
   if (name === 'scores') renderScores();
+  if (name === 'viewas') initViewAs();
 };
 window.addEventListener('resize', () => { if (currentTab === 'ratings') renderWormChart(); });
 

@@ -776,6 +776,17 @@ select.fchip option,.clubrow select option{background:var(--deep);color:var(--te
   .hn.tbl>.hn-info{display:block}
 }
 @media (min-width:1280px){ .hn-grid{grid-template-columns:minmax(0,1fr) 340px} }
+
+/* Staff view-as banner */
+.vbar{position:fixed;top:0;left:0;right:0;z-index:60;height:36px;display:flex;align-items:center;gap:8px;padding:0 14px;background:#F5D628;color:#0E0E2C;font-size:14px;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.vbar .vb-eye svg{width:18px;height:18px;display:block}
+.vbar .vb-t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vbar .vb-x{color:#0E0E2C;font-weight:700;border:1.5px solid #0E0E2C;border-radius:999px;padding:2px 12px;text-decoration:none}
+body.viewas{padding-top:36px}
+body.viewas .bar{top:36px}
+body.viewas .sheet{top:36px}
+@media (min-width:700px){ body.viewas .nav{top:93px} }
+@media (min-width:1024px){ body.viewas .nav{top:36px} }
 </style>
 </head>
 <body>
@@ -813,9 +824,15 @@ select.fchip option,.clubrow select option{background:var(--deep);color:var(--te
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, get, set, update, onValue, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, get, set as _set, update as _update, onValue, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut,
   signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+// ── Staff "view as member" (/smashdex/?as=<memberId>): read-only. Every database write is refused here,
+// because a staff login could otherwise really confirm, dispute or edit as the member.
+const VIEW_AS_ID = (() => { try { return new URLSearchParams(location.search).get('as'); } catch { return null; } })();
+const READ_ONLY_MSG = "Read-only view: nothing was saved";
+const set = (...a) => window.__sdxViewAs ? Promise.reject(new Error(READ_ONLY_MSG)) : _set(...a);
+const update = (...a) => window.__sdxViewAs ? Promise.reject(new Error(READ_ONLY_MSG)) : _update(...a);
 import { DSR } from "/shared/dsr.js";
 import * as MX from "/shared/matchup.js";
 import * as H from "/shared/honours.js";
@@ -939,7 +956,7 @@ setInterval(() => {
 const _ss = { get(k) { try { return sessionStorage.getItem(k); } catch { return null; } }, set(k, v) { try { sessionStorage.setItem(k, v); } catch {} } };
 function track(ev, { once = false } = {}) {
   try {
-    if (!S.user) return;
+    if (!S.user || S.viewAs) return; // staff viewing as a member never counts as the member's activity
     if (once) { if (_ss.get('sdx_ev_' + ev)) return; _ss.set('sdx_ev_' + ev, '1'); }
     const day = todayLocal(), upd = { [`analytics/daily/${day}/events/${ev}`]: increment(1) };
     if (S.mid) upd[`analytics/members/${S.mid}/events/${ev}`] = increment(1);
@@ -948,7 +965,7 @@ function track(ev, { once = false } = {}) {
 }
 // A visit = opening SmashDex, or coming back after 30+ minutes away
 function trackVisit() {
-  if (!S.mid) return;
+  if (!S.mid || S.viewAs) return;
   const last = +(_ss.get('sdx_last') || 0), nowMs = Date.now();
   _ss.set('sdx_last', String(nowMs));
   if (nowMs - last < 30 * 60 * 1000) return;
@@ -987,7 +1004,7 @@ const signInHTML = () => `
 
 document.addEventListener('click', async ev => {
   const a = ev.target.closest('[data-act]')?.dataset.act; if (!a) return;
-  if (a === 'signout') return signOut(auth);
+  if (a === 'signout') { if (S.viewAs) { if (window.top === window) location.href = '/admin/'; else toast('Read-only view: use /admin to pick another member'); return; } return signOut(auth); }
   if (a === 'google') {
     try { await signInWithPopup(auth, provider); S._method = 'signin_google'; }
     catch (e) { if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(e.code)) return signInWithRedirect(auth, provider);
@@ -1032,10 +1049,30 @@ onAuthStateChanged(auth, user => {
   boot(user);
 });
 
+async function startViewAs(user) {
+  let staff = false;
+  try { staff = (await get(ref(db, `admins/${String(user.email || '').trim().toLowerCase().replace(/\./g, ',')}`))).val() === true; } catch {}
+  if (!staff) return null; // not club staff: the ?as= link is ignored and they get their own SmashDex
+  const mid = VIEW_AS_ID;
+  let m = null; try { m = (await get(ref(db, `members/${mid}`))).val(); } catch {}
+  if (!m) { gate(`<p style="color:var(--muted)">No member with that id.</p><p style="margin-top:14px"><a href="/admin/">Back to /admin</a></p>`, '', true); return false; }
+  S.viewAs = { mid, by: user.email, name: m.name || '', dexNo: m.dexNo || null, linked: !!m.smashdexUid };
+  window.__sdxViewAs = true;
+  // Audit trail: who looked at whose SmashDex, and when (staff-only node)
+  _set(ref(db, `viewAsLog/${Date.now()}_${Math.random().toString(36).slice(2, 7)}`), { by: user.email || '', mid, name: m.name || '', at: Date.now() }).catch(e => console.warn('viewAsLog', e));
+  document.body.classList.add('viewas');
+  const inFrame = window.top !== window;
+  const b = document.createElement('div'); b.className = 'vbar'; b.setAttribute('role', 'status');
+  b.innerHTML = `<span class="vb-eye" aria-hidden="true">${svgI('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>')}</span><span class="vb-t">Viewing as <b>${esc(m.name || '?')}</b>${m.dexNo ? ` · ${dexLabel(m.dexNo)}` : ''}${m.smashdexUid ? '' : ' · not signed up yet'} · read-only</span>${inFrame ? '' : '<a class="vb-x" href="/admin/">Exit</a>'}`;
+  document.body.prepend(b);
+  return mid;
+}
+
 async function boot(user) {
-  gate('<div class="spinner"></div>', 'Opening your SmashDex…');
+  gate('<div class="spinner"></div>', VIEW_AS_ID ? 'Opening the member view…' : 'Opening your SmashDex…');
   let mid = null;
-  try { mid = (await get(ref(db, `links/${user.uid}`))).val(); }
+  if (VIEW_AS_ID) { const v = await startViewAs(user); if (v === false) return; if (v) mid = v; }
+  if (!mid) try { mid = (await get(ref(db, `links/${user.uid}`))).val(); }
   catch (e) { return gate(`<button class="btn full" data-act="signout">Sign out</button>`, 'Could not reach SmashDex: ' + (e.code || e.message), true); }
   if (!mid) {
     let req = null; try { req = (await get(ref(db, `linkRequests/${user.uid}`))).val(); } catch {}
@@ -1049,7 +1086,7 @@ async function boot(user) {
       <form id="linkForm">
         <label class="field"><span>Your name, as the club knows you</span><input name="name" required maxlength="40" autocomplete="name" value="${esc(user.displayName || '')}"></label>
         <label class="field"><span>Mobile number</span><input name="phone" type="tel" required inputmode="tel" autocomplete="tel" maxlength="16" placeholder="e.g. 98765 43210" pattern="[+]?[0-9 ]{10,15}" title="Enter a 10-digit mobile number, with country code if outside India"></label>
-        <p class="note">Used only to match you with your club record. It is never shown to other players and never used for marketing.</p>
+        <p class="note">Used only to match you with your club record. It is never shown to other players and never used for marketing. Club staff can open a read-only view of your SmashDex to help with questions, and each view is logged.</p>
         <label class="field"><span>Dex number, if you know it (optional)</span><input name="dex" inputmode="numeric" maxlength="4" placeholder="e.g. 42"></label>
         <fieldset class="q"><legend>When do you usually play? (optional)</legend><div class="chips">${['Weekday mornings', 'Weekday evenings', 'Weekends'].map(v => chip('playTimes', v)).join('')}</div></fieldset>
         <fieldset class="q"><legend>How do you usually play at the club? (optional)</legend><div class="chips">${['Open play', 'Bookings with friends', 'Coaching', 'Tournaments'].map(v => chip('playWays', v)).join('')}</div></fieldset>
