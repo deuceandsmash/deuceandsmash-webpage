@@ -152,6 +152,23 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 .msg.warn{background:rgba(250,178,25,.12);color:#ffd27a}
 .msg.ok{background:rgba(12,163,12,.12);color:#9be89b}
 .msg.info{background:var(--card);color:var(--text2)}
+/* Day close */
+.strip{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.strip button{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-family:var(--ui);font-size:13px;text-align:left;min-width:108px}
+.strip button b{display:block;font-size:15px;margin-bottom:3px}
+.strip button.cur{outline:2px solid var(--yellow);outline-offset:-1px}
+.cl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px;align-items:start}
+.cl-count{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px}
+.cl-count label small{display:block;color:var(--muted);font-size:12px;margin-top:4px;font-family:var(--ui)}
+.cl-res td:first-child,.cl-res th:first-child{text-align:left}
+.cl-res td:last-child{white-space:normal;min-width:96px}
+.cl-res td,.cl-res th{padding:8px 4px}
+.cl-res .gap{color:#ff9d9d;font-weight:700}.cl-res .okv{color:#7fe07f}.cl-res .within{color:#ffd27a}
+.pend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--grid);font-family:var(--ui);font-size:14px}
+.pend .who{flex:1;min-width:150px}.pend .who b{font-size:15px}
+.pend input{flex:2;min-width:200px;padding:8px 10px;font-size:14px}
+.excl{font-family:var(--ui);font-size:14px;color:var(--text2);padding:6px 0;border-bottom:1px solid var(--grid)}
+.excl b{color:var(--text)}
 .cat{font-family:var(--ui);font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:6px 0 8px}
 
 /* players */
@@ -329,8 +346,9 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
   </div></header>
   <main>
     <div id="offline" class="msg warn hidden">You're offline. Changes are saved on this device and will upload when the connection returns. Don't close this tab.</div>
-    <div class="viewseg"><div class="seg" style="margin:0"><button data-view="tabs" id="vTabs">Open tabs</button><button data-view="board" id="vBoard">Courts</button></div><span class="sub" id="viewHint"></span></div>
+    <div class="viewseg"><div class="seg" style="margin:0"><button data-view="tabs" id="vTabs">Open tabs</button><button data-view="board" id="vBoard">Courts</button><button data-view="close" id="vClose">Close day</button></div><span class="sub" id="viewHint"></span></div>
     <div id="viewTabs"></div>
+    <div id="viewClose" class="hidden"></div>
     <div id="viewBoard" class="hidden">
       <div class="card"><div class="card-h"><h3>Courts</h3><span class="sub">Tap an empty slot to book it · tap a booking to open it</span></div>
         <div class="tl-wrap"><div class="tl" id="board"></div></div>
@@ -346,7 +364,7 @@ label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mu
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getDatabase, ref, get, set, push, remove, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, get, set, update, push, remove, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 /* ── Firebase: ops project (bookings & money) + club project (members, matches, sessions) ── */
 const opsApp = initializeApp({
@@ -400,7 +418,9 @@ const STATUSES = [['booked', 'Booked / in play'], ['played', 'Played'], ['no_sho
 const OP_LEVELS = ['Beginner', 'Beginner / Beginner+', 'Beginner+', 'Beginner+ / Inter', 'Inter', 'Inter / Inter+', 'Inter+', 'Strong Inter', 'Advanced'];
 const OP_GROUPS = ['Community', 'Team Smash'];
 const OVERRIDE_REASONS = ['D&S fill-in', 'Discount', 'Member rate', 'Complimentary', 'Launch / promo price', 'Other'];
-const BASE_METHODS = [['upi', 'UPI'], ['card', 'Card'], ['cash', 'Cash']];
+const BASE_METHODS = [['upi', 'UPI'], ['cash', 'Cash'], ['bank', 'Bank transfer']];
+const LEGACY_METHODS = { card: 'Card' };   // older entries only
+const WINDOW_DAYS = 5;                     // front desk can change money on today + the 5 days before
 const CATS = [['beverage', 'Drinks'], ['racquet', 'Racquets & paddles'], ['balls', 'Balls'], ['other', 'Other']];
 const DEFAULT_CONFIG = {
   rates: { padel: { off: 1300, peak: 1600 }, pickle: { off: 600, peak: 700 } },
@@ -472,15 +492,17 @@ const itemPic = (k, it) => it && it.img ? `<img src="${esc(it.img)}" alt="" load
 
 /* ── State ── */
 let USER = null, IS_OWNER = false, CFG = clone(DEFAULT_CONFIG), MEMBERS = {}, DAYISO = todayISO(), ENTRIES = {}, unsub = null;
+let RAWDAY = {}, CL = null, CLOSE = undefined, PENDING = {}, STRIP = null, closeUnsub = null, pendUnsub = null;
 let E = null, EDIT_LOCK = false, SAVING = false, VIEW = store.get('view', 'tabs');
 
 const sorted = obj => Object.entries(obj || {}).filter(([, v]) => v && v.active !== false).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
 const methods = () => [...BASE_METHODS, ...sorted(CFG.sources).filter(([, s]) => s.aggregator).map(([k, s]) => [k, s.label])];
-const methodLabel = k => (methods().find(m => m[0] === k) || [k, k])[1];
+const methodLabel = k => (methods().find(m => m[0] === k) || [k, LEGACY_METHODS[k] || k])[1];
 const itemOf = (k, e) => CFG.items[k] || (e && e.itemSnap && e.itemSnap[k]) || { label: k, price: 0, cat: 'other' };
 const payersOf = e => e.players.filter(p => !p.fill);
 const bookerOf = e => e.players.find(p => p.booker) || e.players[0] || null;
-const lockedFor = e => !IS_OWNER && e.date && Math.floor((Date.now() - dateMsIST(e.date)) / 864e5) > 1;
+const ageDays = iso => Math.floor((Date.now() - dateMsIST(iso)) / 864e5);
+const lockedFor = e => !IS_OWNER && e.date && ageDays(e.date) > WINDOW_DAYS;   // money locked; players, games & notes stay editable
 
 /* ── Pricing & per-player balances ── */
 function courtCharge(sport, iso, start, minutes) {
@@ -601,11 +623,12 @@ function buildDoc(e, id, now) {
   };
 }
 // Write a booking: used by the full editor and by quick actions on Open tabs
-async function commit(e, action = 'update') {
+async function commit(e, action = 'update', peopleOnly = false) {
   const now = new Date().toISOString(), isNew = !e.createdAt, id = e.id || push(ref(db, 'entries')).key;
   e.id = id;
   const doc = buildDoc(e, id, now);
-  await set(ref(db, `entries/${id}`), doc);
+  if (peopleOnly) await update(ref(db, `entries/${id}`), { players: doc.players, games: doc.games, notes: doc.notes, updatedBy: doc.updatedBy, updatedAt: doc.updatedAt });
+  else { await set(ref(db, `entries/${id}`), doc); syncPending(doc); }
   e.createdAt = doc.createdAt; e.createdBy = doc.createdBy;
   push(ref(db, `entryLog/${id}`), { at: now, by: USER, action: isNew ? 'create' : action, summary: `${doc.startTime} ${doc.courts.join(',')} · due ${doc.totals.due} · paid ${doc.paid} · ${doc.status}` }).catch(() => {});
   const mids = doc.players.filter(p => p.id).map(p => p.id);
@@ -620,6 +643,17 @@ async function commit(e, action = 'update') {
       level: doc.level || '', group: doc.group || 'Community', players: doc.players.filter(p => !p.fill).map(p => p.name), fill: doc.totals.fills, status: st, note: doc.notes || '', courts: doc.courts, games: doc.games.filter(g => g.matchId).length, updatedAt: now }).catch(() => {});
   }
   return doc;
+}
+
+// Unpaid balances, kept in one small list so pending tabs from any day show up at day close
+function syncPending(doc) {
+  const rem = Math.round((doc.totals.due || 0) - (doc.paid || 0)), r = ref(db, `pending/${doc.id}`);
+  if (rem > 0 && !['deleted', 'cancelled'].includes(doc.status)) {
+    const bk = (doc.players || []).find(p => p.booker) || (doc.players || [])[0] || {};
+    return update(r, { id: doc.id, date: doc.date, dateMs: doc.dateMs, start: doc.start, courts: doc.courts, sport: doc.sport, who: bk.name || '', players: (doc.players || []).filter(p => !p.fill).map(p => p.name),
+      due: Math.round(doc.totals.due || 0), paid: Math.round(doc.paid || 0), remaining: rem, status: doc.status, updatedAt: doc.updatedAt }).catch(() => {});
+  }
+  return remove(r).catch(() => {});
 }
 
 /* ── Auth ── */
@@ -674,8 +708,9 @@ addEventListener('offline', () => $('#offline').classList.remove('hidden'));
 /* ── Day & views ── */
 function setView(v) {
   VIEW = v; store.set('view', v);
-  $('#viewTabs').classList.toggle('hidden', v !== 'tabs'); $('#viewBoard').classList.toggle('hidden', v !== 'board');
-  $('#vTabs').classList.toggle('on', v === 'tabs'); $('#vBoard').classList.toggle('on', v === 'board'); renderDay();
+  $('#viewTabs').classList.toggle('hidden', v !== 'tabs'); $('#viewBoard').classList.toggle('hidden', v !== 'board'); $('#viewClose').classList.toggle('hidden', v !== 'close');
+  $('#vTabs').classList.toggle('on', v === 'tabs'); $('#vBoard').classList.toggle('on', v === 'board'); $('#vClose').classList.toggle('on', v === 'close');
+  if (v === 'close') closeWatch(); renderDay();
 }
 document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
 function setDay(iso) {
@@ -683,8 +718,9 @@ function setDay(iso) {
   $('#dayTitle').textContent = (iso === todayISO() ? 'TODAY · ' : '') + fdw(iso).toUpperCase();
   $('#dayPick').value = iso;
   if (unsub) unsub();
-  ENTRIES = {}; renderDay();
-  unsub = onValue(query(ref(db, 'entries'), orderByChild('date'), equalTo(iso)), snap => { ENTRIES = Object.fromEntries(Object.entries(snap.val() || {}).filter(([, x]) => x && x.status !== 'deleted')); renderDay(); if (E && !E._quick) refresh(); },
+  ENTRIES = {}; RAWDAY = {}; CL = null; renderDay();
+  if (VIEW === 'close') closeWatch();
+  unsub = onValue(query(ref(db, 'entries'), orderByChild('date'), equalTo(iso)), snap => { RAWDAY = snap.val() || {}; ENTRIES = Object.fromEntries(Object.entries(snap.val() || {}).filter(([, x]) => x && x.status !== 'deleted')); renderDay(); if (E && !E._quick) refresh(); },
     err => toast('Couldn\'t load bookings: ' + err.message, 5000));
 }
 $('#prevDay').onclick = () => setDay(addDays(DAYISO, -1));
@@ -693,7 +729,7 @@ $('#todayBtn').onclick = () => setDay(todayISO());
 $('#dayPick').onchange = e => e.target.value && setDay(e.target.value);
 $('#newBtn').onclick = () => openEditor(null, {});
 
-function renderDay() { renderBoard(); renderTabs(); }
+function renderDay() { renderBoard(); renderTabs(); if (VIEW === 'close') renderClose(); }
 function renderBoard() {
   const list = Object.values(ENTRIES).filter(Boolean).sort((a, b) => a.start - b.start);
   const dw = dowOf(DAYISO);
@@ -781,18 +817,18 @@ $('#viewTabs').addEventListener('click', async ev => {
   const b = ev.target.closest('button'); if (!b || b.disabled) return;
   if (b.dataset.open) return openEditor(ENTRIES[b.dataset.open]);
   if (b.dataset.openp) return openEditor(ENTRIES[b.dataset.openp], {}, b.dataset.p);
-  if (b.dataset.qdel) { const x = ENTRIES[b.dataset.qdel]; if (!x) return; if (lockedFor(toDraft(x))) return toast('Only an owner can delete bookings older than yesterday.'); openEditor(x); E._fromCard = true; return askDelete(); }
+  if (b.dataset.qdel) { const x = ENTRIES[b.dataset.qdel]; if (!x) return; if (lockedFor(toDraft(x))) return toast('Only an owner can delete bookings more than 5 days old.'); openEditor(x); E._fromCard = true; return askDelete(); }
   if (b.dataset.qadd) return quickItems(ENTRIES[b.dataset.qadd], b.dataset.p);
   if (b.dataset.qpay) return quickPay(ENTRIES[b.dataset.qpay], b.dataset.p);
   if (b.dataset.qplayed) {
-    const d = toDraft(ENTRIES[b.dataset.qplayed]); if (lockedFor(d)) return toast('Only an owner can change bookings older than yesterday.');
+    const d = toDraft(ENTRIES[b.dataset.qplayed]); if (lockedFor(d)) return toast('Only an owner can change payments or items on bookings more than 5 days old.');
     d.status = 'played'; try { await commit(d, 'played'); toast('Marked played'); } catch (err) { toast('Couldn\'t save: ' + err.message, 4000); }
   }
 });
 
 // Quick: add items to one player (or the shared tab) without opening the booking
 function quickItems(entry, owner) {
-  const d = toDraft(entry); if (lockedFor(d)) return toast('Only an owner can change bookings older than yesterday.');
+  const d = toDraft(entry); if (lockedFor(d)) return toast('Only an owner can change payments or items on bookings more than 5 days old.');
   E = d; E._quick = true; E._owner = owner; EDIT_LOCK = false;
   const who = owner === 'shared' ? 'Shared' : (d.players.find(p => p.key === owner) || {}).name || '';
   const draw = () => {
@@ -808,7 +844,7 @@ function quickItems(entry, owner) {
 }
 // Quick: take a payment from one player (optionally covering others) or from everyone
 function quickPay(entry, who) {
-  const d = toDraft(entry); if (lockedFor(d)) return toast('Only an owner can change bookings older than yesterday.');
+  const d = toDraft(entry); if (lockedFor(d)) return toast('Only an owner can change payments or items on bookings more than 5 days old.');
   E = d; E._quick = true; EDIT_LOCK = false; E._pay = { payers: who === '*' ? payersOf(d).map(p => p.key) : [who], method: 'upi', amount: null };
   const draw = () => {
     const c = calc(E);
@@ -884,10 +920,10 @@ function timeOptions(sel) { let s = ''; for (let m = 300; m <= 1410; m += 30) s 
 const fmtMin = m => m % 60 ? (m >= 60 ? Math.floor(m / 60) + 'h ' : '') + (m % 60) + 'm' : (m / 60) + 'h';
 function renderEditor() {
   ensureDay(E.date);
-  const e = E, c = calc(e), cf = conflicts(e), dis = EDIT_LOCK ? 'disabled' : '';
+  const e = E, c = calc(e), cf = conflicts(e), dis = EDIT_LOCK ? 'disabled' : '', pdis = '';
   const durs = [30, 60, 90, 120, 150, 180];
   let h = `<div class="sheet"><div class="sheet-h"><h2>${e.id ? 'BOOKING' : 'NEW BOOKING'}</h2><span class="sub">${fdw(e.date)} · ${esc(e.courts.join(' + '))} ${hhmm(e.start)}</span><div style="flex:1"></div><button class="btn btn-sm" data-act="close">Close</button></div>`;
-  if (EDIT_LOCK) h += `<div class="sec"><div class="msg warn">This booking is more than a day old, so only an owner can change it. You can still view it.</div></div>`;
+  if (EDIT_LOCK) h += `<div class="sec"><div class="msg warn">This booking is more than 5 days old. Court, items and payments can only be changed by an owner. You can still correct players, games and notes.</div></div>`;
 
   h += `<div class="sec"><h4>When & where</h4>
     <div class="row"><label class="f">Date<input type="date" data-f="date" value="${e.date}" ${dis}></label>
@@ -909,10 +945,10 @@ function renderEditor() {
     <div class="chips-pick">${sorted(CFG.sources).map(([k, s]) => `<button class="pick ${e.source === k ? 'on' : ''}" data-source="${k}" ${dis}>${esc(s.label)}</button>`).join('')}</div></div>`;
 
   h += `<div class="sec"><h4>Players <small>${e.players.length} of ${c.expected} · can be completed during play · ★ = who booked</small></h4>
-    <div class="players">${e.players.map((p, i) => `<span class="pl ${p.fill ? 'fill' : ''}"><button class="star ${p.booker ? 'on' : ''}" data-booker="${i}" title="Booked by" ${dis}>★</button>${esc(p.name)}${p.fill ? ' <small>D&S fill-in</small>' : p.id ? '' : ' <small>not a member</small>'}${e.type === 'event' || e.type === 'party' ? '' : `<button class="fi ${p.fill ? 'on' : ''}" data-fillp="${i}" title="${p.fill ? 'Charge this player again' : 'Mark as D&S fill-in (court share not charged)'}" ${dis}>D&S</button>`}<button class="x" data-rmp="${i}" aria-label="Remove" ${dis}>✕</button></span>`).join('') || '<span class="sub">No players yet. Add at least who booked.</span>'}</div>
-    ${EDIT_LOCK ? '' : `<div class="search"><input id="pq" placeholder="Search members by name or phone…" autocomplete="off"><div class="dd hidden" id="pdd"></div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-act="fill">+ D&S fill-in player</button><button class="btn btn-sm" data-act="newmember">+ New member</button></div>
-    <div id="nmForm"></div>`}</div>`;
+    <div class="players">${e.players.map((p, i) => `<span class="pl ${p.fill ? 'fill' : ''}"><button class="star ${p.booker ? 'on' : ''}" data-booker="${i}" title="Booked by" ${pdis}>★</button>${esc(p.name)}${p.fill ? ' <small>D&S fill-in</small>' : p.id ? '' : ' <small>not a member</small>'}${e.type === 'event' || e.type === 'party' ? '' : `<button class="fi ${p.fill ? 'on' : ''}" data-fillp="${i}" title="${p.fill ? 'Charge this player again' : 'Mark as D&S fill-in (court share not charged)'}" ${dis}>D&S</button>`}<button class="x" data-rmp="${i}" aria-label="Remove" ${pdis}>✕</button></span>`).join('') || '<span class="sub">No players yet. Add at least who booked.</span>'}</div>
+    <div class="search"><input id="pq" placeholder="Search members by name or phone…" autocomplete="off"><div class="dd hidden" id="pdd"></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${EDIT_LOCK ? '' : '<button class="btn btn-sm" data-act="fill">+ D&S fill-in player</button>'}<button class="btn btn-sm" data-act="newmember">+ New member</button></div>
+    <div id="nmForm"></div></div>`;
 
   h += `<div class="sec"><h4>Court charge</h4>`;
   if (c.isEv) {
@@ -950,7 +986,7 @@ function renderEditor() {
       <span class="sub">${p.at ? new Date(p.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }) : 'now'}</span><div style="flex:1"></div>${EDIT_LOCK ? '' : `<button class="btn btn-sm btn-danger" data-rmpay="${i}">Remove</button>`}</div>`).join('')}</div>` : ''}</div>`;
 
   h += `<div class="sec"><h4>Status</h4><div class="chips-pick">${STATUSES.map(([k, l]) => `<button class="pick ${e.status === k ? 'on' : ''}" data-status="${k}" ${dis}>${l}</button>`).join('')}</div>
-    <label class="f">Notes<textarea rows="2" data-f="notes" placeholder="Anything unusual about this booking" ${dis}>${esc(e.notes)}</textarea></label></div>`;
+    <label class="f">Notes<textarea rows="2" data-f="notes" placeholder="Anything unusual about this booking">${esc(e.notes)}</textarea></label></div>`;
 
   if (e.sport === 'padel' && !c.isEv) h += gamesSection(e);
   if (e.id && !EDIT_LOCK) h += `<div class="sec"><button class="btn btn-sm btn-danger" data-act="askdelete">Delete this booking…</button> <span class="sub">For duplicates or entries made by mistake. You'll be asked to confirm.</span></div>`;
@@ -960,7 +996,7 @@ function renderEditor() {
   $('#sheet').innerHTML = h; $('#sheet').scrollTop = st;
   gpInitAll($('#sheet'));
   $('#footHost').innerHTML = `<div class="foot"><div class="foot-in"><div class="tot" id="tot"></div><div class="fsp" style="flex:1"></div><div id="saveErr" class="sub" style="color:#ffb3b3;max-width:280px"></div>
-    ${EDIT_LOCK ? '<button class="btn" data-act="close">Close</button>' : `<button class="btn btn-ghost" data-act="close">Cancel</button><button class="btn btn-primary" data-act="save" id="saveBtn">${saveLabel(c)}</button>`}</div></div>`;
+    ${EDIT_LOCK ? (e.id ? '<button class="btn btn-ghost" data-act="close">Cancel</button><button class="btn btn-primary" data-act="savepeople" id="saveBtn">Save players & scores</button>' : '<button class="btn" data-act="close">Close</button>') : `<button class="btn btn-ghost" data-act="close">Cancel</button><button class="btn btn-primary" data-act="save" id="saveBtn">${saveLabel(c)}</button>`}</div></div>`;
   refresh();
 }
 function refresh() {
@@ -975,7 +1011,7 @@ function refresh() {
   const t = $('#tot');
   if (t) t.innerHTML = `<div>Bill<b>${inr(c.bill)}</b></div>${c.fillLoss ? `<div>Due<b>${inr(c.due)}</b></div>` : ''}<div>Paid<b>${inr(c.paid)}</b></div>
     <div class="rem ${cls}">${rem < 0 ? 'Overpaid' : 'Remaining'}<b>${Math.abs(rem) < 1 ? '✓ 0' : inr(Math.abs(rem))}</b></div>`;
-  const sb = $('#saveBtn'); if (sb && !SAVING) sb.textContent = saveLabel(c);
+  const sb = $('#saveBtn'); if (sb && !SAVING && !EDIT_LOCK) sb.textContent = saveLabel(c);
 }
 const saveLabel = c => E.status === 'booked' && c.remaining > 0.5 ? 'Save · keep tab open' : (E.id ? 'Save changes' : 'Save booking');
 
@@ -1006,18 +1042,18 @@ function gpPicker(pool, selKey, gk, disabled) {
   </div>`;
 }
 function gamesSection(e) {
-  const pool = gamePool(e), dis = EDIT_LOCK ? 'disabled' : '';
+  const pool = gamePool(e), dis = false ? 'disabled' : '';
   let h = `<div class="sec"><h4>Games & scores <small>every game this session · saved to Smash Ratings${e.type === 'open_play' ? " and the day's open play" : ''} when you save</small></h4>`;
   if (pool.length < 4) return h + `<div class="msg info">Add at least 4 member players to record games${e.type === 'open_play' ? ' (players on other open-play courts at the same time count too)' : ''}.</div></div>`;
   if (pool.some(p => p.from)) h += `<div class="sub" style="margin-bottom:8px">Includes players from the other open-play court running at the same time, so rotations across courts can be scored here.</div>`;
   h += `<div class="gwrap"><table class="gtable"><tbody>${e.games.map((g, i) => {
     const st = g.matchId ? (g._saved === JSON.stringify([g.a1, g.a2, g.b1, g.b2, g.score]) ? '<span class="chip ok">Saved</span>' : '<span class="chip warn">Changed</span>') : '<span class="chip info">New</span>';
-    const mk = k => gpPicker(pool, g[k], k, !!EDIT_LOCK).replace(/ROWID/g, g.lid);
+    const mk = k => gpPicker(pool, g[k], k, !!false).replace(/ROWID/g, g.lid);
     return `<tr data-g="${g.lid}"><td class="num">${i + 1}</td><td>${mk('a1')}</td><td>${mk('a2')}</td><td class="vs">vs</td>
       <td>${mk('b1')}</td><td>${mk('b2')}</td>
       <td class="sc"><input data-gk="score" value="${esc(g.score)}" placeholder="6-4" ${dis}></td><td class="st">${st}</td>
-      <td>${EDIT_LOCK ? '' : `<button class="x" data-rmg="${g.lid}" aria-label="Remove game">✕</button>`}</td></tr>`; }).join('')}</tbody></table></div>
-    ${EDIT_LOCK ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-act="addgame">+ Add game</button>
+      <td>${false ? '' : `<button class="x" data-rmg="${g.lid}" aria-label="Remove game">✕</button>`}</td></tr>`; }).join('')}</tbody></table></div>
+    ${false ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" data-act="addgame">+ Add game</button>
       <button class="btn btn-sm" data-act="rotate">Suggest rotation (${pool.length} players)</button></div>
       <div class="sub" style="margin-top:8px">Score per game like 6-4, or sets like 6-3, 4-6, 10-8. Rows left completely empty are ignored.</div>`}</div>`;
   return h;
@@ -1154,6 +1190,176 @@ async function writeGames(e, id) {
   return wrote;
 }
 
+/* ── Close the day: blind count of cash / UPI / bank transfer against the day's recorded payments ── */
+const COUNT_METHODS = [['cash', 'Cash'], ['upi', 'UPI'], ['bank', 'Bank transfer'], ['card', 'Card']];
+const CASH_TOLERANCE = 100;   // small change; UPI and transfers must match to the rupee
+function dayMoney(raw) {
+  const all = Object.values(raw || {}).filter(x => x && x.date), live = all.filter(x => x.status !== 'deleted');
+  const exp = { cash: 0, upi: 0, bank: 0, card: 0 }, prepaid = {}, pending = [], overrides = [], fills = [], cancelled = [], noshow = [];
+  let billed = 0, n = 0;
+  for (const x of live) {
+    n++; billed += +(x.totals || {}).due || 0; let paid = 0;
+    for (const p of x.pays || []) { const a = +p.amount || 0; paid += a; if (p.method in exp) exp[p.method] += a; else prepaid[p.method] = (prepaid[p.method] || 0) + a; }
+    if (!Array.isArray(x.pays)) for (const [m, v] of Object.entries(x.payments || {})) { const a = +v || 0; paid += a; if (m in exp) exp[m] += a; else prepaid[m] = (prepaid[m] || 0) + a; }
+    const rem = Math.round((+(x.totals || {}).due || 0) - paid);
+    if (rem > 0 && x.status !== 'cancelled') pending.push({ x, rem });
+    const ch = x.charge || {};
+    if (ch.override != null && ch.override !== '' && ch.overrideReason !== 'D&S fill-in') overrides.push(x);
+    if (+(x.totals || {}).fillLoss > 0) fills.push(x);
+    if (x.status === 'cancelled') cancelled.push(x); if (x.status === 'no_show') noshow.push(x);
+  }
+  const prepaidTotal = sum(Object.values(prepaid)), pendingTotal = sum(pending, p => p.rem);
+  const m = { n, billed: Math.round(billed), exp, prepaid, prepaidTotal, pending, pendingTotal, overrides, fills, fillLoss: sum(fills, x => +x.totals.fillLoss || 0), cancelled, noshow, deleted: all.filter(x => x.status === 'deleted') };
+  m.fp = [m.n, m.billed, exp.cash, exp.upi, exp.bank, exp.card, prepaidTotal, pendingTotal].map(v => Math.round(v)).join('|');
+  return m;
+}
+const methodsFor = m => COUNT_METHODS.filter(([k]) => k !== 'card' || m.exp.card > 0);
+const verdict = (k, d) => Math.round(d) === 0 ? 'match' : (k === 'cash' && Math.abs(d) <= CASH_TOLERANCE ? 'within' : 'gap');
+const whoOf = x => ((x.players || []).find(p => p.booker) || (x.players || [])[0] || {}).name || '—';
+const canCloseDay = iso => iso <= todayISO() && (IS_OWNER || ageDays(iso) <= WINDOW_DAYS);
+function closeWatch() {
+  if (closeUnsub) closeUnsub(); CLOSE = undefined;
+  if (canCloseDay(DAYISO)) closeUnsub = onValue(ref(db, `closes/${DAYISO}`), sn => { CLOSE = sn.val(); renderClose(); }, () => { CLOSE = null; renderClose(); });
+  else { closeUnsub = null; CLOSE = null; }
+  if (!pendUnsub) pendUnsub = onValue(ref(db, 'pending'), sn => { PENDING = sn.val() || {}; if (VIEW === 'close') renderClose(); }, () => {});
+  loadStrip();
+}
+async function loadStrip() {
+  const days = []; for (let i = 0; i <= WINDOW_DAYS; i++) days.push(addDays(todayISO(), -i));
+  try {
+    STRIP = await Promise.all(days.map(async iso => {
+      const [es, cs] = await Promise.all([get(query(ref(db, 'entries'), orderByChild('date'), equalTo(iso))), get(ref(db, `closes/${iso}`)).catch(() => null)]);
+      const m = dayMoney(es.val()), c = cs && cs.val();
+      return { iso, n: m.n, pend: m.pending, st: !c ? (m.n ? 'open' : 'empty') : c.fp !== m.fp ? 'changed' : c.flag === 'gap' ? 'gap' : 'ok' };
+    }));
+  } catch { STRIP = null; }
+  if (VIEW === 'close') renderClose();
+}
+const STRIP_LBL = { open: ['due', 'Not closed'], empty: ['info', 'No bookings'], changed: ['warn', 'Changed since close'], gap: ['warn', 'Closed · gap'], ok: ['ok', 'Closed ✓'] };
+function renderClose() {
+  const host = $('#viewClose'); if (!host || VIEW !== 'close') return;
+  const iso = DAYISO, m = dayMoney(RAWDAY), mets = methodsFor(m);
+  let h = '';
+  const sd = STRIP && STRIP.find(d => d.iso === iso);   // keep the chip for the day on screen live
+  if (sd && CLOSE !== undefined) sd.st = !CLOSE ? (m.n ? 'open' : 'empty') : CLOSE.fp !== m.fp ? 'changed' : CLOSE.flag === 'gap' ? 'gap' : 'ok';
+  if (STRIP) h += `<div class="strip">${STRIP.map(d => { const [cls, l] = STRIP_LBL[d.st]; return `<button data-cday="${d.iso}" class="${d.iso === iso ? 'cur' : ''}"><b>${d.iso === todayISO() ? 'Today' : fdw(d.iso)}</b><span class="chip ${cls}">${l}</span></button>`; }).join('')}</div>`;
+  h += `<div class="cl-grid"><div>`;
+  if (iso > todayISO()) h += `<div class="card"><div class="msg info">This day hasn't happened yet, so there's nothing to close.</div></div>`;
+  else if (!canCloseDay(iso)) h += `<div class="card"><div class="msg info">Days more than ${WINDOW_DAYS} days ago can only be closed or reviewed by an owner.</div></div>`;
+  else if (CLOSE === undefined) h += `<div class="card"><div class="spinner"></div></div>`;
+  else {
+    const changed = CLOSE && CLOSE.fp !== m.fp;
+    if (CLOSE && !changed) h += closedCard(CLOSE, m, mets);
+    else h += countCard(m, mets, changed ? CLOSE : null);
+  }
+  h += `</div><div>${pendingCard()}</div></div>`;
+  host.innerHTML = h;
+}
+function closedCard(c, m, mets) {
+  const t = new Date(c.closedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  return `<div class="card"><div class="card-h"><h3>DAY CLOSED</h3><span class="chip ${c.flag === 'gap' ? 'warn' : 'ok'}">${c.flag === 'gap' ? 'Closed with a gap' : 'Tallied ✓'}</span><span class="sub">by ${esc((c.closedBy || '').split('@')[0])} · ${esc(t)}</span></div>
+    ${resultTable(c.expected, c.counted, methodsFor({ exp: c.expected }))}
+    ${c.note ? `<div class="msg info"><b>Note:</b> ${esc(c.note)}</div>` : ''}
+    ${exceptionsList(m)}
+    <div class="sub" style="margin-top:10px">If a payment or item on this day is changed later, it shows up here as "Changed since close" and needs closing again.</div></div>`;
+}
+function resultTable(exp, cnt, mets) {
+  return `<div style="overflow-x:auto"><table class="tbl cl-res"><thead><tr><th>Method</th><th>Expected</th><th>Counted</th><th>Difference</th></tr></thead><tbody>${mets.map(([k, l]) => {
+    const d = (+cnt[k] || 0) - (+exp[k] || 0), v = verdict(k, d);
+    return `<tr><td>${l}</td><td>${inr(exp[k])}</td><td>${inr(cnt[k])}</td><td class="${v === 'match' ? 'okv' : v}">${v === 'match' ? '✓ matches' : (d > 0 ? '+' : '') + inr(d) + (d > 0 ? ' over' : ' short') + (v === 'within' ? ' · within ₹' + CASH_TOLERANCE : '')}</td></tr>`; }).join('')}
+    <tr><td><b>Total</b></td><td><b>${inr(sum(mets, ([k]) => +exp[k] || 0))}</b></td><td><b>${inr(sum(mets, ([k]) => +cnt[k] || 0))}</b></td><td></td></tr></tbody></table></div>`;
+}
+function exceptionsList(m) {
+  const L = [];
+  if (m.prepaidTotal) L.push(`<b>${inr(m.prepaidTotal)}</b> prepaid on aggregators (${Object.entries(m.prepaid).map(([k, v]) => esc(methodLabel(k)) + ' ' + inr(v)).join(', ')}) — not counted at the desk`);
+  if (m.pending.length) L.push(`<b>${m.pending.length}</b> tab${m.pending.length > 1 ? 's' : ''} unpaid, <b>${inr(m.pendingTotal)}</b> pending: ${m.pending.map(p => esc(whoOf(p.x)) + ' ' + inr(p.rem)).join(', ')}`);
+  if (m.fills.length) L.push(`<b>${m.fills.length}</b> booking${m.fills.length > 1 ? 's' : ''} with a D&S fill-in · ${inr(m.fillLoss)} not charged`);
+  if (m.overrides.length) L.push(`<b>${m.overrides.length}</b> court charge${m.overrides.length > 1 ? 's' : ''} overridden: ${m.overrides.map(x => esc(whoOf(x)) + ' ' + inr(x.charge.rateCard) + '→' + inr(x.charge.override) + ' (' + esc(x.charge.overrideReason || 'no reason') + ')').join(', ')}`);
+  if (m.deleted.length) L.push(`<b>${m.deleted.length}</b> booking${m.deleted.length > 1 ? 's' : ''} deleted: ${m.deleted.map(x => esc(whoOf(x)) + ' (' + esc(x.deleteReason || '—') + ')').join(', ')}`);
+  if (m.cancelled.length) L.push(`<b>${m.cancelled.length}</b> cancelled`);
+  if (m.noshow.length) L.push(`<b>${m.noshow.length}</b> no-show${m.noshow.length > 1 ? 's' : ''}`);
+  return L.length ? `<div style="margin-top:6px">${L.map(x => `<div class="excl">${x}</div>`).join('')}</div>` : '';
+}
+function countCard(m, mets, prev) {
+  const iso = DAYISO;
+  if (!m.n && !prev) return `<div class="card"><div class="card-h"><h3>CLOSE ${iso === todayISO() ? 'TODAY' : fdw(iso).toUpperCase()}</h3></div><div class="msg info">No bookings recorded for this day.</div>
+    <button class="btn" data-act="closeempty">Close with nothing collected</button></div>`;
+  CL ||= { counted: {}, first: null, checked: false, note: '' };
+  let h = `<div class="card"><div class="card-h"><h3>CLOSE ${iso === todayISO() ? 'TODAY' : fdw(iso).toUpperCase()}</h3><span class="sub">${m.n} booking${m.n === 1 ? '' : 's'}</span></div>`;
+  if (prev) h += `<div class="msg warn">Payments or charges changed after this day was closed by ${esc((prev.closedBy || '').split('@')[0])}. Count again and close it again. Last time you counted ${mets.map(([k, l]) => l + ' ' + inr((prev.counted || {})[k])).join(' · ')}.</div>`;
+  const open = Object.values(RAWDAY).filter(x => x && x.status === 'booked').length;
+  if (iso === todayISO() && open) h += `<div class="msg info">${open} booking${open > 1 ? 's are' : ' is'} still marked "Booked / in play". You can still close; unpaid amounts are carried as pending.</div>`;
+  if (!CL.checked) {
+    h += `<p class="sub" style="margin-bottom:10px">Count what's actually in hand for this day and enter it. The amounts recorded in the app are shown after you submit.</p>
+      <div class="cl-count">${mets.map(([k, l]) => `<label class="f">${l} received<input type="number" inputmode="numeric" min="0" data-cnt="${k}" value="${CL.counted[k] ?? ''}" placeholder="0"><small>${k === 'cash' ? 'Count the cash drawer' : k === 'upi' ? 'Total in the club UPI app for this day' : k === 'bank' ? 'Transfers seen in the bank account' : 'Card machine settlement'}</small></label>`).join('')}</div>
+      <button class="btn btn-primary" data-act="checkcount">Check against bookings</button>`;
+  } else {
+    const gaps = mets.filter(([k]) => verdict(k, (+CL.counted[k] || 0) - m.exp[k]) === 'gap');
+    h += resultTable(m.exp, CL.counted, mets);
+    h += gaps.length ? `<div class="msg err">Doesn't tally: ${gaps.map(([, l]) => l).join(', ')}. Check the tabs and payment app, then recount, or explain the gap in the note.</div>`
+      : `<div class="msg ok">Tallies${mets.some(([k]) => verdict(k, (+CL.counted[k] || 0) - m.exp[k]) === 'within') ? ' (cash within ₹' + CASH_TOLERANCE + ')' : ''}.</div>`;
+    h += exceptionsList(m);
+    h += `<label class="f" style="margin-top:12px">Note for the owners${gaps.length ? ' <span style="color:#ffb3b3">(required — explain the gap)</span>' : ' (optional)'}<textarea rows="2" id="clNote" placeholder="e.g. ₹40 change short, player to pay pending ₹600 tomorrow">${esc(CL.note)}</textarea></label>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn" data-act="recount">Recount</button><button class="btn btn-primary" data-act="doclose" id="doCloseBtn">Close the day</button></div>
+      ${CL.first && JSON.stringify(CL.first) !== JSON.stringify(CL.counted) ? '<div class="sub" style="margin-top:8px">Recounted — the first count is kept for the owners too.</div>' : ''}`;
+  }
+  return h + `</div>`;
+}
+function pendingCard() {
+  // the shared pending list, plus anything unpaid seen in the last few days' bookings (covers tabs saved before the list existed)
+  const map = {}; for (const x of Object.values(PENDING)) if (x && x.id) map[x.id] = x;
+  const seen = [...(STRIP || []).filter(d => d.iso !== DAYISO).flatMap(d => d.pend || []), ...dayMoney(RAWDAY).pending];
+  for (const { x, rem } of seen) map[x.id] = { ...(map[x.id] || {}), id: x.id, date: x.date, start: x.start, courts: x.courts, who: whoOf(x), remaining: rem };
+  for (const d of [...(STRIP || []).map(d => d.iso), DAYISO]) for (const [id, x] of Object.entries(map)) if (x.date === d && !seen.some(s => s.x.id === id)) delete map[id];   // paid since
+  const list = Object.values(map).filter(x => x && x.date <= todayISO()).sort((a, b) => a.date.localeCompare(b.date) || a.start - b.start);
+  const tot = sum(list, x => +x.remaining || 0);
+  return `<div class="card"><div class="card-h"><h3>PENDING PAYMENTS</h3><span class="chip ${list.length ? 'due' : 'ok'}">${list.length ? inr(tot) + ' · ' + list.length : 'None'}</span></div>
+    ${list.length ? `<p class="sub" style="margin-bottom:6px">Unpaid tabs from any day. Note who's following up; a payment goes on the booking's own day.</p>` + list.map(x => {
+      const old = !IS_OWNER && ageDays(x.date) > WINDOW_DAYS;
+      return `<div class="pend"><div class="who"><b>${esc(x.who || '—')}</b> · ${inr(x.remaining)}<div class="sub">${fdw(x.date)} · ${esc((x.courts || []).join('+'))} ${hhmm(x.start)}${old ? ' · over 5 days: an owner records the payment' : ''}</div></div>
+        <input data-fu="${esc(x.id)}" value="${esc(x.followUp || '')}" placeholder="Follow-up note (who, when)"><button class="btn btn-sm" data-popen="${esc(x.id)}" data-pdate="${x.date}">Open</button></div>`; }).join('') : '<div class="msg ok">No unpaid tabs.</div>'}</div>`;
+}
+async function doCloseDay(empty) {
+  const iso = DAYISO, m = dayMoney(RAWDAY), mets = methodsFor(m);
+  const counted = {}; for (const [k] of mets) counted[k] = empty ? 0 : Math.round(+CL.counted[k] || 0);
+  const diff = {}; let gap = false; for (const [k] of mets) { diff[k] = counted[k] - Math.round(m.exp[k]); if (verdict(k, diff[k]) === 'gap') gap = true; }
+  const note = empty ? '' : (($('#clNote') || {}).value || '').trim();
+  if (gap && !note) return toast('Add a note explaining the gap before closing.', 3500);
+  const now = new Date().toISOString(), expected = Object.fromEntries(mets.map(([k]) => [k, Math.round(m.exp[k])]));
+  const rec = { date: iso, dateMs: dateMsIST(iso), closedBy: USER, closedAt: now, expected, counted, diff, firstCount: empty ? counted : (CL.first || counted),
+    recounted: !empty && !!CL.first && JSON.stringify(CL.first) !== JSON.stringify(counted), prepaid: m.prepaid, prepaidTotal: Math.round(m.prepaidTotal), billed: m.billed,
+    pendingTotal: Math.round(m.pendingTotal), pending: m.pending.map(p => ({ id: p.x.id, who: whoOf(p.x), courts: p.x.courts || [], start: p.x.start, remaining: p.rem })),
+    exceptions: { overrides: m.overrides.length, fills: m.fills.length, fillLoss: Math.round(m.fillLoss), deleted: m.deleted.length, cancelled: m.cancelled.length, noShow: m.noshow.length },
+    bookings: m.n, note, flag: gap ? 'gap' : 'ok', fp: m.fp, version: ((CLOSE && CLOSE.version) || 0) + 1 };
+  const b = $('#doCloseBtn'); if (b) { b.disabled = true; b.textContent = 'Closing…'; }
+  try {
+    await set(ref(db, `closes/${iso}`), rec);
+    push(ref(db, `closeLog/${iso}`), { at: now, by: USER, version: rec.version, expected, counted, firstCount: rec.firstCount, flag: rec.flag, note, pendingTotal: rec.pendingTotal }).catch(() => {});
+    CL = null; toast(gap ? 'Day closed with a gap — owners will see your note' : 'Day closed ✓'); loadStrip();
+  } catch (err) { if (b) { b.disabled = false; b.textContent = 'Close the day'; } toast(/permission/i.test(err.message) ? 'Not allowed: only an owner can close days more than 5 days old.' : 'Couldn\'t close: ' + err.message, 4500); }
+}
+$('#viewClose').addEventListener('click', async ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  if (b.dataset.cday) return setDay(b.dataset.cday);
+  if (b.dataset.act === 'checkcount') {
+    document.querySelectorAll('[data-cnt]').forEach(i => CL.counted[i.dataset.cnt] = i.value === '' ? 0 : +i.value);
+    if (Object.values(CL.counted).some(v => v < 0)) return toast('Amounts can\'t be negative.');
+    CL.first ||= { ...CL.counted }; CL.checked = true; return renderClose();
+  }
+  if (b.dataset.act === 'recount') { CL.note = ($('#clNote') || {}).value || ''; CL.checked = false; return renderClose(); }
+  if (b.dataset.act === 'doclose') return doCloseDay(false);
+  if (b.dataset.act === 'closeempty') return doCloseDay(true);
+  if (b.dataset.popen) {
+    try { const sn = await get(ref(db, `entries/${b.dataset.popen}`)); const x = sn.val(); if (!x || x.status === 'deleted') return toast('That booking no longer exists.');
+      if (x.date !== DAYISO) setDay(x.date); openEditor(x); } catch (err) { toast('Couldn\'t open it: ' + err.message, 4000); }
+  }
+});
+$('#viewClose').addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.dataset.fu) update(ref(db, `pending/${t.dataset.fu}`), { followUp: t.value.trim(), followUpBy: USER, followUpAt: new Date().toISOString() }).then(() => toast('Follow-up note saved')).catch(err => toast('Couldn\'t save the note: ' + err.message, 4000));
+});
+$('#viewClose').addEventListener('input', ev => { const t = ev.target; if (t.dataset.cnt && CL) CL.counted[t.dataset.cnt] = t.value === '' ? '' : +t.value; if (t.id === 'clNote' && CL) CL.note = t.value; });
+
 /* ── Validation & save ── */
 function validate() {
   const e = E, c = calc(e), cf = conflicts(e), errs = [];
@@ -1191,8 +1397,23 @@ async function save() {
     closeEditor();
   } catch (err) {
     if (/already booked/.test(err.message)) renderEditor();
-    $('#saveErr').textContent = /permission/i.test(err.message) ? 'Not allowed: bookings older than yesterday can only be changed by an owner.' : /already booked/.test(err.message) ? err.message : 'Couldn\'t save: ' + err.message;
+    $('#saveErr').textContent = /permission/i.test(err.message) ? 'Not allowed: payments and items on bookings more than 5 days old can only be changed by an owner.' : /already booked/.test(err.message) ? err.message : 'Couldn\'t save: ' + err.message;
   } finally { SAVING = false; const b = $('#saveBtn'); if (b) { b.disabled = false; b.textContent = E ? saveLabel(calc(E)) : ''; } }
+}
+
+// Older bookings (beyond the 5-day window): the desk can still correct players, games and notes — money stays as it was
+async function savePeople() {
+  if (SAVING) return;
+  const errs = E.sport === 'padel' ? gameProblems(E) : []; $('#saveErr').textContent = errs.join(' '); if (errs.length) return;
+  SAVING = true; const btn = $('#saveBtn'); btn.disabled = true; btn.textContent = 'Saving…';
+  const e = E;
+  try {
+    let games = 0;
+    if (e.sport === 'padel') { try { games = await writeGames(e, e.id); } catch (err) { toast('Games couldn\'t be saved to ratings: ' + err.message, 5000); } }
+    await commit(e, 'people', true);
+    toast('Players & scores saved' + (games ? ` · ${games} game${games > 1 ? 's' : ''} sent to ratings` : '')); closeEditor();
+  } catch (err) { $('#saveErr').textContent = /permission/i.test(err.message) ? 'The database refused this change.' : 'Couldn\'t save: ' + err.message; }
+  finally { SAVING = false; const b = $('#saveBtn'); if (b) { b.disabled = false; b.textContent = 'Save players & scores'; } }
 }
 
 /* ── Delete with confirmation ── */
@@ -1224,7 +1445,7 @@ async function doDelete() {
   const e = E, btn = document.querySelector('[data-act="yesdelete"]'); if (btn) { btn.disabled = true; btn.textContent = 'Deleting…'; }
   const prev = e.status; e.deleteReason = ($('#delReason') || {}).value || ''; e.status = 'deleted';
   try { await commit(e, 'delete'); toast('Booking deleted'); closeEditor(); }
-  catch (err) { e.status = prev; if (btn) { btn.disabled = false; btn.textContent = 'Delete'; } toast(/permission/i.test(err.message) ? 'Only an owner can delete bookings older than yesterday.' : 'Couldn\'t delete: ' + err.message, 4000); }
+  catch (err) { e.status = prev; if (btn) { btn.disabled = false; btn.textContent = 'Delete'; } toast(/permission/i.test(err.message) ? 'Only an owner can delete bookings more than 5 days old.' : 'Couldn\'t delete: ' + err.message, 4000); }
 }
 
 /* ── Events: editor and quick screens share #sheet ── */
@@ -1271,7 +1492,12 @@ $('#sheet').addEventListener('click', async ev => {
     p.fill = !p.fill; if (p.fill && E._owner === p.key) E._owner = 'shared';
     toast(p.fill ? `${p.name} marked as D&S fill-in — their court share is taken off the bill` : `${p.name} will be charged again`); return renderEditor(); }
   if (d.booker != null) { E.players.forEach((p, i) => p.booker = i === +d.booker); return renderEditor(); }
-  if (d.rmp != null) { const [p] = E.players.splice(+d.rmp, 1); if (p && p.booker && E.players[0]) E.players[0].booker = true; return renderEditor(); }
+  if (d.rmp != null) {
+    const p0 = E.players[+d.rmp];
+    if (EDIT_LOCK && p0 && (Object.keys((E.items || {})[p0.key] || {}).length || (E.pays || []).some(x => (x.payers || []).includes(p0.key)))) return toast(`${p0.name} has items or payments on this booking. Only an owner can remove them now.`, 4000);
+    const before = calc(E).due, [p] = E.players.splice(+d.rmp, 1); if (p && p.booker && E.players[0]) E.players[0].booker = true;
+    if (EDIT_LOCK && Math.round(calc(E).due) !== Math.round(before)) { E.players.splice(+d.rmp, 0, p); return toast('Removing this player would change the bill. Only an owner can do that now.', 4000); }
+    return renderEditor(); }
   if (d.act === 'fill') { const n = E.players.filter(p => p.fill).length + 1; addPlayer({ key: 'fill-' + uid(), id: '', name: 'D&S fill-in' + (n > 1 ? ' ' + n : ''), fill: true }); return; }
   if (d.act === 'newmember') return newMemberForm();
   if (d.act === 'createmember') return createMember();
@@ -1290,6 +1516,7 @@ $('#footHost').addEventListener('click', async ev => {
   const t = ev.target.closest('button'); if (!t || !E) return;
   if (t.dataset.act === 'close' || t.dataset.qx === 'close') return closeEditor();
   if (t.dataset.act === 'save') return save();
+  if (t.dataset.act === 'savepeople') return savePeople();
   if (t.dataset.qx === 'save') { t.disabled = true; try { await commit(E, 'items'); toast('Saved to the tab'); closeEditor(); } catch (err) { t.disabled = false; toast('Couldn\'t save: ' + err.message, 4000); } }
 });
 $('#sheet').addEventListener('input', ev => {
@@ -1343,7 +1570,8 @@ function searchMembers(q) {
 }
 function addPlayer(p) {
   if (!E.players.some(x => x.booker)) p.booker = true;
-  E.players.push(p);
+  const before = calc(E).due; E.players.push(p);
+  if (EDIT_LOCK && Math.round(calc(E).due) !== Math.round(before)) { E.players.pop(); return toast('Adding a player here would change the bill. Only an owner can do that now.', 4000); }
   if (!p.fill && E._owner === 'shared' && !Object.keys(E.items || {}).length) E._owner = p.key;
   renderEditor();
   const q = $('#pq'); if (q) q.focus();
