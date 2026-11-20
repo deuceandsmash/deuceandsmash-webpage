@@ -1357,7 +1357,7 @@ function dayMoney(list) {
   const exp = { cash: 0, upi: 0, bank: 0, card: 0 }, prepaid = {}, pending = [], overrides = [], fills = [], cancelled = [], noshow = [];
   let billed = 0, n = 0;
   for (const x of live) {
-    n++; billed += +(x.totals || {}).due || 0; let paid = 0;
+    n++; if (x.status !== 'cancelled') billed += +(x.totals || {}).due || 0; let paid = 0;
     for (const p of x.pays || []) { const a = +p.amount || 0; paid += a; if (p.method in exp) exp[p.method] += a; else prepaid[p.method] = (prepaid[p.method] || 0) + a; }
     if (!Array.isArray(x.pays)) for (const [m, v] of Object.entries(x.payments || {})) { const a = +v || 0; paid += a; if (m in exp) exp[m] += a; else prepaid[m] = (prepaid[m] || 0) + a; }
     const rem = Math.round((+(x.totals || {}).due || 0) - paid);
@@ -1395,35 +1395,29 @@ function closeRows() {
     const st = !c ? (m.n ? 'open' : 'empty') : c.fp !== m.fp ? 'changed' : c.flag === 'gap' ? 'gap' : 'ok';
     return { d, m, c, st, list: byDay[d] || [] }; }).filter(r => r.st !== 'empty' || r.c);
 }
-const CST = { open: ['critical', 'Not closed'], changed: ['warning', 'Changed since close'], gap: ['serious', 'Closed with a gap'], ok: ['ok', 'Tallied'], empty: ['info', 'Nothing booked'] };
+const CST = { open: ['critical', 'Not closed'], changed: ['warning', 'Changed since close'], gap: ['ok', 'Closed'], ok: ['ok', 'Closed'], empty: ['info', 'Nothing booked'] };
 function viewClose() {
   const rows = closeRows(), recent = rows.filter(r => r.d >= addDays(IST_TODAY(), -29));
-  const notClosed = recent.filter(r => r.st === 'open'), gaps = recent.filter(r => r.st === 'gap'), changed = recent.filter(r => r.st === 'changed');
+  const notClosed = recent.filter(r => r.st === 'open'), changed = recent.filter(r => r.st === 'changed');
   const pendAll = Object.values(PENDING).filter(x => x && x.date && x.date <= IST_TODAY());
-  const cashGap = sum(recent.filter(r => r.c), r => +(r.c.diff || {}).cash || 0);
   let h = `<div class="kpis">
-    ${kpi('Days to review', num(notClosed.length + gaps.length + changed.length), `<span>last 30 days with bookings</span>`, true)}
+    ${kpi('Days to review', num(notClosed.length + changed.length), `<span>last 30 days with bookings</span>`, true)}
     ${kpi('Not closed', num(notClosed.length), notClosed.length ? `<span>${notClosed.slice(0, 3).map(r => fd(r.d)).join(', ')}${notClosed.length > 3 ? '…' : ''}</span>` : '<span>All closed</span>')}
-    ${kpi('Closed with a gap', num(gaps.length), gaps.length ? `<span>${gaps.slice(0, 3).map(r => fd(r.d)).join(', ')}</span>` : '<span>None</span>')}
-    ${kpi('Changed after close', num(changed.length), '<span>Desk needs to close again</span>')}
-    ${kpi('Cash over / short', (cashGap > 0 ? '+' : cashGap < 0 ? '−' : '') + inr(Math.abs(cashGap)), '<span>net, last 30 days</span>')}
+    ${kpi('Changed after close', num(changed.length), changed.length ? `<span>${changed.slice(0, 3).map(r => fd(r.d)).join(', ')} · desk to close again</span>` : '<span>None</span>')}
     ${kpi('Pending payments', inr(sum(pendAll, x => +x.remaining || 0)), `<span>${pendAll.length} unpaid tab${pendAll.length === 1 ? '' : 's'}, any day</span>`)}
   </div>`;
-  h += `<div class="grid"><div class="card c12"><div class="card-h"><div><h3>Daily close-out</h3><div class="sub">What the front desk counted at the end of each day against the payments recorded in the app. Cash may be up to ${inr(CASH_TOLERANCE)} out; UPI and transfers must match exactly. Tap a day for details.</div></div></div>
-    <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">Day</th><th class="l">Status</th><th>Bookings</th><th>Expected</th><th>Counted</th><th>Difference</th><th>Pending</th><th>Prepaid (apps)</th><th class="l">Closed by</th><th class="l">Note</th></tr></thead><tbody>
-    ${rows.length ? rows.map(r => {
-      const expT = sum(CMETHODS, ([k]) => +(r.c ? r.c.expected[k] : r.m.exp[k]) || 0), cntT = r.c ? sum(CMETHODS, ([k]) => +(r.c.counted || {})[k] || 0) : null;
-      const gapM = r.c ? CMETHODS.filter(([k]) => verdictOf(k, +(r.c.diff || {})[k] || 0) !== 'match') : [];
-      const [cls, lab] = CST[r.st];
-      return `<tr data-cl="${r.d}" style="cursor:pointer" class="${closeOpen === r.d ? 'sel' : ''}"><td class="l"><b>${fdw(r.d)}</b></td><td class="l">${chip0(cls, lab)}${r.c && r.c.recounted ? ' ' + chip0('info', 'Recounted') : ''}</td><td>${r.m.n}</td>
-        <td>${inr(expT)}</td><td>${cntT == null ? '—' : inr(cntT)}</td><td>${!r.c ? '—' : gapM.length ? gapM.map(([k, l]) => `<span style="color:${verdictOf(k, r.c.diff[k]) === 'gap' ? '#ff9d9d' : '#ffd27a'}">${l} ${r.c.diff[k] > 0 ? '+' : '−'}${inr(Math.abs(r.c.diff[k]))}</span>`).join('<br>') : '<span style="color:var(--goodText)">✓</span>'}</td>
-        <td>${r.m.pendingTotal ? inr(r.m.pendingTotal) : '—'}</td><td>${r.m.prepaidTotal ? inr(r.m.prepaidTotal) : '—'}</td>
+  h += `<div class="grid"><div class="card c12"><div class="card-h"><div><h3>End-of-day reconciliation</h3><div class="sub">Each day's front-desk bookings: what was billed, collected by method, prepaid on apps and still pending — and whether the desk closed the day. Tap a day for details.</div></div></div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">Day</th><th class="l">Status</th><th>Bookings</th><th>Billed</th><th>Cash</th><th>UPI</th><th>Transfer</th><th>Prepaid (apps)</th><th>Pending</th><th class="l">Closed by</th><th class="l">Note</th></tr></thead><tbody>
+    ${rows.length ? rows.map(r => { const [cls, lab] = CST[r.st], e = r.m.exp;
+      return `<tr data-cl="${r.d}" style="cursor:pointer" class="${closeOpen === r.d ? 'sel' : ''}"><td class="l"><b>${fdw(r.d)}</b></td><td class="l">${chip0(cls, lab)}</td><td>${r.m.n}</td>
+        <td>${inr(r.m.billed)}</td><td>${inr(e.cash)}</td><td>${inr(e.upi)}</td><td>${inr(e.bank)}${e.card ? `<br><span style="color:var(--muted)">card ${inr(e.card)}</span>` : ''}</td>
+        <td>${r.m.prepaidTotal ? inr(r.m.prepaidTotal) : '—'}</td><td>${r.m.pendingTotal ? `<b style="color:#ff9d9d">${inr(r.m.pendingTotal)}</b>` : '—'}</td>
         <td class="l">${r.c ? esc((r.c.closedBy || '').split('@')[0]) + ' · ' + new Date(r.c.closedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '—'}</td>
-        <td class="l wrap" style="max-width:260px">${r.c && r.c.note ? esc(r.c.note) : ''}</td></tr>${closeOpen === r.d ? `<tr><td colspan="10" class="l" style="background:var(--card2);white-space:normal">${closeDetail(r)}</td></tr>` : ''}`; }).join('')
-      : '<tr><td colspan="10" class="l"><div class="empty">No front-desk bookings yet.</div></td></tr>'}
+        <td class="l wrap" style="max-width:260px">${r.c && r.c.note ? esc(r.c.note) : ''}</td></tr>${closeOpen === r.d ? `<tr><td colspan="11" class="l" style="background:var(--card2);white-space:normal">${closeDetail(r)}</td></tr>` : ''}`; }).join('')
+      : '<tr><td colspan="11" class="l"><div class="empty">No front-desk bookings yet.</div></td></tr>'}
     </tbody></table></div></div>`;
   const pl = pendAll.sort((a, b) => a.date.localeCompare(b.date));
-  h += `<div class="card c12"><div class="card-h"><div><h3>Pending payments</h3><div class="sub">Unpaid tabs left open at close, oldest first. Payments are recorded on the booking's own day; beyond ${5} days only an owner can record them.</div></div></div>
+  h += `<div class="card c12"><div class="card-h"><div><h3>Pending payments</h3><div class="sub">Unpaid tabs, oldest first. Payments are recorded on the booking's own day; beyond 5 days only an owner can record them.</div></div></div>
     ${pl.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th class="l">Booking day</th><th class="l">Who</th><th class="l">Court</th><th>Bill</th><th>Paid</th><th>Pending</th><th>Age</th><th class="l">Follow-up</th></tr></thead><tbody>
       ${pl.map(x => `<tr><td class="l">${fdw(x.date)}</td><td class="l">${esc(x.who || '—')}</td><td class="l">${esc((x.courts || []).join('+'))}</td><td>${inr(x.due)}</td><td>${inr(x.paid)}</td><td><b>${inr(x.remaining)}</b></td>
         <td>${Math.round((D(IST_TODAY()) - D(x.date)) / 864e5)} d</td><td class="l wrap">${esc(x.followUp || '')}${x.followUpBy ? ` <span style="color:var(--muted)">— ${esc(x.followUpBy.split('@')[0])}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>`
@@ -1432,11 +1426,12 @@ function viewClose() {
 }
 const chip0 = (cls, lab) => `<span class="chip ${cls === 'ok' ? 'okc' : cls}">${esc(lab)}</span>`;
 function closeDetail(r) {
-  const { m, c } = r, mets = CMETHODS.filter(([k]) => k !== 'card' || m.exp.card || (c && c.expected.card));
+  const { m, c } = r, mets = CMETHODS.filter(([k]) => k !== 'card' || m.exp.card || (c && (c.expected || {}).card));
   let h = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px;padding:6px 0">`;
-  h += `<div><b>Count</b><table class="tbl" style="margin-top:6px"><thead><tr><th class="l">Method</th><th>Recorded now</th>${c ? '<th>At close</th><th>Counted</th>' + (c.recounted ? '<th>First count</th>' : '') : ''}</tr></thead><tbody>
-    ${mets.map(([k, l]) => `<tr><td class="l">${l}</td><td>${inr(m.exp[k])}</td>${c ? `<td>${inr(c.expected[k])}</td><td>${inr((c.counted || {})[k])}</td>${c.recounted ? `<td>${inr((c.firstCount || {})[k])}</td>` : ''}` : ''}</tr>`).join('')}</tbody></table>
-    ${r.st === 'changed' ? `<div class="banner warn" style="margin-top:8px">Payments or charges were changed after this day was closed${(r.m.billed !== c.billed) ? ` (bill ${inr(c.billed)} → ${inr(r.m.billed)})` : ''}. The desk needs to close it again.</div>` : ''}</div>`;
+  h += `<div><b>Collected</b><table class="tbl" style="margin-top:6px"><thead><tr><th class="l">Method</th><th>Now</th>${c ? '<th>At close</th>' : ''}</tr></thead><tbody>
+    ${mets.map(([k, l]) => `<tr><td class="l">${l}</td><td>${inr(m.exp[k])}</td>${c ? `<td>${inr((c.expected || {})[k])}</td>` : ''}</tr>`).join('')}
+    <tr><td class="l">Billed</td><td>${inr(m.billed)}</td>${c ? `<td>${inr(c.billed)}</td>` : ''}</tr><tr><td class="l">Pending</td><td>${inr(m.pendingTotal)}</td>${c ? `<td>${inr(c.pendingTotal)}</td>` : ''}</tr></tbody></table>
+    ${r.st === 'changed' ? `<div class="banner warn" style="margin-top:8px">Payments or charges were changed after this day was closed. The desk needs to close it again.</div>` : ''}</div>`;
   const L = [];
   if (m.prepaidTotal) L.push(`${inr(m.prepaidTotal)} prepaid on apps: ${Object.entries(m.prepaid).map(([k, v]) => esc(k) + ' ' + inr(v)).join(', ')}`);
   for (const p of m.pending) L.push(`Unpaid: ${esc(whoOf(p.x))} · ${esc((p.x.courts || []).join('+'))} · ${inr(p.rem)} pending`);
@@ -1447,7 +1442,8 @@ function closeDetail(r) {
   for (const x of m.noshow) L.push(`No-show: ${esc(whoOf(x))}`);
   h += `<div><b>Things to know</b>${L.length ? `<ul style="margin:6px 0 0 18px;font-family:var(--ui);font-size:14px;line-height:1.6">${L.map(x => `<li>${x}</li>`).join('')}</ul>` : '<div class="sub" style="margin-top:6px">Nothing unusual.</div>'}</div>`;
   const log = Object.values(CLOSELOG[r.d] || {}).sort((a, b) => a.at.localeCompare(b.at));
-  if (log.length) h += `<div><b>Close history</b><ul style="margin:6px 0 0 18px;font-family:var(--ui);font-size:14px;line-height:1.6">${log.map(l => `<li>${new Date(l.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })} · ${esc((l.by || '').split('@')[0])} · counted ${CMETHODS.filter(([k]) => (l.counted || {})[k] != null).map(([k, lb]) => lb + ' ' + inr(l.counted[k])).join(', ')} · ${l.flag === 'gap' ? 'gap' : 'tallied'}${l.note ? ' · “' + esc(l.note) + '”' : ''}</li>`).join('')}</ul></div>`;
+  if (log.length) h += `<div><b>Close history</b><ul style="margin:6px 0 0 18px;font-family:var(--ui);font-size:14px;line-height:1.6">${log.map(l => { const col = l.collected || l.counted || {};
+    return `<li>${new Date(l.at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })} · ${esc((l.by || '').split('@')[0])} · collected ${inr(sum(Object.values(col), v => +v || 0))}${l.pendingTotal ? ' · pending ' + inr(l.pendingTotal) : ''}${l.note ? ' · “' + esc(l.note) + '”' : ''}</li>`; }).join('')}</ul></div>`;
   return h + `</div>`;
 }
 document.addEventListener('click', e => {

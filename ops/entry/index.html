@@ -1196,20 +1196,21 @@ const CASH_TOLERANCE = 100;   // small change; UPI and transfers must match to t
 function dayMoney(raw) {
   const all = Object.values(raw || {}).filter(x => x && x.date), live = all.filter(x => x.status !== 'deleted');
   const exp = { cash: 0, upi: 0, bank: 0, card: 0 }, prepaid = {}, pending = [], overrides = [], fills = [], cancelled = [], noshow = [];
-  let billed = 0, n = 0;
+  let billed = 0, n = 0, overpaid = 0;
   for (const x of live) {
-    n++; billed += +(x.totals || {}).due || 0; let paid = 0;
+    n++; if (x.status !== 'cancelled') billed += +(x.totals || {}).due || 0; let paid = 0;
     for (const p of x.pays || []) { const a = +p.amount || 0; paid += a; if (p.method in exp) exp[p.method] += a; else prepaid[p.method] = (prepaid[p.method] || 0) + a; }
     if (!Array.isArray(x.pays)) for (const [m, v] of Object.entries(x.payments || {})) { const a = +v || 0; paid += a; if (m in exp) exp[m] += a; else prepaid[m] = (prepaid[m] || 0) + a; }
     const rem = Math.round((+(x.totals || {}).due || 0) - paid);
     if (rem > 0 && x.status !== 'cancelled') pending.push({ x, rem });
+    if (rem < 0 || (x.status === 'cancelled' && paid > 0)) overpaid += x.status === 'cancelled' ? paid : -rem;
     const ch = x.charge || {};
     if (ch.override != null && ch.override !== '' && ch.overrideReason !== 'D&S fill-in') overrides.push(x);
     if (+(x.totals || {}).fillLoss > 0) fills.push(x);
     if (x.status === 'cancelled') cancelled.push(x); if (x.status === 'no_show') noshow.push(x);
   }
   const prepaidTotal = sum(Object.values(prepaid)), pendingTotal = sum(pending, p => p.rem);
-  const m = { n, billed: Math.round(billed), exp, prepaid, prepaidTotal, pending, pendingTotal, overrides, fills, fillLoss: sum(fills, x => +x.totals.fillLoss || 0), cancelled, noshow, deleted: all.filter(x => x.status === 'deleted') };
+  const m = { n, billed: Math.round(billed), overpaid: Math.round(overpaid), exp, prepaid, prepaidTotal, pending, pendingTotal, overrides, fills, fillLoss: sum(fills, x => +x.totals.fillLoss || 0), cancelled, noshow, deleted: all.filter(x => x.status === 'deleted') };
   m.fp = [m.n, m.billed, exp.cash, exp.upi, exp.bank, exp.card, prepaidTotal, pendingTotal].map(v => Math.round(v)).join('|');
   return m;
 }
@@ -1235,7 +1236,7 @@ async function loadStrip() {
   } catch { STRIP = null; }
   if (VIEW === 'close') renderClose();
 }
-const STRIP_LBL = { open: ['due', 'Not closed'], empty: ['info', 'No bookings'], changed: ['warn', 'Changed since close'], gap: ['warn', 'Closed · gap'], ok: ['ok', 'Closed ✓'] };
+const STRIP_LBL = { open: ['due', 'Not closed'], empty: ['info', 'No bookings'], changed: ['warn', 'Changed since close'], gap: ['warn', 'Closed · gap'], ok: ['ok', 'Closed ✓'] };   // 'gap' only on closes made with the old counted version
 function renderClose() {
   const host = $('#viewClose'); if (!host || VIEW !== 'close') return;
   const iso = DAYISO, m = dayMoney(RAWDAY), mets = methodsFor(m);
@@ -1249,30 +1250,42 @@ function renderClose() {
   else if (CLOSE === undefined) h += `<div class="card"><div class="spinner"></div></div>`;
   else {
     const changed = CLOSE && CLOSE.fp !== m.fp;
-    if (CLOSE && !changed) h += closedCard(CLOSE, m, mets);
-    else h += countCard(m, mets, changed ? CLOSE : null);
+    if (CLOSE && !changed) h += closedCard(CLOSE, m);
+    else h += openCard(m, changed ? CLOSE : null);
   }
   h += `</div><div>${pendingCard()}</div></div>`;
   host.innerHTML = h;
 }
-function closedCard(c, m, mets) {
+function closedCard(c, m) {
   const t = new Date(c.closedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
-  return `<div class="card"><div class="card-h"><h3>DAY CLOSED</h3><span class="chip ${c.flag === 'gap' ? 'warn' : 'ok'}">${c.flag === 'gap' ? 'Closed with a gap' : 'Tallied ✓'}</span><span class="sub">by ${esc((c.closedBy || '').split('@')[0])} · ${esc(t)}</span></div>
-    ${resultTable(c.expected, c.counted, methodsFor({ exp: c.expected }))}
+  return `<div class="card"><div class="card-h"><h3>DAY CLOSED</h3><span class="chip ok">Closed ✓</span><span class="sub">by ${esc((c.closedBy || '').split('@')[0])} · ${esc(t)}</span></div>
     ${c.note ? `<div class="msg info"><b>Note:</b> ${esc(c.note)}</div>` : ''}
-    ${exceptionsList(m)}
-    <div class="sub" style="margin-top:10px">If a payment or item on this day is changed later, it shows up here as "Changed since close" and needs closing again.</div></div>`;
+    ${reportBody(m)}
+    <div class="sub" style="margin-top:10px">If a payment or item on this day is changed later, the day shows "Changed since close" and needs closing again.</div></div>`;
 }
-function resultTable(exp, cnt, mets) {
-  return `<div style="overflow-x:auto"><table class="tbl cl-res"><thead><tr><th>Method</th><th>Expected</th><th>Counted</th><th>Difference</th></tr></thead><tbody>${mets.map(([k, l]) => {
-    const d = (+cnt[k] || 0) - (+exp[k] || 0), v = verdict(k, d);
-    return `<tr><td>${l}</td><td>${inr(exp[k])}</td><td>${inr(cnt[k])}</td><td class="${v === 'match' ? 'okv' : v}">${v === 'match' ? '✓ matches' : (d > 0 ? '+' : '') + inr(d) + (d > 0 ? ' over' : ' short') + (v === 'within' ? ' · within ₹' + CASH_TOLERANCE : '')}</td></tr>`; }).join('')}
-    <tr><td><b>Total</b></td><td><b>${inr(sum(mets, ([k]) => +exp[k] || 0))}</b></td><td><b>${inr(sum(mets, ([k]) => +cnt[k] || 0))}</b></td><td></td></tr></tbody></table></div>`;
+// End-of-day reconciliation: everything billed is either collected (by method), prepaid on an app, or pending
+function reportBody(m) {
+  const mets = methodsFor(m), coll = sum(mets, ([k]) => m.exp[k]);
+  const check = Math.round(m.billed - coll - m.prepaidTotal - m.pendingTotal + m.overpaid);
+  const live = Object.values(RAWDAY).filter(x => x && x.date && x.status !== 'deleted').sort((a, b) => a.start - b.start);
+  let h = `<div class="lines">
+    <div class="ln"><span>Billed · ${m.n} booking${m.n === 1 ? '' : 's'}</span><b>${inr(m.billed)}</b></div>
+    ${mets.map(([k, l]) => `<div class="ln"><span>Collected · ${l}</span><b>${inr(m.exp[k])}</b></div>`).join('')}
+    ${m.prepaidTotal ? `<div class="ln"><span>Prepaid on apps · ${Object.entries(m.prepaid).map(([k, v]) => esc(methodLabel(k)) + ' ' + inr(v)).join(', ')}</span><b>${inr(m.prepaidTotal)}</b></div>` : ''}
+    <div class="ln"><span>Pending (unpaid)</span><b style="color:${m.pendingTotal ? '#ff9d9d' : 'inherit'}">${inr(m.pendingTotal)}</b></div>
+    ${m.overpaid ? `<div class="ln"><span>Paid more than the bill</span><b style="color:#ffd27a">${inr(m.overpaid)}</b></div>` : ''}
+    <div class="ln"><span><b>Total collected at the desk</b></span><b>${inr(coll)}</b></div></div>`;
+  h += check === 0 ? `<div class="msg ok">Reconciled: everything billed is collected, prepaid on an app, or listed as pending.</div>`
+    : `<div class="msg err">${inr(Math.abs(check))} doesn't add up. Check the bookings below.</div>`;
+  if (live.length) h += `<div style="overflow-x:auto"><table class="tbl cl-res"><thead><tr><th>Booking</th><th>Bill</th><th>Paid</th><th>Pending</th></tr></thead><tbody>
+    ${live.map(x => { const pays = {}; for (const p of x.pays || []) pays[p.method] = (pays[p.method] || 0) + (+p.amount || 0);
+      const paid = sum(Object.values(pays)), due = Math.round(+(x.totals || {}).due || 0), rem = x.status === 'cancelled' ? 0 : Math.max(0, due - paid);
+      return `<tr><td>${hhmm(x.start)} · ${esc((x.courts || []).join('+'))} · ${esc(whoOf(x))}${x.status === 'cancelled' ? ' <span class="chip info">cancelled</span>' : x.status === 'no_show' ? ' <span class="chip info">no-show</span>' : ''}</td><td>${inr(due)}</td>
+        <td>${Object.entries(pays).map(([k, v]) => `${inr(v)} <span class="sub">${esc(methodLabel(k))}</span>`).join('<br>') || '—'}</td><td class="${rem ? 'gap' : ''}">${rem ? inr(rem) : '—'}</td></tr>`; }).join('')}</tbody></table></div>`;
+  return h + exceptionsList(m);
 }
 function exceptionsList(m) {
   const L = [];
-  if (m.prepaidTotal) L.push(`<b>${inr(m.prepaidTotal)}</b> prepaid on aggregators (${Object.entries(m.prepaid).map(([k, v]) => esc(methodLabel(k)) + ' ' + inr(v)).join(', ')}) — not counted at the desk`);
-  if (m.pending.length) L.push(`<b>${m.pending.length}</b> tab${m.pending.length > 1 ? 's' : ''} unpaid, <b>${inr(m.pendingTotal)}</b> pending: ${m.pending.map(p => esc(whoOf(p.x)) + ' ' + inr(p.rem)).join(', ')}`);
   if (m.fills.length) L.push(`<b>${m.fills.length}</b> booking${m.fills.length > 1 ? 's' : ''} with a D&S fill-in · ${inr(m.fillLoss)} not charged`);
   if (m.overrides.length) L.push(`<b>${m.overrides.length}</b> court charge${m.overrides.length > 1 ? 's' : ''} overridden: ${m.overrides.map(x => esc(whoOf(x)) + ' ' + inr(x.charge.rateCard) + '→' + inr(x.charge.override) + ' (' + esc(x.charge.overrideReason || 'no reason') + ')').join(', ')}`);
   if (m.deleted.length) L.push(`<b>${m.deleted.length}</b> booking${m.deleted.length > 1 ? 's' : ''} deleted: ${m.deleted.map(x => esc(whoOf(x)) + ' (' + esc(x.deleteReason || '—') + ')').join(', ')}`);
@@ -1280,29 +1293,18 @@ function exceptionsList(m) {
   if (m.noshow.length) L.push(`<b>${m.noshow.length}</b> no-show${m.noshow.length > 1 ? 's' : ''}`);
   return L.length ? `<div style="margin-top:6px">${L.map(x => `<div class="excl">${x}</div>`).join('')}</div>` : '';
 }
-function countCard(m, mets, prev) {
-  const iso = DAYISO;
-  if (!m.n && !prev) return `<div class="card"><div class="card-h"><h3>CLOSE ${iso === todayISO() ? 'TODAY' : fdw(iso).toUpperCase()}</h3></div><div class="msg info">No bookings recorded for this day.</div>
-    <button class="btn" data-act="closeempty">Close with nothing collected</button></div>`;
-  CL ||= { counted: {}, first: null, checked: false, note: '' };
-  let h = `<div class="card"><div class="card-h"><h3>CLOSE ${iso === todayISO() ? 'TODAY' : fdw(iso).toUpperCase()}</h3><span class="sub">${m.n} booking${m.n === 1 ? '' : 's'}</span></div>`;
-  if (prev) h += `<div class="msg warn">Payments or charges changed after this day was closed by ${esc((prev.closedBy || '').split('@')[0])}. Count again and close it again. Last time you counted ${mets.map(([k, l]) => l + ' ' + inr((prev.counted || {})[k])).join(' · ')}.</div>`;
+function openCard(m, prev) {
+  const iso = DAYISO, title = `END OF DAY · ${iso === todayISO() ? 'TODAY' : fdw(iso).toUpperCase()}`;
+  if (!m.n && !prev) return `<div class="card"><div class="card-h"><h3>${title}</h3></div><div class="msg info">No bookings recorded for this day.</div>
+    <button class="btn" data-act="doclose" id="doCloseBtn">Close the day</button></div>`;
+  CL ||= { note: '' };
+  let h = `<div class="card"><div class="card-h"><h3>${title}</h3></div>`;
+  if (prev) h += `<div class="msg warn">Payments or charges changed after ${esc((prev.closedBy || '').split('@')[0])} closed this day. Check the report and close it again.</div>`;
   const open = Object.values(RAWDAY).filter(x => x && x.status === 'booked').length;
-  if (iso === todayISO() && open) h += `<div class="msg info">${open} booking${open > 1 ? 's are' : ' is'} still marked "Booked / in play". You can still close; unpaid amounts are carried as pending.</div>`;
-  if (!CL.checked) {
-    h += `<p class="sub" style="margin-bottom:10px">Count what's actually in hand for this day and enter it. The amounts recorded in the app are shown after you submit.</p>
-      <div class="cl-count">${mets.map(([k, l]) => `<label class="f">${l} received<input type="number" inputmode="numeric" min="0" data-cnt="${k}" value="${CL.counted[k] ?? ''}" placeholder="0"><small>${k === 'cash' ? 'Count the cash drawer' : k === 'upi' ? 'Total in the club UPI app for this day' : k === 'bank' ? 'Transfers seen in the bank account' : 'Card machine settlement'}</small></label>`).join('')}</div>
-      <button class="btn btn-primary" data-act="checkcount">Check against bookings</button>`;
-  } else {
-    const gaps = mets.filter(([k]) => verdict(k, (+CL.counted[k] || 0) - m.exp[k]) === 'gap');
-    h += resultTable(m.exp, CL.counted, mets);
-    h += gaps.length ? `<div class="msg err">Doesn't tally: ${gaps.map(([, l]) => l).join(', ')}. Check the tabs and payment app, then recount, or explain the gap in the note.</div>`
-      : `<div class="msg ok">Tallies${mets.some(([k]) => verdict(k, (+CL.counted[k] || 0) - m.exp[k]) === 'within') ? ' (cash within ₹' + CASH_TOLERANCE + ')' : ''}.</div>`;
-    h += exceptionsList(m);
-    h += `<label class="f" style="margin-top:12px">Note for the owners${gaps.length ? ' <span style="color:#ffb3b3">(required — explain the gap)</span>' : ' (optional)'}<textarea rows="2" id="clNote" placeholder="e.g. ₹40 change short, player to pay pending ₹600 tomorrow">${esc(CL.note)}</textarea></label>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn" data-act="recount">Recount</button><button class="btn btn-primary" data-act="doclose" id="doCloseBtn">Close the day</button></div>
-      ${CL.first && JSON.stringify(CL.first) !== JSON.stringify(CL.counted) ? '<div class="sub" style="margin-top:8px">Recounted — the first count is kept for the owners too.</div>' : ''}`;
-  }
+  if (iso === todayISO() && open) h += `<div class="msg info">${open} booking${open > 1 ? 's are' : ' is'} still marked "Booked / in play". You can still close; anything unpaid stays on the pending list.</div>`;
+  h += reportBody(m);
+  h += `<label class="f" style="margin-top:12px">Note for the owners (optional)<textarea rows="2" id="clNote" placeholder="e.g. Bunny to pay the pending ₹600 tomorrow">${esc(CL.note)}</textarea></label>
+    <div style="margin-top:12px"><button class="btn btn-primary" data-act="doclose" id="doCloseBtn">${prev ? 'Close the day again' : 'Close the day'}</button></div>`;
   return h + `</div>`;
 }
 function pendingCard() {
@@ -1319,36 +1321,25 @@ function pendingCard() {
       return `<div class="pend"><div class="who"><b>${esc(x.who || '—')}</b> · ${inr(x.remaining)}<div class="sub">${fdw(x.date)} · ${esc((x.courts || []).join('+'))} ${hhmm(x.start)}${old ? ' · over 5 days: an owner records the payment' : ''}</div></div>
         <input data-fu="${esc(x.id)}" value="${esc(x.followUp || '')}" placeholder="Follow-up note (who, when)"><button class="btn btn-sm" data-popen="${esc(x.id)}" data-pdate="${x.date}">Open</button></div>`; }).join('') : '<div class="msg ok">No unpaid tabs.</div>'}</div>`;
 }
-async function doCloseDay(empty) {
+async function doCloseDay() {
   const iso = DAYISO, m = dayMoney(RAWDAY), mets = methodsFor(m);
-  const counted = {}; for (const [k] of mets) counted[k] = empty ? 0 : Math.round(+CL.counted[k] || 0);
-  const diff = {}; let gap = false; for (const [k] of mets) { diff[k] = counted[k] - Math.round(m.exp[k]); if (verdict(k, diff[k]) === 'gap') gap = true; }
-  const note = empty ? '' : (($('#clNote') || {}).value || '').trim();
-  if (gap && !note) return toast('Add a note explaining the gap before closing.', 3500);
-  const now = new Date().toISOString(), expected = Object.fromEntries(mets.map(([k]) => [k, Math.round(m.exp[k])]));
-  const rec = { date: iso, dateMs: dateMsIST(iso), closedBy: USER, closedAt: now, expected, counted, diff, firstCount: empty ? counted : (CL.first || counted),
-    recounted: !empty && !!CL.first && JSON.stringify(CL.first) !== JSON.stringify(counted), prepaid: m.prepaid, prepaidTotal: Math.round(m.prepaidTotal), billed: m.billed,
+  const note = (($('#clNote') || {}).value || '').trim();
+  const now = new Date().toISOString(), collected = Object.fromEntries(mets.map(([k]) => [k, Math.round(m.exp[k])]));
+  const rec = { date: iso, dateMs: dateMsIST(iso), closedBy: USER, closedAt: now, mode: 'report', expected: collected, counted: collected, prepaid: m.prepaid, prepaidTotal: Math.round(m.prepaidTotal), billed: m.billed,
     pendingTotal: Math.round(m.pendingTotal), pending: m.pending.map(p => ({ id: p.x.id, who: whoOf(p.x), courts: p.x.courts || [], start: p.x.start, remaining: p.rem })),
     exceptions: { overrides: m.overrides.length, fills: m.fills.length, fillLoss: Math.round(m.fillLoss), deleted: m.deleted.length, cancelled: m.cancelled.length, noShow: m.noshow.length },
-    bookings: m.n, note, flag: gap ? 'gap' : 'ok', fp: m.fp, version: ((CLOSE && CLOSE.version) || 0) + 1 };
+    bookings: m.n, note, flag: 'ok', fp: m.fp, version: ((CLOSE && CLOSE.version) || 0) + 1 };
   const b = $('#doCloseBtn'); if (b) { b.disabled = true; b.textContent = 'Closing…'; }
   try {
     await set(ref(db, `closes/${iso}`), rec);
-    push(ref(db, `closeLog/${iso}`), { at: now, by: USER, version: rec.version, expected, counted, firstCount: rec.firstCount, flag: rec.flag, note, pendingTotal: rec.pendingTotal }).catch(() => {});
-    CL = null; toast(gap ? 'Day closed with a gap — owners will see your note' : 'Day closed ✓'); loadStrip();
+    push(ref(db, `closeLog/${iso}`), { at: now, by: USER, version: rec.version, collected, billed: rec.billed, note, pendingTotal: rec.pendingTotal }).catch(() => {});
+    CL = null; toast('Day closed ✓'); loadStrip();
   } catch (err) { if (b) { b.disabled = false; b.textContent = 'Close the day'; } toast(/permission/i.test(err.message) ? 'Not allowed: only an owner can close days more than 5 days old.' : 'Couldn\'t close: ' + err.message, 4500); }
 }
 $('#viewClose').addEventListener('click', async ev => {
   const b = ev.target.closest('button'); if (!b) return;
   if (b.dataset.cday) return setDay(b.dataset.cday);
-  if (b.dataset.act === 'checkcount') {
-    document.querySelectorAll('[data-cnt]').forEach(i => CL.counted[i.dataset.cnt] = i.value === '' ? 0 : +i.value);
-    if (Object.values(CL.counted).some(v => v < 0)) return toast('Amounts can\'t be negative.');
-    CL.first ||= { ...CL.counted }; CL.checked = true; return renderClose();
-  }
-  if (b.dataset.act === 'recount') { CL.note = ($('#clNote') || {}).value || ''; CL.checked = false; return renderClose(); }
-  if (b.dataset.act === 'doclose') return doCloseDay(false);
-  if (b.dataset.act === 'closeempty') return doCloseDay(true);
+  if (b.dataset.act === 'doclose') return doCloseDay();
   if (b.dataset.popen) {
     try { const sn = await get(ref(db, `entries/${b.dataset.popen}`)); const x = sn.val(); if (!x || x.status === 'deleted') return toast('That booking no longer exists.');
       if (x.date !== DAYISO) setDay(x.date); openEditor(x); } catch (err) { toast('Couldn\'t open it: ' + err.message, 4000); }
@@ -1358,7 +1349,7 @@ $('#viewClose').addEventListener('change', ev => {
   const t = ev.target;
   if (t.dataset.fu) update(ref(db, `pending/${t.dataset.fu}`), { followUp: t.value.trim(), followUpBy: USER, followUpAt: new Date().toISOString() }).then(() => toast('Follow-up note saved')).catch(err => toast('Couldn\'t save the note: ' + err.message, 4000));
 });
-$('#viewClose').addEventListener('input', ev => { const t = ev.target; if (t.dataset.cnt && CL) CL.counted[t.dataset.cnt] = t.value === '' ? '' : +t.value; if (t.id === 'clNote' && CL) CL.note = t.value; });
+$('#viewClose').addEventListener('input', ev => { const t = ev.target; if (t.id === 'clNote' && CL) CL.note = t.value; });
 
 /* ── Validation & save ── */
 function validate() {
