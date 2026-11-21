@@ -1017,7 +1017,7 @@ const saveLabel = c => E.status === 'booked' && c.remaining > 0.5 ? 'Save · kee
 
 /* ── Games & scores (padel): a whole session with rotating partners ── */
 function gamePool(e) {
-  const pool = e.players.filter(p => p.id).map(p => ({ key: p.key, name: p.name, from: '' }));
+  const pool = e.players.filter(p => p.id || p.guestSeed != null).map(p => ({ key: p.key, name: p.name, from: '', guestSeed: p.guestSeed }));
   if (e.type === 'open_play') for (const x of Object.values(ENTRIES)) {
     if (!x || x.id === e.id || x.date !== e.date || x.type !== 'open_play' || x.sport !== 'padel' || x.status === 'cancelled') continue;
     if (!(x.start < e.start + e.minutes && e.start < x.start + x.minutes)) continue;
@@ -1183,8 +1183,12 @@ async function writeGames(e, id) {
     const matchId = g.matchId || `${e.date}-desk-${uid()}`;
     const teamA = [nameOf(g.a1), nameOf(g.a2)], teamB = [nameOf(g.b1), nameOf(g.b2)];
     const mid_ = k => (MEMBERS[k] ? k : '');
+    // Collect guest seeds for any non-member players in this game
+    const guestSeeds = {};
+    [g.a1, g.a2, g.b1, g.b2].forEach(k => { const p = e.players.find(x => x.key === k); if (p && p.guestSeed != null) guestSeeds[p.name] = p.guestSeed; });
     await set(ref(clubDb, `openPlayMatches/${matchId}`), { date: e.date, format: 'openplay', teamA, teamB, teamAIds: [mid_(g.a1), mid_(g.a2)], teamBIds: [mid_(g.b1), mid_(g.b2)], a: sc.a, b: sc.b, score: sc.score, sets: sc.sets, setsData: sc.setsData,
-      status: 'confirmed', enteredAt: now, note: `Desk — ${teamA.join(' & ')} vs ${teamB.join(' & ')}`, source: 'desk', bookingId: id, court: e.courts.join(','), session: e.type === 'open_play' ? 'desk-' + id : '' });
+      status: 'confirmed', enteredAt: now, note: `Desk — ${teamA.join(' & ')} vs ${teamB.join(' & ')}`, source: 'desk', bookingId: id, court: e.courts.join(','), session: e.type === 'open_play' ? 'desk-' + id : '',
+      ...(Object.keys(guestSeeds).length ? { guestSeeds } : {}) });
     g.matchId = matchId; g._saved = sig; wrote++;
   }
   return wrote;
@@ -1493,7 +1497,8 @@ $('#sheet').addEventListener('click', async ev => {
   if (d.act === 'newmember') return newMemberForm();
   if (d.act === 'createmember') return createMember();
   if (d.pick) { const m = MEMBERS[d.pick]; if (m) addPlayer({ key: m.id, id: m.id, name: m.name }); return; }
-  if (d.typed) { addPlayer({ key: 'guest-' + uid(), id: '', name: d.typed }); return; }
+  if (d.typed) { showGuestLevelPicker(d.typed); return; }
+  if (d.guestlevel) { addGuestPlayer(d.guestname, d.guestlevel); return; }
   if (d.act === 'addgame') { E.games.push({ lid: uid(), a1: '', a2: '', b1: '', b2: '', score: '' }); return renderEditor(); }
   if (d.act === 'rotate') {
     const pool = gamePool(E).map(p => p.key);
@@ -1556,7 +1561,7 @@ function searchMembers(q) {
   const raw = $('#pq').value.trim();
   dd.innerHTML = hits.map((m, i) => `<button data-pick="${esc(m.id)}" class="${i === 0 ? 'hl' : ''}"><span>${esc(m.name)}${m.fullName && m.fullName !== m.name ? ` <small>${esc(m.fullName)}</small>` : ''}</span><small>${esc(m.levelOverride || m.membership || '')}</small></button>`).join('')
     + `<button data-act="newmember"><span>+ Add "${esc(raw)}" as a new member</span><small>recommended</small></button>`
-    + `<button data-typed="${esc(raw)}"><span>Use "${esc(raw)}" without a member record</span><small>guest</small></button>`;
+    + `<button data-typed="${esc(raw)}"><span>Add "${esc(raw)}" as a guest</span><small>choose level →</small></button>`;
   dd.classList.remove('hidden');
 }
 function addPlayer(p) {
@@ -1566,6 +1571,23 @@ function addPlayer(p) {
   if (!p.fill && E._owner === 'shared' && !Object.keys(E.items || {}).length) E._owner = p.key;
   renderEditor();
   const q = $('#pq'); if (q) q.focus();
+}
+const GUEST_SEEDS = {'Beginner':0.75,'Beginner+':1.5,'Lower Intermediate':2.5,'Intermediate':3.5,'Intermediate High':4.5,'Advanced':5.5,'Elite':6.5,'Unknown':2.5};
+function showGuestLevelPicker(name) {
+  const dd = $('#pdd'); if (dd) dd.classList.add('hidden');
+  $('#nmForm').innerHTML = `<div class="payform" style="margin-top:12px">
+    <div class="cat" style="margin:0">Guest level for <b>${esc(name)}</b></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      ${['Unknown','Beginner','Beginner+','Lower Intermediate','Intermediate','Intermediate High','Advanced','Elite'].map(l =>
+        `<button class="btn btn-sm" data-guestlevel="${esc(l)}" data-guestname="${esc(name)}">${l}</button>`).join('')}
+    </div>
+    <div class="sub" style="margin-top:8px">Pick the closest level — this sets the SDX seed used to calculate other players' ratings.</div>
+  </div>`;
+}
+function addGuestPlayer(name, level) {
+  const seed = GUEST_SEEDS[level] ?? 2.5;
+  addPlayer({ key: 'guest-' + uid(), id: '', name, guestLevel: level, guestSeed: seed });
+  $('#nmForm').innerHTML = '';
 }
 function newMemberForm() {
   const typed = ($('#pq') || {}).value || '';

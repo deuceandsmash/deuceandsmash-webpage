@@ -1981,7 +1981,17 @@ window.wormClearAll = () => {
 };
 
 // ===== Open Play searchable picker =====
+const OP_GUESTS = ['Guest – Unknown','Guest – Beginner','Guest – Beginner+','Guest – Lower Intermediate','Guest – Intermediate','Guest – Intermediate High','Guest – Advanced','Guest – Elite'];
+function opPickerBtn(n, isGuest) {
+  const col = isGuest ? 'color:var(--muted,#888)' : '';
+  return `<button type="button" data-name="${n.replace(/"/g,'&quot;')}"
+    style="display:block;width:100%;background:none;border:0;border-bottom:1px solid var(--border,#222);
+           padding:11px 14px;font-size:${isGuest?'14px':'16px'};text-align:left;${col}cursor:pointer"
+    onmouseover="this.style.background='var(--card3,#2a2d3e)'" onmouseout="this.style.background='none'">${n}</button>`;
+}
 function opPicker(id, placeholder, names) {
+  const guestBtns = OP_GUESTS.map(n => opPickerBtn(n, true)).join('');
+  const memberBtns = names.map(n => opPickerBtn(n, false)).join('');
   return `<div class="op-pick-wrap" style="position:relative;flex:1;min-width:0">
     <input type="hidden" id="${id}-val" value="">
     <input type="text" id="${id}" class="form-input op-pick-text" placeholder="${placeholder}" readonly autocomplete="off"
@@ -1994,11 +2004,10 @@ function opPicker(id, placeholder, names) {
         <input type="text" class="op-pick-search form-input" placeholder="Search…"
           style="width:100%;box-sizing:border-box;padding:7px 10px;font-size:15px" autocomplete="off">
       </div>
-      <div class="op-pick-list" style="max-height:220px;overflow-y:auto">
-        ${names.map(n=>`<button type="button" data-name="${n.replace(/"/g,'&quot;')}"
-          style="display:block;width:100%;background:none;border:0;border-bottom:1px solid var(--border,#222);
-                 padding:11px 14px;font-size:16px;text-align:left;color:var(--text,#eee);cursor:pointer"
-          onmouseover="this.style.background='var(--card3,#2a2d3e)'" onmouseout="this.style.background='none'">${n}</button>`).join('')}
+      <div class="op-pick-list" style="max-height:260px;overflow-y:auto">
+        ${guestBtns}
+        <div style="padding:5px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted,#888);border-bottom:1px solid var(--border,#333);border-top:1px solid var(--border,#333);background:var(--card3,#1a1d2a)">Members</div>
+        ${memberBtns}
       </div>
     </div>
   </div>`;
