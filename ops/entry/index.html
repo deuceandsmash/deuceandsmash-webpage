@@ -1572,13 +1572,13 @@ function addPlayer(p) {
   renderEditor();
   const q = $('#pq'); if (q) q.focus();
 }
-const GUEST_SEEDS = {'Beginner':0.75,'Beginner+':1.5,'Lower Intermediate':2.5,'Intermediate':3.5,'Intermediate High':4.5,'Advanced':5.5,'Elite':6.5,'Unknown':2.5};
+const GUEST_SEEDS = {'Beginner':0.75,'Intermediate':3.0,'Advanced':5.5,'Unknown':2.5};
 function showGuestLevelPicker(name) {
   const dd = $('#pdd'); if (dd) dd.classList.add('hidden');
   $('#nmForm').innerHTML = `<div class="payform" style="margin-top:12px">
     <div class="cat" style="margin:0">Guest level for <b>${esc(name)}</b></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-      ${['Unknown','Beginner','Beginner+','Lower Intermediate','Intermediate','Intermediate High','Advanced','Elite'].map(l =>
+      ${['Unknown','Beginner','Intermediate','Advanced'].map(l =>
         `<button class="btn btn-sm" data-guestlevel="${esc(l)}" data-guestname="${esc(name)}">${l}</button>`).join('')}
     </div>
     <div class="sub" style="margin-top:8px">Pick the closest level — this sets the SDX seed used to calculate other players' ratings.</div>

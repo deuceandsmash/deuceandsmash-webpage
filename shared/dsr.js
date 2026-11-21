@@ -16,7 +16,7 @@ const DSR = {
   TAG_ORDER:["Beginner","Beginner / Beginner+","Beginner+","Beginner+ / Inter","Inter","Inter / Inter+","Strong Inter","Inter+"],
   SEED_FLOOR:0.5,SEED_CAP:4.0,DEFAULT_SEED:0.5,
   // Fixed seeds for guest placeholders — engine uses these for expected-score but never updates them
-  GUEST_SEEDS:{"Guest – Beginner":0.75,"Guest – Beginner+":1.5,"Guest – Lower Intermediate":2.5,"Guest – Intermediate":3.5,"Guest – Intermediate High":4.5,"Guest – Advanced":5.5,"Guest – Elite":6.5,"Guest – Unknown":2.5},
+  GUEST_SEEDS:{"Guest – Beginner":0.75,"Guest – Intermediate":3.0,"Guest – Advanced":5.5,"Guest – Unknown":2.5},
 };
 DSR.band=r=>{let b=DSR.BANDS[0][0];for(const[n,lo]of DSR.BANDS)if(r>=lo-1e-9)b=n;return b;};
 DSR.zone=r=>DSR.ZONES.find(z=>r>=z.lo-1e-9&&r<z.hi)||DSR.ZONES[0];

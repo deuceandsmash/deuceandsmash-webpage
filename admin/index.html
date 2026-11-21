@@ -1981,7 +1981,7 @@ window.wormClearAll = () => {
 };
 
 // ===== Open Play searchable picker =====
-const OP_GUESTS = ['Guest – Unknown','Guest – Beginner','Guest – Beginner+','Guest – Lower Intermediate','Guest – Intermediate','Guest – Intermediate High','Guest – Advanced','Guest – Elite'];
+const OP_GUESTS = ['Guest – Unknown','Guest – Beginner','Guest – Intermediate','Guest – Advanced'];
 function opPickerBtn(n, isGuest) {
   const col = isGuest ? 'color:var(--muted,#888)' : '';
   return `<button type="button" data-name="${n.replace(/"/g,'&quot;')}"
