@@ -443,8 +443,11 @@
   <div style="padding:4px 2px">
     <p style="color:var(--muted);margin:0 0 10px">See exactly what a member sees in SmashDex, on every tab. It's read-only: nothing you tap is saved, it doesn't count as their visit, and each view is logged below.</p>
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-      <input class="filter-select" id="va-q" list="va-members" placeholder="Member name or Dex number" style="flex:1;min-width:220px;max-width:420px" aria-label="Choose a member" autocomplete="off">
-      <datalist id="va-members"></datalist>
+      <!-- Our own results list instead of a <datalist>, and no "member … number" wording: Chrome treats such fields as loyalty/membership cards and offers saved cards -->
+      <div style="position:relative;flex:1;min-width:220px;max-width:420px">
+        <input class="filter-select" id="va-q" type="search" name="sdx-find-player" placeholder="Find a player: name or Dex #" style="width:100%;box-sizing:border-box" aria-label="Find a player" role="combobox" aria-expanded="false" aria-controls="va-res" aria-autocomplete="list" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
+        <div id="va-res" role="listbox" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;max-height:320px;overflow-y:auto;background:var(--card2,#1e2130);border:1px solid var(--border,#333);border-radius:10px;z-index:300;box-shadow:0 12px 30px rgba(0,0,0,.6)"></div>
+      </div>
       <button class="btn btn-primary btn-sm" id="va-go">View</button>
       <a class="btn btn-sm" id="va-tab" target="_blank" rel="noopener" style="display:none">Open in a new tab</a>
     </div>
@@ -1044,17 +1047,38 @@ function _vaOpen(id) {
   document.getElementById('va-who').innerHTML = `Viewing <b>${_esc(m.name || '?')}</b>${m.dexNo ? ' · ' + dexLabel(m) : ''}${m.smashdexUid ? '' : ' · hasn’t signed up yet, so this is what they’ll see once linked'}`;
   _vaFit(); setTimeout(loadViewLog, 1500);
 }
-window.initViewAs = () => {
-  const dl = document.getElementById('va-members');
-  if (dl && !dl.children.length) dl.innerHTML = Object.entries(members).sort((a, b) => (a[1].name || '').localeCompare(b[1].name || '')).map(([id, m]) => `<option value="${_esc(_vaLabel(id, m))}"></option>`).join('');
-  loadViewLog(); _vaFit();
-};
+window.initViewAs = () => { loadViewLog(); _vaFit(); };
+// Results list for the player search (name or Dex number), up to 12, keyboard friendly
+let _vaHits = [], _vaSel = -1;
+function _vaResults() {
+  const q = document.getElementById('va-q').value.trim().toLowerCase(), box = document.getElementById('va-res');
+  const dex = q.replace(/^dex\s*#?|^#/, '');
+  const all = Object.entries(members).sort((a, b) => (a[1].name || '').localeCompare(b[1].name || ''));
+  _vaHits = (q ? all.filter(([, m]) => (m.name || '').toLowerCase().includes(q) || (/^\d+$/.test(dex) && String(m.dexNo || '').padStart(4, '0').includes(dex))) : all).slice(0, 12);
+  _vaSel = _vaHits.length ? 0 : -1;
+  box.innerHTML = _vaHits.length ? _vaHits.map(([id, m], i) => `<button type="button" role="option" data-va-id="${id}" aria-selected="${i === _vaSel}" style="display:flex;justify-content:space-between;gap:10px;width:100%;background:${i === _vaSel ? 'var(--card3,#2a2d3e)' : 'none'};border:0;border-bottom:1px solid var(--border,#222);padding:9px 14px;text-align:left;color:var(--text,#f0f0f0);cursor:pointer;font-size:14px"><span>${_esc(m.name || '?')}${m.smashdexUid ? '' : ' <span style="color:var(--muted)">· not signed up yet</span>'}</span><span style="color:var(--muted)">${m.dexNo ? dexLabel(m) : ''}</span></button>`).join('')
+    : '<div style="padding:10px 14px;color:var(--muted)">No player matches that.</div>';
+  box.style.display = 'block'; document.getElementById('va-q').setAttribute('aria-expanded', 'true');
+}
+function _vaHide() { const b = document.getElementById('va-res'); if (b) b.style.display = 'none'; document.getElementById('va-q')?.setAttribute('aria-expanded', 'false'); }
+function _vaPick(id) { const m = members[id]; if (!m) return; document.getElementById('va-q').value = m.name || ''; _vaHide(); _vaOpen(id); }
+document.addEventListener('input', e => { if (e.target.id === 'va-q') _vaResults(); });
+document.addEventListener('focusin', e => { if (e.target.id === 'va-q') _vaResults(); });
+document.addEventListener('mousedown', e => { const b = e.target.closest('[data-va-id]'); if (b) { e.preventDefault(); _vaPick(b.dataset.vaId); } else if (!e.target.closest('#va-res') && e.target.id !== 'va-q') _vaHide(); });
 document.addEventListener('click', e => {
-  if (e.target.id === 'va-go') { const id = _vaFind(document.getElementById('va-q').value); if (!id) return showToast('No single member matches. Pick one from the list.', 'err'); _vaOpen(id); }
+  if (e.target.id === 'va-go') { const id = _vaHits[_vaSel]?.[0] && document.getElementById('va-res').style.display === 'block' ? _vaHits[_vaSel][0] : _vaFind(document.getElementById('va-q').value); if (!id) return showToast('No single player matches. Pick one from the list.', 'err'); _vaPick(id); }
   const sz = e.target.closest('.va-size');
   if (sz) { document.querySelectorAll('.va-size').forEach(b => b.classList.toggle('active', b === sz)); _vaW = +sz.dataset.w; _vaH = +sz.dataset.h; _vaFit(); }
 });
-document.addEventListener('keydown', e => { if (e.target.id === 'va-q' && e.key === 'Enter') document.getElementById('va-go').click(); });
+document.addEventListener('keydown', e => {
+  if (e.target.id !== 'va-q') return;
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('va-go').click(); }
+  else if (e.key === 'Escape') _vaHide();
+  else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && _vaHits.length) {
+    e.preventDefault(); _vaSel = (_vaSel + (e.key === 'ArrowDown' ? 1 : -1) + _vaHits.length) % _vaHits.length;
+    document.querySelectorAll('#va-res [data-va-id]').forEach((b, i) => { b.style.background = i === _vaSel ? 'var(--card3,#2a2d3e)' : 'none'; b.setAttribute('aria-selected', i === _vaSel); if (i === _vaSel) b.scrollIntoView({ block: 'nearest' }); });
+  }
+});
 window.addEventListener('resize', () => { if (currentTab === 'viewas') _vaFit(); });
 async function loadViewLog() {
   const box = document.getElementById('va-log'); if (!box) return;
