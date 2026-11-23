@@ -1733,7 +1733,15 @@ window.saveMember = async () => {
       if (JSON.stringify(newB) !== JSON.stringify(mx.teamB)) batch[`openPlayMatches/${mid}/teamB`] = newB;
     }
     await update(ref(db), batch);
+    // Update in-memory member record first so resolveNamesFromIds uses the new name
     Object.assign(members[drawerMemberId], updates);
+    // Also update in-memory match records so _buildMatchCache sees the new name immediately
+    // (without this, cache rebuilds against the old name strings until next page load)
+    for (const mx of Object.values(opMatches || {})) {
+      const fix = arr => arr ? arr.map(p => p === oldName ? newName : p) : arr;
+      if (Array.isArray(mx.teamA)) mx.teamA = fix(mx.teamA);
+      if (Array.isArray(mx.teamB)) mx.teamB = fix(mx.teamB);
+    }
   } else {
     // --- No name change — simple field update ---
     await update(ref(db, `members/${drawerMemberId}`), updates);
