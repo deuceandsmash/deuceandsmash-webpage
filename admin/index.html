@@ -1983,10 +1983,11 @@ window.wormClearAll = () => {
 // ===== Open Play searchable picker =====
 const OP_GUESTS = ['Guest – Unknown','Guest – Beginner','Guest – Intermediate','Guest – Advanced'];
 function opPickerBtn(n, isGuest) {
-  const col = isGuest ? 'color:var(--muted,#888)' : '';
+  const col = isGuest ? 'color:#888' : 'color:var(--text,#f0f0f0)';
+  const sz = isGuest ? '13px' : '15px';
   return `<button type="button" data-name="${n.replace(/"/g,'&quot;')}"
     style="display:block;width:100%;background:none;border:0;border-bottom:1px solid var(--border,#222);
-           padding:11px 14px;font-size:${isGuest?'14px':'16px'};text-align:left;${col}cursor:pointer"
+           padding:10px 14px;font-size:${sz};text-align:left;${col};cursor:pointer"
     onmouseover="this.style.background='var(--card3,#2a2d3e)'" onmouseout="this.style.background='none'">${n}</button>`;
 }
 function opPicker(id, placeholder, names) {
@@ -2036,19 +2037,24 @@ function opPickerInit(container) {
     textIn.addEventListener('click', openDD);
     textIn.addEventListener('touchend', openDD);
     searchIn.addEventListener('input', () => filterList(searchIn.value));
+    const selectName = name => { hiddenIn.value = name; textIn.value = name; dd.style.display = 'none'; };
     listEl.addEventListener('click', ev => {
       const btn = ev.target.closest('button[data-name]'); if (!btn) return;
       ev.stopPropagation();
-      hiddenIn.value = btn.dataset.name;
-      textIn.value = btn.dataset.name;
-      dd.style.display = 'none';
+      selectName(btn.dataset.name);
     });
+    // Touch: record where the finger went down; only select if it barely moved (tap, not scroll)
+    let _touchStartY = 0, _touchStartBtn = null;
+    listEl.addEventListener('touchstart', ev => {
+      _touchStartY = ev.touches[0].clientY;
+      _touchStartBtn = ev.target.closest('button[data-name]') || null;
+    }, { passive: true });
     listEl.addEventListener('touchend', ev => {
-      const btn = ev.target.closest('button[data-name]'); if (!btn) return;
+      const dy = Math.abs(ev.changedTouches[0].clientY - _touchStartY);
+      if (dy > 8) return; // finger moved — it was a scroll, not a tap
+      const btn = _touchStartBtn; if (!btn) return;
       ev.preventDefault(); ev.stopPropagation();
-      hiddenIn.value = btn.dataset.name;
-      textIn.value = btn.dataset.name;
-      dd.style.display = 'none';
+      selectName(btn.dataset.name);
     });
   });
   if (opPickerInit._closeH) { document.removeEventListener('click', opPickerInit._closeH, true); document.removeEventListener('touchstart', opPickerInit._closeH, true); }
