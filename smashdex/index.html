@@ -574,7 +574,7 @@ select.fchip option,.clubrow select option{background:var(--deep);color:var(--te
 .card-ish{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:rgba(23,23,63,.6)}
 .card-ish h3{font-size:16px;margin-bottom:8px}
 .hn{padding-top:18px;width:100%;min-width:0}
-#view:has(>.hn){width:100%}
+@media (max-width:1023px){#view:has(>.hn){width:100%}}
 .hn-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .hn-h h1{font-family:var(--head);font-weight:400;font-size:40px;letter-spacing:.02em;line-height:1}
 .hn-meta{text-align:right;font-size:13px;color:var(--muted)}.hn-meta b{display:block;color:var(--text);font-size:14px}.hn-meta span{display:block}
