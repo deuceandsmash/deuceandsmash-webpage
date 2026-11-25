@@ -42,7 +42,7 @@ const [profiles, openPlayMatches, adjustments, submissions, settings] = await Pr
 const { rows, levels } = buildRows({ profiles, openPlayMatches, adjustments, submissions }, to);
 const st = settings || {}, num = (v, d) => (isFinite(+v) && +v > 0 ? +v : d);
 const record = H.closeSeason(rows, month, levels, {
-  K: num(st.K, H.HONOURS.K), min: num(st.MIN_SEASON, H.HONOURS.MIN_SEASON),
+  K: num(st.K, H.HONOURS.K), min: num(st.MIN_SEASON, H.HONOURS.MIN_SEASON), minDays: num(st.MIN_SEASON_DAYS, H.HONOURS.MIN_SEASON_DAYS),
   K_PAIR: num(st.K_PAIR, H.HONOURS.K_PAIR), MIN_PAIR: num(st.MIN_PAIR, H.HONOURS.MIN_PAIR), closedAt: Date.now(),
 });
 

@@ -556,6 +556,16 @@ select.fchip option,.clubrow select option{background:var(--deep);color:var(--te
 }
 
 /* ── Honours ── */
+.hn-prov{display:flex;gap:10px;align-items:baseline;border:1px dashed rgba(245,214,40,.45);background:rgba(245,214,40,.06);border-radius:12px;padding:9px 12px;font-size:13px;color:var(--muted);margin-bottom:12px}
+.hn-prov b{color:var(--yellow);font-size:12px;letter-spacing:.06em;text-transform:uppercase;flex:none}
+.hn-lh small{color:var(--muted)}
+.qok{font-style:normal;color:#9DB67C}
+.hn-warm{margin-top:22px}
+.hn-wr{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line)}
+.hn-wr .hav{opacity:.8}.hn-wr .nm b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hn-wr .nm small{font-size:12px;color:var(--muted)}
+.hn-wr .need{text-align:right}.hn-wr .need small{display:block;font-size:11px;color:var(--faint)}.hn-wr .need b{font-size:13px;color:var(--text);font-weight:600}
+.hn-wr.me{background:rgba(245,214,40,.07);border-radius:10px}.hn-wr.me .need b{color:var(--yellow)}
+.hn-warm>.linkish{margin-top:8px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .card-ish{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:rgba(23,23,63,.6)}
 .card-ish h3{font-size:16px;margin-bottom:8px}
@@ -1589,7 +1599,7 @@ document.addEventListener('submit', async e => {
 const hn = () => (S.hn ||= { board: 'season', view: 'season', mode: ['podium', 'ladder', 'table'].includes(S.profiles[S.mid]?.prefs?.honoursView) ? S.profiles[S.mid].prefs.honoursView : 'podium',
   lv: 'all', club: 'home', month: null, zoom: 'near', sel: null, plan: [], k: 0, info: false, replay: false, rday: null, cmp: null });
 const HS = () => { const x = S.hset || {}; const n = (v, d) => (isFinite(+v) && +v > 0 ? +v : d);
-  return { ...HONOURS, K: n(x.K, HONOURS.K), K_PAIR: n(x.K_PAIR, HONOURS.K_PAIR), MIN_SEASON: n(x.MIN_SEASON, HONOURS.MIN_SEASON), MIN_ALL: n(x.MIN_ALL, HONOURS.MIN_ALL), MIN_PAIR: n(x.MIN_PAIR, HONOURS.MIN_PAIR) }; };
+  return { ...HONOURS, K: n(x.K, HONOURS.K), K_PAIR: n(x.K_PAIR, HONOURS.K_PAIR), MIN_SEASON: n(x.MIN_SEASON, HONOURS.MIN_SEASON), MIN_SEASON_DAYS: n(x.MIN_SEASON_DAYS, HONOURS.MIN_SEASON_DAYS), MIN_ALL: n(x.MIN_ALL, HONOURS.MIN_ALL), MIN_ALL_DAYS: n(x.MIN_ALL_DAYS, HONOURS.MIN_ALL_DAYS), MIN_PAIR: n(x.MIN_PAIR, HONOURS.MIN_PAIR) }; };
 const liveMonth = () => { const m = todayLocal().slice(0, 7); return m < HONOURS.FIRST_SEASON ? HONOURS.FIRST_SEASON : m; };
 const curMonth = () => hn().month || liveMonth();
 const isLive = () => curMonth() === liveMonth();
@@ -1639,15 +1649,18 @@ const podiumsOf = id => sealsOf(id).filter(x => x.type === 'season').length;
 // Boards
 function closedBoard(month) {
   const s = S.seasons[month];
-  const ranked = Object.entries(s.standings || {}).map(([id, x]) => ({ id, ...x, l5: String(x.l5 || '').split('').filter(Boolean), streak: 0, opp: {} })).sort((a, b) => a.rank - b.rank);
-  return { avg: s.meta?.clubAvg || HONOURS.FALLBACK_AVG, ranked, warming: Array(s.meta?.warming || 0).fill(null), all: Object.fromEntries(ranked.map(x => [x.id, x])), closed: s };
+  const min = s.meta?.min || HONOURS.MIN_SEASON, minDays = s.meta?.minDays || 0;
+  const all = Object.entries(s.standings || {}).map(([id, x]) => { const y = { id, ...x, l5: String(x.l5 || '').split('').filter(Boolean), streak: 0, opp: {} }; y.need = H.needOf(y, min, minDays); y.q = x.rank != null; return y; });
+  const ranked = all.filter(x => x.rank != null).sort((a, b) => a.rank - b.rank);
+  const warming = all.filter(x => x.rank == null).sort((a, b) => (a.need.sets + a.need.days) - (b.need.sets + b.need.days) || b.sets - a.sets);
+  return { avg: s.meta?.clubAvg || HONOURS.FALLBACK_AVG, ranked, warming, all: Object.fromEntries(all.map(x => [x.id, x])), closed: s, provisional: false, qualified: ranked.length, min, minDays };
 }
 function hBoard(view = hn().view, month = curMonth(), club = hn().club) {
   const key = `${view}|${month}|${club}`; if (S._hb?.[key]) return S._hb[key];
   const st = HS(); let out;
-  if (view === 'all') out = H.table(S.hRows || [], { from: st.DATA_START, club: club === 'all' ? 'all' : 'home', K: st.K, min: st.MIN_ALL, levels: S.hLevels });
+  if (view === 'all') out = H.table(S.hRows || [], { from: st.DATA_START, club: club === 'all' ? 'all' : 'home', K: st.K, min: st.MIN_ALL, minDays: st.MIN_ALL_DAYS, levels: S.hLevels });
   else if (month !== liveMonth() && S.seasons?.[month]?.standings) out = closedBoard(month);
-  else { const b = H.monthBounds(month); out = H.table(S.hRows || [], { from: b.from, to: b.to, club: 'home', K: st.K, min: st.MIN_SEASON, levels: S.hLevels }); }
+  else { const b = H.monthBounds(month); out = H.table(S.hRows || [], { from: b.from, to: b.to, club: 'home', K: st.K, min: st.MIN_SEASON, minDays: st.MIN_SEASON_DAYS, levels: S.hLevels }); }
   return (S._hb ||= {})[key] = out;
 }
 // Movement since the member's last visit to the same board
@@ -1667,9 +1680,33 @@ function hList() {
   list.forEach(x => { x.mv = prev[x.id] ? prev[x.id] - x.pos : 0; });
   saveRanks(key, list);
   const maxN = Math.max(1, ...list.map(x => x.sets));
-  return { b, list, me: list.find(x => x.id === S.mid) || null, mine: b.all[S.mid] || null, maxN, key, first };
+  const warm = (b.warming || []).filter(x => x && (h.lv === 'all' || x.level === h.lv));
+  return { b, list, warm, me: list.find(x => x.id === S.mid) || null, mine: b.all[S.mid] || null, maxN, key, first };
+}
+// What someone still needs to qualify, in words
+const needTxt = n => { if (!n || (!n.sets && !n.days)) return 'Qualified'; const p = [];
+  if (n.sets) p.push(`${n.sets} more set${n.sets > 1 ? 's' : ''}`); if (n.days) p.push(`${n.days} more day${n.days > 1 ? 's' : ''}`);
+  return p.join(' and '); };
+const needShort = n => [n.sets ? `${n.sets} set${n.sets > 1 ? 's' : ''}` : '', n.days ? `${n.days} day${n.days > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ');
+const ruleTxt = b => `${b.min} sets across ${b.minDays} different days`;
+function provHTML(b) {
+  if (!b.provisional) return '';
+  return `<div class="hn-prov" role="note"><b>Provisional</b><span>Ranked on ${HONOURS.PROV_MIN}+ sets until three players qualify with ${ruleTxt(b)}. Qualified so far: ${b.qualified}.</span></div>`;
+}
+function warmHTML(warm, b) {
+  if (!warm.length) return '';
+  const h = hn(), mine = warm.find(x => x.id === S.mid), cap = 8;
+  let shown = h.warmAll ? warm : warm.slice(0, cap);
+  if (mine && !shown.includes(mine)) shown = [mine, ...shown.slice(0, cap - 1)];
+  const sub = b.provisional ? `Play ${HONOURS.PROV_MIN} sets to appear on the provisional board. To qualify: ${ruleTxt(b)}.` : `Not on the board yet. To qualify: ${ruleTxt(b)}.`;
+  return `<section class="hn-warm" aria-label="Warming up"><div class="hn-lh"><h2>Warming up</h2><small>${warm.length}</small></div><p class="hn-note" style="margin:0 0 8px">${sub}</p>
+    ${shown.map(x => { const n = b.provisional && x.sets < HONOURS.PROV_MIN ? { sets: HONOURS.PROV_MIN - x.sets, days: 0 } : x.need;
+      return `<div class="hn-wr${x.id === S.mid ? ' me' : ''}">${hav(x.id)}<span class="nm"><b>${x.id === S.mid ? 'You' : esc(pnm(x.id))}</b><small>${x.w}–${x.l}${x.t ? '–' + x.t : ''} · ${plural(x.sets, 'set')} · ${plural(x.days, 'day')}</small></span>
+      <span class="need" aria-label="${b.provisional && x.sets < HONOURS.PROV_MIN ? 'To appear' : 'To qualify'}: ${needTxt(n)}"><small>${b.provisional && x.sets < HONOURS.PROV_MIN ? 'To appear' : 'Still needs'}</small><b>${needShort(n)}</b></span></div>`; }).join('')}
+    ${warm.length > cap ? `<button class="linkish" data-hn="warmall">${h.warmAll ? 'Show fewer' : `Show all ${warm.length}`}</button>` : ''}</section>`;
 }
 const statusOf = (x, season) => {
+  if (hBoard().provisional) return x.q ? ['Qualified', 'up'] : [`Needs ${needShort(x.need)}`, 'dim'];
   if (!season) { const n = podiumsOf(x.id); return n ? [`${n} podium${n > 1 ? 's' : ''}`, 'gold'] : ['—', 'dim']; }
   if (x.streak >= 5) return [`On fire · ${x.streak}`, 'hot'];
   if (x.mv > 0) return [`Climbing ▲${x.mv}`, 'up'];
@@ -1705,18 +1742,20 @@ function explainerHTML() {
   const st = HS(), h = hn();
   if (h.view === 'all') return `<h3>How all-time works</h3><ul>
     <li>Every counted set since score recording began (18 Oct 2026), scored exactly like a season.</li>
-    <li>Play ${st.MIN_ALL} or more sets to be ranked.</li>
+    <li>Play ${st.MIN_ALL} or more sets across at least ${st.MIN_ALL_DAYS} different days to be ranked.</li>
     <li>Choose Deuce &amp; Smash only, or all clubs to include sets recorded at other venues.</li>
     <li>Seals show podium finishes from past seasons: gold for 1st, silver for 2nd, bronze for 3rd.</li></ul>`;
   return `<h3>What is a season?</h3><ul>
     <li>A season is one calendar month at Deuce &amp; Smash. Everyone starts level on the 1st.</li>
     <li>Every set earns points: a win against a stronger pair 4, an equal pair 3, a weaker pair 2; a close loss (2 games or fewer) 1; a clear loss 0.</li>
     <li>Your Season Score is your points per set, steadied with ${st.K} sets at the club average so a few lucky sets can’t top the table, shown out of 1,000.</li>
-    <li>Play ${st.MIN_SEASON} or more sets to be ranked. The season closes by itself on the 2nd of the next month: the top 3, and the top player in each level, earn a permanent seal.</li></ul>`;
+    <li>To qualify, play ${st.MIN_SEASON} or more sets across at least ${st.MIN_SEASON_DAYS} different days in the month (about once a week). Everyone else is in Warming up, with what they still need.</li>
+    <li>Early in the month the board is provisional: it ranks everyone with ${HONOURS.PROV_MIN}+ sets until three players qualify.</li>
+    <li>The season closes by itself on the 2nd of the next month. Only qualified players earn seals: the top 3, and the top qualified player in each level.</li></ul>`;
 }
 
 function seasonHTML() {
-  const h = hn(), st = HS(), season = h.view === 'season', { b, list, me, mine, maxN, first } = hList();
+  const h = hn(), st = HS(), season = h.view === 'season', { b, list, warm, me, mine, maxN, first } = hList();
   const months = monthList();
   const ctl = `<div class="hn-ctl">
       <div class="seg hn-seg" role="group" aria-label="Season or all-time">${['season', 'all'].map(v => `<button class="${h.view === v ? 'on' : ''}" data-hn="view:${v}">${v === 'season' ? 'Season' : 'All-time'}</button>`).join('')}</div>
@@ -1729,10 +1768,11 @@ function seasonHTML() {
     </div>
     <div class="hn-sum"><span>${h.lv !== 'all' ? `${esc(lvLabel(h.lv))} · ${esc((LEVELS.find(l => l.id === h.lv) || {}).range)} · ` : ''}${season ? (isLive() ? `Closes ${fmtShort(H.monthBounds(curMonth()).to)} · Deuce &amp; Smash matches` : isPending(curMonth()) ? 'Finalising… late scores still count until the season closes on the 2nd' : `Final · closed ${b.closed?.meta?.closedAt ? new Date(b.closed.meta.closedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'automatically'} · seals awarded`) : (h.club === 'all' ? 'Every counted set, all clubs' : 'Every counted set at Deuce &amp; Smash')}</span>
       <button class="linkish hn-infob" data-hn="info" aria-expanded="${h.info}">${h.info ? 'Hide' : season ? 'How seasons work' : 'How all-time works'}</button></div>
-    ${h.info ? `<div class="hn-info card-ish">${explainerHTML()}</div>` : ''}`;
+    ${h.info ? `<div class="hn-info card-ish">${explainerHTML()}</div>` : ''}${list.length ? provHTML(b) : ''}`;
   let main;
-  if (!list.length) main = `<div class="hn-empty"><p>${season ? `No one has played ${st.MIN_SEASON} sets ${isLive() ? 'yet this season' : 'in this season'}${h.lv !== 'all' ? ' at this level' : ''}.` : `No one has ${st.MIN_ALL} sets yet${h.lv !== 'all' ? ' at this level' : ''}.`}</p>${mine ? `<p>You have ${plural(mine.sets, 'set')} so far.</p>` : ''}${season && isLive() && pendingMonth() ? `<p style="margin-top:12px"><button class="btn" data-hn="month:${pendingMonth()}">See ${esc(H.monthLabel(pendingMonth()))} standings</button></p>` : ''}</div>`;
+  if (!list.length) main = `<div class="hn-empty"><p>${b.provisional ? `No one has played ${HONOURS.PROV_MIN} sets ${season ? (isLive() ? 'yet this season' : 'in this season') : 'yet'}${h.lv !== 'all' ? ' at this level' : ''}.` : `No one ${season && !isLive() ? 'qualified' : 'has qualified yet'}${h.lv !== 'all' ? ' at this level' : ''} (${ruleTxt(b)}).`}</p>${mine ? `<p>You have ${plural(mine.sets, 'set')} so far.</p>` : ''}${season && isLive() && pendingMonth() ? `<p style="margin-top:12px"><button class="btn" data-hn="month:${pendingMonth()}">See ${esc(H.monthLabel(pendingMonth()))} standings</button></p>` : ''}</div>`;
   else main = h.mode === 'ladder' ? ladderHTML(list, me, maxN) : h.mode === 'table' ? tableHTML(list, maxN, b, first) : podiumHTML(list, me, maxN, b);
+  if (h.mode !== 'ladder' || !list.length) main += warmHTML(warm, b);
   const side = sideHTML(list, me, b);
   return `${ctl}<div class="hn-grid"><div class="hn-main">${main}
     ${season && list.length ? `<button class="btn full hn-replay" data-hn="replay">${HNI.play}Replay the month</button>` : ''}</div>${side}</div>`;
@@ -1748,7 +1788,7 @@ function rowHTML(x, maxN, opts = {}) {
   const season = hn().view === 'season', isMe = x.id === S.mid;
   return `<div class="hn-row${isMe ? ' me' : ''}">
     <span class="rk">${x.pos}</span>${hav(x.id)}
-    <span class="nm"><b>${isMe ? 'You' : esc(opts.full ? pnm(x.id) : nmShort(x.id))}</b><small>${esc(dexOf(x.id))}</small></span>
+    <span class="nm"><b>${isMe ? 'You' : esc(opts.full ? pnm(x.id) : nmShort(x.id))}</b><small>${esc(dexOf(x.id))}${hBoard().provisional ? (x.q ? ' · <em class="qok">Qualified</em>' : ` · needs ${needShort(x.need)}`) : ''}</small></span>
     ${recBar(x, maxN)}
     <span class="c2">${season ? `${x.sets ? Math.round(x.w / x.sets * 100) : 0}%` : (() => { const n = podiumsOf(x.id); return n ? `${n} seal${n > 1 ? 's' : ''}` : '—'; })()}</span>
     ${l5HTML(x.l5 || [])}
@@ -1765,9 +1805,9 @@ function podiumHTML(list, me, maxN, b) {
   const idx = me ? me.pos - 1 : -1, slice = me ? list.slice(Math.max(0, idx - 3), idx + 4) : list.slice(0, 7);
   const up = aboveMe(list, me), live = season && isLive();
   const rows = slice.map(x => rowHTML(x, maxN, { full: true }) + (live && up && x.id === up.id ? `<button class="hn-plan" data-hn="plan"><span>${chipTxt(list, me, b)}</span><span>Plan it →</span></button>` : '')).join('');
-  return `${pod}<div class="hn-lh"><h2>${me ? 'Your neighbourhood' : 'Top of the table'}</h2></div>
+  return `${pod}<div class="hn-lh"><h2>${me ? 'Your neighbourhood' : 'Top of the table'}</h2>${b.provisional ? '<small>Provisional</small>' : ''}</div>
     <div class="hn-rows"><div class="hn-row hn-rowh" aria-hidden="true"><span class="rk">#</span><span class="hav ph"></span><span class="nm">Player</span><span class="rbar">Sets</span><span class="c2">${season ? 'Win %' : 'Seals'}</span><span class="l5">Last 5</span><span class="sc">Score</span></div>${rows}</div>
-    ${!me ? `<p class="hn-note">${b.all[S.mid] ? `You’re warming up: ${plural(b.all[S.mid].sets, 'set')} of ${season ? HS().MIN_SEASON : HS().MIN_ALL} needed.` : 'Play a few sets to join the table.'}</p>` : ''}`;
+    ${!me ? `<p class="hn-note">${b.all[S.mid] ? `You’re warming up: ${needTxt(b.all[S.mid].need)} to qualify.` : 'Play a few sets to join the table.'}</p>` : ''}`;
 }
 function ladderHTML(list, me, maxN) {
   const h = hn(), centre = me || list[0], H_ = 380, padT = 22;
@@ -1803,7 +1843,7 @@ function tableHTML(list, maxN, b, first) {
   const h = hn(), season = h.view === 'season', anim = h.k % 2 ? 'a' : 'b';
   const moves = list.filter(x => x.mv).length;
   return `<section class="hn-tbl">
-    <div class="hn-tblh"><div><h2>${season ? `Season · ${esc(H.monthLabel(curMonth()))}` : 'All-time'}${h.lv !== 'all' ? ' · ' + esc(lvLabel(h.lv)) : ''}</h2><small>${season ? (first ? 'Movement shows from your next visit' : `${moves} move${moves === 1 ? '' : 's'} since your last visit`) : `Every counted set · ${HS().MIN_ALL}+ sets to be ranked`}</small></div>
+    <div class="hn-tblh"><div><h2>${season ? `Season · ${esc(H.monthLabel(curMonth()))}` : 'All-time'}${h.lv !== 'all' ? ' · ' + esc(lvLabel(h.lv)) : ''}</h2><small>${season ? (first ? 'Movement shows from your next visit' : `${moves} move${moves === 1 ? '' : 's'} since your last visit`) : `Every counted set · ${ruleTxt(b)} to be ranked`}</small></div>
       <button class="hn-flipb" data-hn="flip" aria-label="Replay the flips">${HNI.flip}</button></div>
     <div class="hn-tscroll"><div class="hn-tr hn-trh" aria-hidden="true"><span>Pos</span><span>Player</span><span>Sets</span><span>Last 5</span><span>Score</span><span class="c2">${season ? 'Win %' : 'Seals'}</span><span class="c3">${season ? 'Days' : ''}</span><span class="c4">${season ? 'Status' : 'Podiums'}</span></div>
     ${list.map((x, i) => { const [stt, cls] = statusOf(x, season); return `<div class="hn-tr${x.id === S.mid ? ' me' : ''}${x.mv ? ' mvd f' + anim : ''}" style="--d:${i * 60}ms">
@@ -1813,7 +1853,6 @@ function tableHTML(list, maxN, b, first) {
       <span class="c2">${season ? `${x.sets ? Math.round(x.w / x.sets * 100) : 0}%` : (() => { const n = sealsOf(x.id).length; return n ? `${n} seal${n > 1 ? 's' : ''}` : '—'; })()}</span>
       <span class="c3">${season ? x.days : ''}</span><span class="c4 st-${cls}">${esc(stt)}</span></div>`; }).join('')}
     </div>
-    ${b.warming?.length ? `<p class="hn-note">+ ${b.warming.length} warming up (fewer than ${season ? HS().MIN_SEASON : HS().MIN_ALL} sets)</p>` : ''}
   </section>`;
 }
 function workingHTML(id) {
@@ -1845,7 +1884,7 @@ function sideHTML(list, me, b) {
 // Season Replay
 function replayData(month) {
   const key = month; if (S._hrep?.[key]) return S._hrep[key];
-  return (S._hrep ||= {})[key] = H.replay(S.hRows || [], month, { club: 'home', K: HS().K, min: HS().MIN_SEASON, levels: S.hLevels });
+  return (S._hrep ||= {})[key] = H.replay(S.hRows || [], month, { club: 'home', K: HS().K, min: HS().MIN_SEASON, minDays: HS().MIN_SEASON_DAYS, levels: S.hLevels });
 }
 function replayHTML() {
   const h = hn(), month = curMonth(), days = replayData(month);
@@ -1965,7 +2004,7 @@ function mySeasonsHTML() {
     const d = (a, b, rank) => { const v = rank ? a - b : b - a; return `<b class="${v > 0 ? 'up' : v < 0 ? 'down' : ''}">${v === 0 ? '=' : (v > 0 ? '+' : '') + v}${rank && v ? ' places' : ''}</b>`; };
     cmp = `<div class="mscmp"><span></span><span>${esc(H.monthLabel(A.m))}</span><span class="y">${esc(H.monthLabel(B.m))}</span><span>Change</span>
       <span>Season Score</span><span>${A.score}</span><span>${B.score}</span>${d(A.score, B.score)}
-      <span>Rank</span><span>${ordn(A.rank)}</span><span>${ordn(B.rank)}</span>${d(A.rank, B.rank, true)}
+      <span>Rank</span><span>${A.rank ? ordn(A.rank) : '—'}</span><span>${B.rank ? ordn(B.rank) : '—'}</span>${A.rank && B.rank ? d(A.rank, B.rank, true) : '<b>–</b>'}
       <span>Sets played</span><span>${A.sets}</span><span>${B.sets}</span>${d(A.sets, B.sets)}
       <span>Win rate</span><span>${pct(A)}%</span><span>${pct(B)}%</span>${d(pct(A), pct(B))}
       <span>Wins vs stronger</span><span>${A.ws}</span><span>${B.ws}</span>${d(A.ws, B.ws)}</div><p class="note">Tap any two finished months to compare them.</p>`;
@@ -1992,6 +2031,7 @@ document.addEventListener('click', e => {
   if (k === 'sel') return hnSet({ sel: v });
   if (k === 'info') { if (!h.info) track('hn_info'); return hnSet({ info: !h.info }); }
   if (k === 'flip') return hnSet({ k: h.k + 1 });
+  if (k === 'warmall') return hnSet({ warmAll: !h.warmAll });
   if (k === 'why') { track('hn_working'); return openHnSheet('why', v || S.mid); }
   if (k === 'plan') { track('hn_plan'); return openHnSheet('plan'); }
   if (k === 'padd') { h.plan = h.plan.concat([+v]).slice(-6); return $('#sheet').classList.contains('hidden') ? render() : openHnSheet('plan'); }

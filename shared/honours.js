@@ -8,8 +8,12 @@
 export const HONOURS = {
   K: 15,              // phantom sets at the club average (individual boards)
   K_PAIR: 8,          // phantom sets for pairs (they play fewer sets together)
-  MIN_SEASON: 3,      // sets to be ranked in a season
-  MIN_ALL: 10,        // sets to be ranked all-time
+  MIN_SEASON: 10,     // sets to qualify for a season (podium, seals)…
+  MIN_SEASON_DAYS: 4, // …played on at least this many different days (roughly once a week)
+  MIN_ALL: 20,        // sets to qualify all-time…
+  MIN_ALL_DAYS: 5,    // …on at least this many days
+  PROV_MIN: 3,        // until PROV_TOP players qualify, the board is provisional and ranks everyone with this many sets
+  PROV_TOP: 3,
   MIN_PAIR: 6,        // sets together to be ranked as a pair
   REGULAR_DAYS: 30,   // Court Regular window
   HOME: 'deuce-and-smash',
@@ -74,10 +78,15 @@ function tally(acc, id, p, row, oppIds) {
 }
 const inRange = (row, o) => (!o.from || row.date >= o.from) && (!o.to || row.date <= o.to) && (o.club === 'all' || row.club === HONOURS.HOME);
 
-// Individual table. opts: { from, to, club:'home'|'all', K, min, levels:{id:'b'|'i'|'a'} }
-// Returns { avg, ranked:[...], warming:[...], all:{id:stats} }. Ranked entries carry rank, score, l5, streak, best, days.
+// What a player still needs to qualify: { sets, days } (0 = done)
+export const needOf = (x, min, minDays) => ({ sets: Math.max(0, min - (x.sets || 0)), days: Math.max(0, minDays - (x.days || 0)) });
+
+// Individual table. opts: { from, to, club:'home'|'all', K, min, minDays, levels:{id:'b'|'i'|'a'}, provisional:true|false }
+// Qualified = min sets on minDays different days. While fewer than PROV_TOP players qualify (and provisional !== false),
+// the table is provisional: it ranks everyone with PROV_MIN+ sets, and each entry says whether they've qualified.
+// Returns { avg, ranked, warming, all, provisional, qualified, min, minDays }. Entries carry rank, score, q, need, l5, streak, best, days.
 export function table(rows, opts = {}) {
-  const K = opts.K ?? HONOURS.K, min = opts.min ?? HONOURS.MIN_SEASON;
+  const K = opts.K ?? HONOURS.K, min = opts.min ?? HONOURS.MIN_SEASON, minDays = opts.minDays ?? 0;
   const acc = {}; let tp = 0, tn = 0;
   for (const row of rows) {
     if (!inRange(row, opts)) continue;
@@ -89,17 +98,23 @@ export function table(rows, opts = {}) {
   const avg = tn ? tp / tn : HONOURS.FALLBACK_AVG;
   const list = Object.entries(acc).map(([id, x]) => {
     const v = steadied(x.pts, x.sets, avg, K);
-    return { id, ...x, days: x.days.size, l5: x.seq.slice(-5), v, score: toScore(v), level: opts.levels?.[id] || null };
+    const y = { id, ...x, days: x.days.size, l5: x.seq.slice(-5), v, score: toScore(v), level: opts.levels?.[id] || null };
+    y.need = needOf(y, min, minDays); y.q = !y.need.sets && !y.need.days;
+    return y;
   });
   const cmp = (a, b) => {
     if (b.score !== a.score) return b.score - a.score;
     const h = a.opp[b.id]; if (h && h.w !== h.l) return h.l - h.w; // head-to-head sets
     return b.w - a.w || b.days - a.days || b.v - a.v;
   };
-  const ranked = list.filter(x => x.sets >= min).sort(cmp);
+  const qualified = list.filter(x => x.q).length;
+  const provisional = opts.provisional !== false && qualified < HONOURS.PROV_TOP;
+  const onBoard = provisional ? x => x.sets >= Math.min(min, HONOURS.PROV_MIN) : x => x.q;
+  const ranked = list.filter(onBoard).sort(cmp);
   ranked.forEach((x, i) => { x.rank = i + 1; });
-  const warming = list.filter(x => x.sets < min).sort((a, b) => b.sets - a.sets);
-  return { avg, ranked, warming, all: Object.fromEntries(list.map(x => [x.id, x])) };
+  // Warming up: closest to qualifying first
+  const warming = list.filter(x => !onBoard(x)).sort((a, b) => (a.need.sets + a.need.days) - (b.need.sets + b.need.days) || b.sets - a.sets || b.score - a.score);
+  return { avg, ranked, warming, all: Object.fromEntries(list.map(x => [x.id, x])), provisional, qualified, min, minDays };
 }
 
 // Rank within one level ('b'|'i'|'a'), keeping the club-wide scores
@@ -170,14 +185,19 @@ export const monthLabel = month => { const [y, m] = month.split('-').map(Number)
 // Close a season: the frozen record written to seasons/YYYY-MM. levels = {id: 'b'|'i'|'a'} at close.
 export function closeSeason(rows, month, levels, settings = {}) {
   const { from, to } = monthBounds(month);
-  const K = settings.K ?? HONOURS.K, min = settings.min ?? HONOURS.MIN_SEASON;
-  const tb = table(rows, { from, to, club: 'home', K, min, levels });
+  const K = settings.K ?? HONOURS.K, min = settings.min ?? HONOURS.MIN_SEASON, minDays = settings.minDays ?? HONOURS.MIN_SEASON_DAYS;
+  const tb = table(rows, { from, to, club: 'home', K, min, minDays, levels, provisional: false });
   const pr = pairs(rows, { from, to, club: 'home', K: settings.K_PAIR ?? HONOURS.K_PAIR, min: settings.MIN_PAIR ?? HONOURS.MIN_PAIR });
   const cr = courtRegular(rows, to);
   const standings = {}, seals = {};
   const seal = (id, s) => (seals[id] ||= []).push(s);
   for (const x of tb.ranked) {
     standings[x.id] = { rank: x.rank, level: x.level || null, score: x.score, sets: x.sets, w: x.w, l: x.l, t: x.t, pts: x.pts,
+      ws: x.ws, we: x.we, ww: x.ww, cl: x.cl, lc: x.lc, days: x.days, best: x.best, l5: x.l5.join('') };
+  }
+  // Played but didn't qualify: kept (unranked) so members can see their month in My seasons
+  for (const x of tb.warming) {
+    standings[x.id] = { rank: null, level: x.level || null, score: x.score, sets: x.sets, w: x.w, l: x.l, t: x.t, pts: x.pts,
       ws: x.ws, we: x.we, ww: x.ww, cl: x.cl, lc: x.lc, days: x.days, best: x.best, l5: x.l5.join('') };
   }
   const place = ['gold', 'silver', 'bronze'];
@@ -192,7 +212,7 @@ export function closeSeason(rows, month, levels, settings = {}) {
   const holder = cr.list[0] || null;
   if (holder) seal(holder.id, { type: 'regular', days: holder.days, kind: 'green' });
   return {
-    meta: { month, from, to, closedAt: settings.closedAt || null, K, min, K_PAIR: settings.K_PAIR ?? HONOURS.K_PAIR, minPair: settings.MIN_PAIR ?? HONOURS.MIN_PAIR,
+    meta: { month, from, to, closedAt: settings.closedAt || null, K, min, minDays, K_PAIR: settings.K_PAIR ?? HONOURS.K_PAIR, minPair: settings.MIN_PAIR ?? HONOURS.MIN_PAIR,
       clubAvg: Math.round(tb.avg * 1000) / 1000, ranked: tb.ranked.length, warming: tb.warming.length },
     standings, pairs: pairOut,
     courtRegular: holder ? { id: holder.id, days: holder.days, sets: holder.sets } : null,
