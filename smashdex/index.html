@@ -561,7 +561,11 @@ select.fchip option,.clubrow select option{background:var(--deep);color:var(--te
 .hn-lh small{color:var(--muted)}
 .qok{font-style:normal;color:#9DB67C}
 .hn-warm{margin-top:22px}
-.hn-wr{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line)}
+.hn-wr{display:grid;grid-template-columns:34px minmax(0,1fr) auto;grid-template-areas:"av nm sc" "av l5 nd";align-items:center;gap:4px 10px;padding:10px 4px;border-bottom:1px solid var(--line)}
+.hn-wr .hav{grid-area:av}.hn-wr .nm{grid-area:nm;min-width:0}.hn-wr .l5{grid-area:l5}.hn-wr .wsc{grid-area:sc;justify-self:end;display:flex;align-items:center;gap:8px}.hn-wr .need{grid-area:nd}
+.hn-wr .wsc .st{--sh:22px;opacity:.85}.hn-wr .wsc small{font-size:11px;color:var(--faint);white-space:nowrap}.hn-wr .wsc small.top{color:#D8C36A;font-weight:600}
+.hn-warm .hn-wr .need small{display:inline;margin-right:5px}.hn-warm .hn-wr .need{text-align:right;white-space:nowrap}
+@media (min-width:700px){.hn-warm .hn-wr .need small{display:block;margin:0}.hn-wr{grid-template-columns:36px minmax(170px,1.4fr) 100px minmax(150px,auto) minmax(110px,auto);grid-template-areas:"av nm l5 sc nd";gap:10px 14px}}
 .hn-wr .hav{opacity:.8}.hn-wr .nm b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hn-wr .nm small{font-size:12px;color:var(--muted)}
 .hn-wr .need{text-align:right}.hn-wr .need small{display:block;font-size:11px;color:var(--faint)}.hn-wr .need b{font-size:13px;color:var(--text);font-weight:600}
 .hn-wr.me{background:rgba(245,214,40,.07);border-radius:10px}.hn-wr.me .need b{color:var(--yellow)}
@@ -1665,13 +1669,13 @@ function hBoard(view = hn().view, month = curMonth(), club = hn().club) {
 }
 // Movement since the member's last visit to the same board
 function prevRanks(key) {
-  S.hnPrev ||= (() => { try { return JSON.parse(localStorage.getItem('sdx_hn_prev') || '{}'); } catch { return {}; } })();
+  S.hnPrev ||= (() => { try { return JSON.parse(localStorage.getItem('sdx_hn_prev2') || '{}'); } catch { return {}; } })();
   S.hnSaved ||= {};
   return S.hnPrev[key] || {};
 }
 function saveRanks(key, list) {
   if (S.hnSaved[key]) return; S.hnSaved[key] = true;
-  try { const all = JSON.parse(localStorage.getItem('sdx_hn_prev') || '{}'); all[key] = Object.fromEntries(list.map(x => [x.id, x.pos])); localStorage.setItem('sdx_hn_prev', JSON.stringify(all)); } catch {}
+  try { const all = JSON.parse(localStorage.getItem('sdx_hn_prev2') || '{}'); all[key] = Object.fromEntries(list.map(x => [x.id, x.pos])); localStorage.setItem('sdx_hn_prev2', JSON.stringify(all)); } catch {}
 }
 function hList() {
   const h = hn(), b = hBoard(), key = `${h.view}|${curMonth()}|${h.lv}|${h.club}`;
@@ -1693,7 +1697,7 @@ function provHTML(b) {
   if (!b.provisional) return '';
   return `<div class="hn-prov" role="note"><b>Provisional</b><span>Ranked on ${HONOURS.PROV_MIN}+ sets until three players qualify with ${ruleTxt(b)}. Qualified so far: ${b.qualified}.</span></div>`;
 }
-function warmHTML(warm, b) {
+function warmHTML(warm, b, list = []) {
   if (!warm.length) return '';
   const h = hn(), mine = warm.find(x => x.id === S.mid), cap = 8;
   let shown = h.warmAll ? warm : warm.slice(0, cap);
@@ -1701,7 +1705,11 @@ function warmHTML(warm, b) {
   const sub = b.provisional ? `Play ${HONOURS.PROV_MIN} sets to appear on the provisional board. To qualify: ${ruleTxt(b)}.` : `Not on the board yet. To qualify: ${ruleTxt(b)}.`;
   return `<section class="hn-warm" aria-label="Warming up"><div class="hn-lh"><h2>Warming up</h2><small>${warm.length}</small></div><p class="hn-note" style="margin:0 0 8px">${sub}</p>
     ${shown.map(x => { const n = b.provisional && x.sets < HONOURS.PROV_MIN ? { sets: HONOURS.PROV_MIN - x.sets, days: 0 } : x.need;
-      return `<div class="hn-wr${x.id === S.mid ? ' me' : ''}">${hav(x.id)}<span class="nm"><b>${x.id === S.mid ? 'You' : esc(pnm(x.id))}</b><small>${x.w}–${x.l}${x.t ? '–' + x.t : ''} · ${plural(x.sets, 'set')} · ${plural(x.days, 'day')}</small></span>
+      // Where their current score would sit on the board if they qualified today
+      const would = list.length ? 1 + list.filter(y => y.score > x.score).length : null;
+      const pct = x.sets ? Math.round(x.w / x.sets * 100) : 0;
+      return `<div class="hn-wr${x.id === S.mid ? ' me' : ''}">${hav(x.id)}<span class="nm"><b>${x.id === S.mid ? 'You' : esc(pnm(x.id))}</b><small>${x.w}–${x.l}${x.t ? '–' + x.t : ''} · ${pct}% · ${plural(x.sets, 'set')} · ${plural(x.days, 'day')}</small></span>
+      ${l5HTML(x.l5 || [])}<span class="wsc">${hTiles(x.score)}${would ? `<small class="${would <= 5 ? 'top' : ''}">Would be ${ordn(would)}</small>` : ''}</span>
       <span class="need" aria-label="${b.provisional && x.sets < HONOURS.PROV_MIN ? 'To appear' : 'To qualify'}: ${needTxt(n)}"><small>${b.provisional && x.sets < HONOURS.PROV_MIN ? 'To appear' : 'Still needs'}</small><b>${needShort(n)}</b></span></div>`; }).join('')}
     ${warm.length > cap ? `<button class="linkish" data-hn="warmall">${h.warmAll ? 'Show fewer' : `Show all ${warm.length}`}</button>` : ''}</section>`;
 }
@@ -1772,7 +1780,7 @@ function seasonHTML() {
   let main;
   if (!list.length) main = `<div class="hn-empty"><p>${b.provisional ? `No one has played ${HONOURS.PROV_MIN} sets ${season ? (isLive() ? 'yet this season' : 'in this season') : 'yet'}${h.lv !== 'all' ? ' at this level' : ''}.` : `No one ${season && !isLive() ? 'qualified' : 'has qualified yet'}${h.lv !== 'all' ? ' at this level' : ''} (${ruleTxt(b)}).`}</p>${mine ? `<p>You have ${plural(mine.sets, 'set')} so far.</p>` : ''}${season && isLive() && pendingMonth() ? `<p style="margin-top:12px"><button class="btn" data-hn="month:${pendingMonth()}">See ${esc(H.monthLabel(pendingMonth()))} standings</button></p>` : ''}</div>`;
   else main = h.mode === 'ladder' ? ladderHTML(list, me, maxN) : h.mode === 'table' ? tableHTML(list, maxN, b, first) : podiumHTML(list, me, maxN, b);
-  if (h.mode !== 'ladder' || !list.length) main += warmHTML(warm, b);
+  if (h.mode !== 'ladder' || !list.length) main += warmHTML(warm, b, list);
   const side = sideHTML(list, me, b);
   return `${ctl}<div class="hn-grid"><div class="hn-main">${main}
     ${season && list.length ? `<button class="btn full hn-replay" data-hn="replay">${HNI.play}Replay the month</button>` : ''}</div>${side}</div>`;
