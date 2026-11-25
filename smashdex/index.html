@@ -1616,9 +1616,15 @@ const HNI = {
 
 function buildHonours() {
   const P = S.profiles;
-  const preR = (m, id) => { const nm = P[id]?.name; const v = nm ? S.pre[m.id]?.[nm] : null; return v != null ? v : (nm ? playerOf(nm).r : null); };
+  // Names straight from the match records, for anyone whose SmashDex profile isn't published yet
+  S.idNames = {};
+  for (const m of S.ms) for (const [ids, nms] of [[m.teamAIds, m.teamA], [m.teamBIds, m.teamB]])
+    if (Array.isArray(ids) && Array.isArray(nms)) ids.forEach((id, i) => { if (id && !P[id]?.name && nms[i]) S.idNames[id] = String(nms[i]); });
+  const nameOf = id => P[id]?.name || S.idNames[id];
+  const preR = (m, id) => { const nm = nameOf(id); const v = nm ? S.pre[m.id]?.[nm] : null; return v != null ? v : (nm ? playerOf(nm).r : null); };
   S.hRows = H.rowsFrom(S.ms.filter(validMatch), setsOf, preR);
   S.hLevels = {}; for (const [id, p] of Object.entries(P)) if (p?.name) S.hLevels[id] = H.levelOf(playerOf(p.name).r);
+  for (const [id, nm] of Object.entries(S.idNames)) if (!S.hLevels[id]) S.hLevels[id] = H.levelOf(playerOf(nm).r);
   S._hb = {}; S._hpairs = {}; S._hrep = {};
 }
 
@@ -2028,7 +2034,7 @@ document.addEventListener('click', async e => {
 
 /* ══════════ Matchup Dex ══════════ */
 // Flow: start (partner or rival) → pick → that pairing's stats, with a court to add the other players or leave them blank.
-const pnm = id => S.profiles[id]?.name || 'Player';
+const pnm = id => S.profiles[id]?.name || (S.idNames?.[id] || '').replace(/\s+/g, ' ').trim() || 'Player';
 const idOfName = n => Object.keys(S.profiles).find(id => S.profiles[id]?.name === n) || null;
 const personaOf = id => bandOf(playerOf(pnm(id)).r).persona;
 const quiet = id => S.profiles[id]?.active === false || !!playerOf(pnm(id)).hidden;

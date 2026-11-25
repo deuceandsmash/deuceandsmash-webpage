@@ -9,7 +9,10 @@ const validMatch = m => m.status === 'confirmed' && DSR.W[m.format];
 
 // db = { profiles, openPlayMatches, adjustments, submissions }; upTo = last date to count (YYYY-MM-DD); now = ms
 export function buildRows(db, upTo, now = Date.now()) {
-  const P = db.profiles || {}, nameOf = id => P[id]?.name;
+  const P = db.profiles || {}, idNames = {};
+  for (const m of Object.values(db.openPlayMatches || {})) for (const [ids, nms] of [[m.teamAIds, m.teamA], [m.teamBIds, m.teamB]])
+    if (Array.isArray(ids) && Array.isArray(nms)) ids.forEach((id, i) => { if (id && !P[id]?.name && nms[i]) idNames[id] = String(nms[i]); });
+  const nameOf = id => P[id]?.name || idNames[id];
   const ms = Object.entries(db.openPlayMatches || {}).map(([id, m]) => {
     const x = { id, ...m };
     if (Array.isArray(x.teamA) && Array.isArray(x.teamAIds)) x.teamA = x.teamA.map((n, i) => nameOf(x.teamAIds[i]) || n);
@@ -32,9 +35,10 @@ export function buildRows(db, upTo, now = Date.now()) {
   const pre = {};
   for (const p of Object.values(ratings)) for (const h of p.hist || []) if (h.id && !h.manual) { const o = (pre[h.id] ||= {}); if (!(p.name in o)) o[p.name] = h.r - h.delta; }
   const rOf = name => ratings[name]?.r ?? DSR.DEFAULT_SEED;
-  const preR = (m, id) => { const nm = P[id]?.name; const v = nm ? pre[m.id]?.[nm] : null; return v != null ? v : (nm ? rOf(nm) : null); };
+  const preR = (m, id) => { const nm = nameOf(id); const v = nm ? pre[m.id]?.[nm] : null; return v != null ? v : (nm ? rOf(nm) : null); };
   const rows = H.rowsFrom(all.filter(validMatch), setsOf, preR);
   const levels = {};
   for (const [id, p] of Object.entries(P)) if (p?.name) levels[id] = H.levelOf(rOf(p.name));
+  for (const [id, nm] of Object.entries(idNames)) if (!levels[id]) levels[id] = H.levelOf(rOf(nm));
   return { rows, levels };
 }
